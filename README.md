@@ -1,4 +1,4 @@
-# direct-edge
+# Direct-Edge
 
 ## 👨‍💻 Authors
 - **Mahbubur Rahman** - *Core Development* - [@mahbub623a](https://github.com/mahbub623a)  
