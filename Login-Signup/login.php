@@ -1,3 +1,48 @@
+<?php
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$databasename = "direct-edge";
+
+$conn = mysqli_connect($servername, $username, $password, $databasename);
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+session_start();
+
+$error = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+    $password = $_POST['password'];
+
+    // Fetch user by phone
+    $sql = "SELECT * FROM users WHERE phone = '$phone' LIMIT 1";
+    $result = mysqli_query($conn, $sql);
+
+    if ($result && mysqli_num_rows($result) > 0) {
+        $user = mysqli_fetch_assoc($result);
+
+        // Verify password
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['phone'] = $user['phone'];
+
+            header("Location: Dashboard.html");
+            exit();
+        } else {
+            $error = "Invalid password!";
+        }
+    } else {
+        $error = "No account found with this phone number.";
+    }
+}
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,7 +58,6 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 shadow-lg rounded-2xl p-8 bg-white w-[90%] max-w-5xl">
 
-        <!-- SVG IMAGE -->
         <div class="flex justify-center items-center p-4">
             <svg xmlns="http://www.w3.org/2000/svg" width="500" height="400" viewBox="0 0 708 555.86743">
                 <path id="b10fb2cf-c586-4c5f-9fbf-e678f5ffa3db-58" data-name="Path 133"
@@ -99,34 +143,37 @@
         <div class="flex flex-col justify-center p-6">
             <h2 class="text-2xl font-semibold text-center mb-6">Log In</h2>
 
-            <form action="../Dashboard/Dashboard.php" method="POST" class="space-y-4">
-                <!-- Phone -->
+            <form action="login.php" method="POST" class="space-y-4">
                 <div>
                     <label for="floatingInput" class="block mb-1 text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="text" id="floatingInput" name="mail" placeholder="+8801744177620"
+                    <input type="text" id="floatingInput" name="phone" placeholder="+8801744177620"
                         class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
                 </div>
 
-                <!-- Password -->
                 <div>
                     <label for="floatingPassword" class="block mb-1 text-sm font-medium text-gray-700">Password</label>
                     <input type="password" id="floatingPassword" name="password" placeholder="Password"
                         class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
                 </div>
 
-                <!-- Button -->
                 <button type="submit"
-                    class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">Login</button>
+                    class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">Login</button>
 
-                <!-- Sign up link -->
                 <p class="text-center text-sm text-gray-600 mt-4">
                     Don't have an account?
-                    <a href="signup.php" class="text-blue-600 hover:underline">Create</a>
+                    <a href="signup.php" class="text-green-600 hover:underline">Create</a>
                 </p>
             </form>
         </div>
 
     </div>
+
+    <?php if (!empty($error)) : ?>
+        <script>
+            alert("<?php echo $error; ?>");
+        </script>
+    <?php endif; ?>
+
 
 </body>
 
