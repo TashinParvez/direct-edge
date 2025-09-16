@@ -115,14 +115,14 @@
                 </div>
 
                 <!-- Submit -->
-                <button type="submit" class="w-full bg-blue-600 text-white font-medium py-2 rounded-md hover:bg-blue-700 transition">
+                <button type="submit" class="w-full bg-green-600 text-white font-medium py-2 rounded-md hover:bg-green-700 transition">
                     Sign Up
                 </button>
 
                 <!-- Already have account -->
                 <p class="text-center text-sm mt-3">
                     Already have an account?
-                    <a href="login.php" class="text-blue-600 hover:underline">Log in</a>
+                    <a href="login.php" class="text-green-600 hover:underline">Log in</a>
                 </p>
 
             </form>
