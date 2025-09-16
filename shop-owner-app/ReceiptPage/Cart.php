@@ -80,7 +80,7 @@
                 </div>
             </div>
         </div>
-        <div class="container mx-auto my-3 flex space-x-4">
+        <div class="container mx-auto flex space-x-4">
             <button type="button" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Manually add product</button>
             <button type="button" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Scan to add product</button>
         </div>
