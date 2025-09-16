@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warehouse Info</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../warehouse information/warehouse-info.css">
 </head>
 <body>
+     <?php //include '../../include/Sidebar.php'; 
+    ?>
     <div class="container">
         <h1>Warehouse Information</h1>
 
@@ -222,6 +224,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="../warehouse information/warehouse-info.js"></script>
 </body>
 </html>
