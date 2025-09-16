@@ -116,12 +116,12 @@
 
                 <!-- Button -->
                 <button type="submit"
-                    class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">Login</button>
+                    class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">Login</button>
 
                 <!-- Sign up link -->
                 <p class="text-center text-sm text-gray-600 mt-4">
                     Don't have an account?
-                    <a href="signup.php" class="text-blue-600 hover:underline">Create</a>
+                    <a href="signup.php" class="text-green-600 hover:underline">Create</a>
                 </p>
             </form>
         </div>
