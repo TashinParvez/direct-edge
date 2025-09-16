@@ -1,3 +1,53 @@
+<?php
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$databasename = "direct-edge";
+
+$conn = mysqli_connect($servername, $username, $password, $databasename);
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+$message = "";
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $full_name = $_POST['username'];
+    $email = $_POST['mail'];
+    $phone = $_POST['phonenumber'];
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+    $role = $_POST['usertype'];
+
+    // Allowed ENUM values
+    $allowed_roles = ['Admin', 'Shop-Owner', 'Agent', 'User'];
+    if (!in_array($role, $allowed_roles)) {
+        $message = "Invalid role selected!";
+    } elseif ($password !== $confirm_password) {
+        $message = "Passwords do not match!";
+    } else {
+        // Hash password
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+        // Insert query
+        $stmt = $conn->prepare("INSERT INTO users (full_name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssss", $full_name, $email, $phone, $hashed_password, $role);
+
+        if ($stmt->execute()) {
+            // $message = "Sign up successful!";
+            header("Location: login.php");
+            exit();
+        } else {
+            $message = "❌ Error: " . $stmt->error;
+        }
+
+        $stmt->close();
+    }
+}
+
+$conn->close();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -69,12 +119,25 @@
         <div class="flex-1 w-full">
             <h2 class="text-2xl font-bold text-center mb-6">Sign Up</h2>
 
-            <form action="signUpHandler.php" method="post" class="space-y-4">
+            <?php if ($message != "") { ?>
+                <p class="text-center mb-4 font-medium <?php echo (strpos($message, '✅') !== false) ? 'text-green-600' : 'text-red-600'; ?>">
+                    <?php echo $message; ?>
+                </p>
+            <?php } ?>
 
-                <!-- Username -->
+            <form action="" method="post" class="space-y-4">
+
+                <!-- Full Name -->
                 <div>
-                    <label for="username" class="block text-sm font-medium">User Name</label>
+                    <label for="username" class="block text-sm font-medium">Full Name</label>
                     <input type="text" id="username" name="username" placeholder="Mahbub" required
+                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="mail" class="block text-sm font-medium">Email</label>
+                    <input type="email" id="mail" name="mail" placeholder="example@mail.com" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
@@ -102,14 +165,22 @@
                 <!-- User Type -->
                 <div>
                     <label class="block text-sm font-medium">User Type</label>
-                    <div class="flex gap-4 mt-2">
+                    <div class="flex flex-wrap gap-4 mt-2">
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="usertype" value="consumer" required class="text-blue-600 focus:ring-blue-500">
-                            <span>Consumer</span>
+                            <input type="radio" name="usertype" value="User" required class="text-blue-600 focus:ring-blue-500">
+                            <span>User</span>
                         </label>
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="usertype" value="consumer_seller" required class="text-blue-600 focus:ring-blue-500">
-                            <span>Consumer and Seller</span>
+                            <input type="radio" name="usertype" value="Shop-Owner" required class="text-blue-600 focus:ring-blue-500">
+                            <span>Shop Owner</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="usertype" value="Agent" required class="text-blue-600 focus:ring-blue-500">
+                            <span>Agent</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="usertype" value="Admin" required class="text-blue-600 focus:ring-blue-500">
+                            <span>Admin</span>
                         </label>
                     </div>
                 </div>
