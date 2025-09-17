@@ -13,14 +13,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Available Product</title>
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="../Available-Products-List/Available-Products-List.css">
-    
+    <link rel="stylesheet" href="../Available-Products-List/available-products-list.css">
+
 </head>
 
 <body>
     <?php //include '../../include/Sidebar.php'; 
     ?>
     <section class="home-section p-0">
+
+        <div>
+            <h2>Available Products</h2>
+        </div>
+
         <!-- Search bar -->
         <div class="search-bar">
             <div class="search-container">
@@ -37,7 +42,7 @@
             <div class="carousel-slide">
                 <!-- Sample discounted product cards -->
                 <div class="carousel-card">
-                    <img src="../Available-Products-List/Images/istockphoto-1036777904-612x612.jpg" alt="Product 1">
+                    <img src="../../include/All Images/Single-Produc-Images/istockphoto-1036777904-612x612.jpg" alt="Product 1">
                     <h3>Product 1</h3>
                     <span class="price">$20</span>
                     <span class="discounted-price">$15</span>
@@ -47,7 +52,7 @@
                     <button class="view-details" onclick="window.location.href='#'">Add Item</button>
                 </div>
                 <div class="carousel-card">
-                    <img src="../Available-Products-List/Images/istockphoto-1085723794-612x612.jpg" alt="Product 2">
+                    <img src="../../include/All Images/Single-Produc-Images/istockphoto-1085723794-612x612.jpg" alt="Product 2">
                     <h3>Product 2</h3>
                     <span class="price">$30</span>
                     <span class="discounted-price">$24</span>
@@ -57,7 +62,7 @@
                     <button class="view-details" onclick="window.location.href='#'">Add Item</button>
                 </div>
                 <div class="carousel-card">
-                    <img src="../Available-Products-List/Images/istockphoto-1198016565-612x612.jpg" alt="Product 3">
+                    <img src="../../include/All Images/Single-Produc-Images/istockphoto-1198016565-612x612.jpg" alt="Product 3">
                     <h3>Product 3</h3>
                     <span class="price">$50</span>
                     <span class="discounted-price">$35</span>
@@ -67,7 +72,7 @@
                     <button class="view-details" onclick="window.location.href='#'">Add Item</button>
                 </div>
                 <div class="carousel-card">
-                    <img src="../Available-Products-List/Images/istockphoto-1282866808-612x612.jpg" alt="Product 4">
+                    <img src="../../include/All Images/Single-Produc-Images/istockphoto-1282866808-612x612.jpg" alt="Product 4">
                     <h3>Product 4</h3>
                     <span class="price">$40</span>
                     <span class="discounted-price">$32</span>
@@ -77,7 +82,7 @@
                     <button class="view-details" onclick="window.location.href='#'">Add Item</button>
                 </div>
                 <div class="carousel-card">
-                    <img src="../Available-Products-List/Images/istockphoto-1346380707-612x612.jpg" alt="Product 1">
+                    <img src="../../include/All Images/Single-Produc-Images/istockphoto-1346380707-612x612.jpg" alt="Product 1">
                     <h3>Product 1</h3>
                     <span class="price">$20</span>
                     <span class="discounted-price">$15</span>
@@ -87,7 +92,7 @@
                     <button class="view-details" onclick="window.location.href='#'">Add Item</button>
                 </div>
                 <div class="carousel-card">
-                    <img src="../Available-Products-List/Images/istockphoto-2204214171-612x612.jpg" alt="Product 2">
+                    <img src="../../include/All Images/Single-Produc-Images/istockphoto-2204214171-612x612.jpg" alt="Product 2">
                     <h3>Product 2</h3>
                     <span class="price">$30</span>
                     <span class="discounted-price">$24</span>
@@ -97,7 +102,7 @@
                     <button class="view-details" onclick="window.location.href='#'">Add Item</button>
                 </div>
                 <div class="carousel-card">
-                    <img src="../Available-Products-List/Images/istockphoto-2204214171-612x612.jpg" alt="Product 3">
+                    <img src="../../include/All Images/Single-Produc-Images/istockphoto-2204214171-612x612.jpg" alt="Product 3">
                     <h3>Product 3</h3>
                     <span class="price">$50</span>
                     <span class="discounted-price">$35</span>
@@ -107,7 +112,7 @@
                     <button class="view-details" onclick="window.location.href='#'">Add Item</button>
                 </div>
                 <div class="carousel-card">
-                    <img src="../Available-Products-List/Images/istockphoto-2233520721-612x612.jpg" alt="Product 4">
+                    <img src="../../include/All Images/Single-Produc-Images/istockphoto-2233520721-612x612.jpg" alt="Product 4">
                     <h3>Product 4</h3>
                     <span class="price">$40</span>
                     <span class="discounted-price">$32</span>
@@ -135,7 +140,7 @@
         <div class="products-container">
             <!-- Product rows -->
             <div class="product-row">
-                <img src="../Available-Products-List/Images/istockphoto-510618777-612x612.jpg" alt="Product 1">
+                <img src="../../include/All Images/Single-Produc-Images/istockphoto-510618777-612x612.jpg" alt="Product 1">
                 <div class="product-info">
                     <h3>Product 1</h3>
                     <p class="description">High-quality widget for everyday use, durable and reliable.</p>
@@ -150,7 +155,7 @@
                 </div>
             </div>
             <div class="product-row">
-                <img src="../Available-Products-List/Images/istockphoto-510015094-612x612.jpg" alt="Product 2">
+                <img src="../../include/All Images/Single-Produc-Images/istockphoto-510015094-612x612.jpg" alt="Product 2">
                 <div class="product-info">
                     <h3>Product 2</h3>
                     <p class="description">Stylish accessory for modern lifestyles, limited stock.</p>
@@ -164,7 +169,7 @@
                 </div>
             </div>
             <div class="product-row">
-                <img src="../Available-Products-List/Images/istockphoto-1346380707-612x612.jpg" alt="Product 3">
+                <img src="../../include/All Images/Single-Produc-Images/istockphoto-1346380707-612x612.jpg" alt="Product 3">
                 <div class="product-info">
                     <h3>Product 3</h3>
                     <p class="description">Premium gadget with advanced features for professionals.</p>
@@ -179,7 +184,7 @@
                 </div>
             </div>
             <div class="product-row">
-                <img src="../Available-Products-List/Images/istockphoto-2204214171-612x612.jpg" alt="Product 4">
+                <img src="../../include/All Images/Single-Produc-Images/istockphoto-2204214171-612x612.jpg" alt="Product 4">
                 <div class="product-info">
                     <h3>Product 4</h3>
                     <p class="description">Stylish clothing for all seasons.</p>
@@ -194,7 +199,7 @@
                 </div>
             </div>
             <div class="product-row">
-                <img src="../Available-Products-List/Images/istockphoto-2226910903-612x612.jpg" alt="Product 5">
+                <img src="../../include/All Images/Single-Produc-Images/istockphoto-2226910903-612x612.jpg" alt="Product 5">
                 <div class="product-info">
                     <h3>Product 5</h3>
                     <p class="description">Affordable tool for home and office use.</p>
@@ -207,7 +212,7 @@
                 </div>
             </div>
             <div class="product-row">
-                <img src="../Available-Products-List/Images/istockphoto-2182314369-612x612.jpg" alt="Product 1">
+                <img src="../../include/All Images/Single-Produc-Images/istockphoto-2182314369-612x612.jpg" alt="Product 1">
                 <div class="product-info">
                     <h3>Product 1</h3>
                     <p class="description">Versatile widget for multiple applications.</p>
@@ -222,7 +227,7 @@
                 </div>
             </div>
             <div class="product-row">
-                <img src="../Available-Products-List/Images/istockphoto-2234472958-612x612.jpg" alt="Product 2">
+                <img src="../../include/All Images/Single-Produc-Images/istockphoto-2234472958-612x612.jpg" alt="Product 2">
                 <div class="product-info">
                     <h3>Product 2</h3>
                     <p class="description">Fashionable item with a sleek design.</p>
@@ -236,7 +241,7 @@
                 </div>
             </div>
             <div class="product-row">
-                <img src="../Available-Products-List/Images/istockphoto-695597866-612x612.jpg" alt="Product 3">
+                <img src="../../include/All Images/Single-Produc-Images/istockphoto-695597866-612x612.jpg" alt="Product 3">
                 <div class="product-info">
                     <h3>Product 3</h3>
                     <p class="description">High-performance gadget for tech enthusiasts.</p>
@@ -251,7 +256,7 @@
                 </div>
             </div>
             <div class="product-row">
-                <img src="../Available-Products-List/Images/istockphoto-2204214171-612x612.jpg" alt="Product 4">
+                <img src="../../include/All Images/Single-Produc-Images/istockphoto-2204214171-612x612.jpg" alt="Product 4">
                 <div class="product-info">
                     <h3>Product 4</h3>
                     <p class="description">Stylish clothing for all seasons.</p>
@@ -266,7 +271,7 @@
                 </div>
             </div>
             <div class="product-row">
-                <img src="../Available-Products-List/Images/istockphoto-2233520596-612x612.jpg" alt="Product 5">
+                <img src="../../include/All Images/Single-Produc-Images/istockphoto-2233520596-612x612.jpg" alt="Product 5">
                 <div class="product-info">
                     <h3>Product 5</h3>
                     <p class="description">Reliable tool for professional tasks.</p>
