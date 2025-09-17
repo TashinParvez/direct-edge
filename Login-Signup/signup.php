@@ -63,7 +63,6 @@ $conn->close();
 
     <div class="bg-white shadow rounded-lg p-6 md:p-10 flex flex-col md:flex-row items-center gap-8 w-full max-w-5xl">
 
-        <!-- SVG Section -->
         <div class="flex-1 flex justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="350" height="250" viewBox="0 0 841.59024 589">
                 <polygon points="743.208 574.193 729.128 574.192 722.43 519.885 743.21 519.886 743.208 574.193" fill="#ffb8b8" />
@@ -127,42 +126,36 @@ $conn->close();
 
             <form action="" method="post" class="space-y-4">
 
-                <!-- Full Name -->
                 <div>
                     <label for="username" class="block text-sm font-medium">Full Name</label>
                     <input type="text" id="username" name="username" placeholder="Mahbub" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                <!-- Email -->
                 <div>
                     <label for="mail" class="block text-sm font-medium">Email</label>
                     <input type="email" id="mail" name="mail" placeholder="example@mail.com" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                <!-- Phone Number -->
                 <div>
                     <label for="phonenumber" class="block text-sm font-medium">Phone Number</label>
                     <input type="text" id="phonenumber" name="phonenumber" placeholder="+8801744177620" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                <!-- Password -->
                 <div>
                     <label for="password" class="block text-sm font-medium">Password</label>
                     <input type="password" id="password" name="password" placeholder="Password" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                <!-- Confirm Password -->
                 <div>
                     <label for="confirm_password" class="block text-sm font-medium">Confirm Password</label>
                     <input type="password" id="confirm_password" name="confirm_password" placeholder="Password" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                <!-- User Type -->
                 <div>
                     <label class="block text-sm font-medium">User Type</label>
                     <div class="flex flex-wrap gap-4 mt-2">
@@ -185,12 +178,10 @@ $conn->close();
                     </div>
                 </div>
 
-                <!-- Submit -->
                 <button type="submit" class="w-full bg-green-600 text-white font-medium py-2 rounded-md hover:bg-green-700 transition">
                     Sign Up
                 </button>
 
-                <!-- Already have account -->
                 <p class="text-center text-sm mt-3">
                     Already have an account?
                     <a href="login.php" class="text-green-600 hover:underline">Log in</a>
