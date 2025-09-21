@@ -117,11 +117,12 @@ function filterTable() {
         const productCode = row.cells[1].textContent.toLowerCase(); // Product Code
         const status = row.cells[6].textContent; // Status
         const quantity = parseInt(row.cells[5].textContent); // Quantity
+        const warehouse = row.cells[7].textContent; // Warehouse
 
         // Apply search filter
         const searchMatch = !searchTerm || (product.includes(searchTerm) || productCode.includes(searchTerm));
 
-        // Apply combined filter (status or capacity)
+        // Apply combined filter (status or capacity or warehouse)
         let filterMatch = filters.includes('all'); 
         if (!filterMatch) {
             filterMatch = filters.some(filter => {
@@ -133,6 +134,8 @@ function filterTable() {
                     return quantity >= 10 && quantity <= 50;
                 } else if (filter === 'high') {
                     return quantity > 50;
+                } else if (filter === 'Warehouse A' || filter === 'Warehouse B' || filter === 'Warehouse C') {
+                    return warehouse === filter;
                 }
                 return false;
             });
@@ -244,8 +247,9 @@ if (addProductForm) {
         const dateAdded = document.getElementById('dateAdded')?.value;
         const quantity = parseInt(document.getElementById('quantity')?.value);
         const unit = document.getElementById('unit')?.value.trim();
+        const warehouse = document.getElementById('warehouse')?.value;
 
-        if (!productCode || !productName || !dateAdded || isNaN(quantity) || quantity <= 0 || !unit) {
+        if (!productCode || !productName || !dateAdded || isNaN(quantity) || quantity <= 0 || !unit || !warehouse) {
             alert('Please fill all required fields correctly. Quantity must be greater than 0.');
             return;
         }
@@ -258,7 +262,8 @@ if (addProductForm) {
             date_added: dateAdded,
             quantity: quantity,
             status: document.getElementById('status')?.value,
-            unit: unit
+            unit: unit,
+            warehouse: warehouse
         };
 
         // Check for unique ID
@@ -280,6 +285,7 @@ if (addProductForm) {
             <td>${newProduct.date_added}</td>
             <td class="${newProduct.quantity < 10 ? 'low-stock' : ''}">${newProduct.quantity}</td>
             <td class="${newProduct.status.toLowerCase() === 'completed' ? 'completed' : 'in-progress'}">${newProduct.status}</td>
+            <td>${newProduct.warehouse}</td>
             <td>
                 <button class="action-btn edit-btn" onclick="editProduct(${newProduct.id})">✎</button>
                 <button class="action-btn delete-btn" onclick="deleteProduct(${newProduct.id})">🗑</button>
@@ -327,6 +333,7 @@ function editProduct(id) {
     document.getElementById('editQuantity').value = product.quantity;
     document.getElementById('editStatus').value = product.status;
     document.getElementById('editUnit').value = product.unit;
+    document.getElementById('editWarehouse').value = product.warehouse;
 
     if (editProductPopup) {
         editProductPopup.style.display = 'block';
@@ -352,8 +359,9 @@ if (editProductForm) {
         const dateAdded = document.getElementById('editDateAdded')?.value;
         const quantity = parseInt(document.getElementById('editQuantity')?.value);
         const unit = document.getElementById('editUnit')?.value.trim();
+        const warehouse = document.getElementById('editWarehouse')?.value;
 
-        if (!productCode || !productName || !dateAdded || isNaN(quantity) || quantity <= 0 || !unit) {
+        if (!productCode || !productName || !dateAdded || isNaN(quantity) || quantity <= 0 || !unit || !warehouse) {
             alert('Please fill all required fields correctly. Quantity must be greater than 0.');
             return;
         }
@@ -375,7 +383,8 @@ if (editProductForm) {
             date_added: dateAdded,
             quantity: quantity,
             status: document.getElementById('editStatus')?.value,
-            unit: unit
+            unit: unit,
+            warehouse: warehouse
         };
 
         // Update DOM
@@ -389,6 +398,7 @@ if (editProductForm) {
             row.cells[5].className = quantity < 10 ? 'low-stock' : '';
             row.cells[6].textContent = document.getElementById('editStatus')?.value;
             row.cells[6].className = document.getElementById('editStatus')?.value.toLowerCase() === 'completed' ? 'completed' : 'in-progress';
+            row.cells[7].textContent = warehouse;
         } else {
             console.error('Row not found for ID:', id);
         }
@@ -470,7 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
             date_added: cells[4].textContent,
             quantity: parseInt(cells[5].textContent),
             status: cells[6].textContent,
-            unit: 'units' // Assuming unit is fixed as 'units'
+            unit: cells[7].textContent, // Updated to match new column order
+            warehouse: cells[8].textContent // New warehouse column
         };
     });
 
