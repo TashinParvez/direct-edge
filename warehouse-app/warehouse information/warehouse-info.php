@@ -12,7 +12,6 @@
 
         <!-- Metrics Section -->
         <?php
-        // Raw data for inventory with warehouse
         $inventory = [
             ['id' => 10001, 'product_code' => 'VEG-001', 'product' => 'Carrot', 'special_instructions' => 'Store at 0-2°C', 'date_added' => '2025-01-10', 'quantity' => 500, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse A'],
             ['id' => 10002, 'product_code' => 'VEG-002', 'product' => 'Potato', 'special_instructions' => null, 'date_added' => '2025-02-15', 'quantity' => 100, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse B'],
@@ -36,9 +35,8 @@
             ['id' => 10020, 'product_code' => 'VEG-014', 'product' => 'Eggplant', 'special_instructions' => 'Avoid direct sunlight', 'date_added' => '2025-10-30', 'quantity' => 250, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse B'],
         ];
 
-        // Calculate metrics from raw data
-        $totalCapacity = 100000; // Fixed value for demo
-        $usedCapacity = array_sum(array_column($inventory, 'quantity')); // Sum of quantities
+        $totalCapacity = 100000;
+        $usedCapacity = array_sum(array_column($inventory, 'quantity'));
         $freeCapacity = $totalCapacity - $usedCapacity;
         $itemCount = count($inventory);
         ?>
@@ -57,7 +55,6 @@
             </div>
         </div>
 
-        <!-- Search and Filters -->
         <div class="controls">
             <input type="text" id="searchInput" placeholder="Search Products..." />
             <div class="filter-container">
@@ -95,19 +92,15 @@
             <button id="addProductBtn">Add Product</button>
         </div>
 
-        <!-- Success Message -->
         <div id="successMessage" class="success-message" style="display: none;">
             <span id="successText"></span>
         </div>
 
-        <!-- Low Stock Alert -->
         <div id="lowStockAlert" class="alert alert-warning" style="display: none;">
             Low stock detected for some products!
         </div>
 
-        <!-- Product Display -->
         <div id="productContainer" class="list-view">
-            <!-- Table View -->
             <table id="productTable">
                 <thead>
                     <tr>
@@ -143,10 +136,27 @@
                         </tr>";
                     } ?>
                 </tbody>
+                <tfoot id="totalRow" style="display: none;">
+    <tr>
+        <td colspan="2">Totals:</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>
+            <span class="label">Total Items:</span>
+            <span class="value" id="totalItems">0</span>
+        </td>
+        <td></td>
+        <td>
+            <span class="label">Total Quantity:</span>
+            <span class="value" id="totalQuantity">0</span>
+        </td>
+        <td></td>
+    </tr>
+</tfoot>
             </table>
         </div>
 
-        <!-- Pagination Controls -->
         <div class="pagination">
             <button id="prevBtn" onclick="changePage(-1)">Previous</button>
             <div id="pageNumbers"></div>
@@ -160,7 +170,6 @@
             <span>Rows per page</span>
         </div>
 
-        <!-- Add Product Popup -->
         <div id="addProductPopup" class="popup">
             <div class="popup-content">
                 <span class="close-btn" onclick="closePopup()">&times;</span>
@@ -202,7 +211,6 @@
             </div>
         </div>
 
-        <!-- Edit Product Popup -->
         <div id="editProductPopup" class="popup">
             <div class="popup-content">
                 <span class="close-btn" onclick="closePopup('edit')">&times;</span>

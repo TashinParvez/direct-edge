@@ -26,6 +26,9 @@ const totalCapacityElement = document.getElementById('totalCapacity');
 const freeCapacityElement = document.getElementById('freeCapacity');
 const itemCountElement = document.getElementById('itemCount');
 const tbody = document.getElementById('productTableBody');
+const totalRow = document.getElementById('totalRow');
+const totalItemsElement = document.getElementById('totalItems');
+const totalQuantityElement = document.getElementById('totalQuantity');
 
 // Reusable function to show success message with error handling
 function showSuccessMessage(message) {
@@ -33,13 +36,13 @@ function showSuccessMessage(message) {
         console.error('Success message elements not found:', { successMessage, successText });
         return;
     }
-    console.log('Showing success message:', message); // Debug log
+    console.log('Showing success message:', message);
     successText.textContent = message;
     successMessage.classList.add('show');
     setTimeout(() => {
-        console.log('Hiding success message'); // Debug log
+        console.log('Hiding success message');
         successMessage.classList.remove('show');
-    }, 2000); // Hide after 2 seconds
+    }, 2000);
 }
 
 // Function to close popups with animation
@@ -51,8 +54,8 @@ function closePopup(popupType = 'add') {
         setTimeout(() => {
             popupElement.style.display = 'none';
             formElement.reset();
-            popupElement.style.animation = ''; // Reset animation
-        }, 300); // Match animation duration
+            popupElement.style.animation = '';
+        }, 300);
     } else {
         console.error('Popup element not found:', popupType);
     }
@@ -77,7 +80,7 @@ function applyFilters() {
     filters = Array.from(document.querySelectorAll('.filter-option:checked'))
         .map(cb => cb.value);
     filterTable();
-    currentPage = 1; // Reset to first page on filter change
+    currentPage = 1;
     updatePagination();
     document.getElementById('dropdownMenu')?.classList.remove('show');
 }
@@ -97,7 +100,7 @@ function applyFiltersDebounced() {
     searchTimeout = setTimeout(() => {
         searchTerm = searchInput.value.toLowerCase();
         filterTable();
-        currentPage = 1; // Reset to first page on filter change
+        currentPage = 1;
         updatePagination();
     }, 300);
 }
@@ -113,17 +116,15 @@ if (searchInput) {
 function filterTable() {
     const tableRows = document.querySelectorAll('#productTableBody tr');
     tableRows.forEach(row => {
-        const product = row.cells[2].textContent.toLowerCase(); // Product Name
-        const productCode = row.cells[1].textContent.toLowerCase(); // Product Code
-        const status = row.cells[6].textContent; // Status
-        const quantity = parseInt(row.cells[5].textContent); // Quantity
-        const warehouse = row.cells[7].textContent; // Warehouse
+        const product = row.cells[2].textContent.toLowerCase();
+        const productCode = row.cells[1].textContent.toLowerCase();
+        const status = row.cells[6].textContent;
+        const quantity = parseInt(row.cells[5].textContent);
+        const warehouse = row.cells[7].textContent;
 
-        // Apply search filter
         const searchMatch = !searchTerm || (product.includes(searchTerm) || productCode.includes(searchTerm));
 
-        // Apply combined filter (status or capacity or warehouse)
-        let filterMatch = filters.includes('all'); 
+        let filterMatch = filters.includes('all');
         if (!filterMatch) {
             filterMatch = filters.some(filter => {
                 if (filter === 'In progress' || filter === 'Completed') {
@@ -147,6 +148,7 @@ function filterTable() {
             row.classList.add('filtered-out');
         }
     });
+    updateTotals();
 }
 
 // Pagination Logic
@@ -160,14 +162,11 @@ function updatePagination() {
     const pageNumbers = document.getElementById('pageNumbers');
     const rows = Array.from(tbody.querySelectorAll('tr'));
 
-    // Filter visible rows (after filter step)
     const visibleRows = rows.filter(row => !row.classList.contains('filtered-out'));
     const totalPages = Math.max(1, Math.ceil(visibleRows.length / rowsPerPage));
 
-    // Adjust current page if out of bounds
     if (currentPage > totalPages) currentPage = totalPages;
 
-    // Clear pagination buttons
     pageNumbers.innerHTML = '';
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
@@ -180,25 +179,23 @@ function updatePagination() {
         pageNumbers.appendChild(btn);
     }
 
-    // Enable/disable prev/next
     prevBtn.disabled = currentPage === 1;
     nextBtn.disabled = currentPage === totalPages || totalPages === 0;
 
-    // Show only current page rows
     const startIdx = (currentPage - 1) * rowsPerPage;
     const endIdx = startIdx + rowsPerPage;
 
     rows.forEach(row => {
         if (row.classList.contains('filtered-out')) {
-            row.style.display = 'none'; // Hide filtered
+            row.style.display = 'none';
         } else {
             const index = visibleRows.indexOf(row);
             row.style.display = index >= startIdx && index < endIdx ? '' : 'none';
         }
     });
 
-    // Show/hide table based on visible results
     table.style.display = visibleRows.length > 0 ? 'table' : 'none';
+    updateTotals();
 }
 
 function changePage(delta) {
@@ -215,8 +212,24 @@ function changePage(delta) {
 
 function changeRowsPerPage() {
     rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-    currentPage = 1; // Reset to first page
+    currentPage = 1;
     updatePagination();
+}
+
+// Function to update totals based on filtered rows
+function updateTotals() {
+    if (!totalRow || !totalItemsElement || !totalQuantityElement) {
+        console.error('Total row elements not found:', { totalRow, totalItemsElement, totalQuantityElement });
+        return;
+    }
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const visibleRows = rows.filter(row => !row.classList.contains('filtered-out'));
+
+    totalItemsElement.textContent = visibleRows.length;
+    totalQuantityElement.textContent = visibleRows.reduce((sum, row) => sum + parseInt(row.cells[5].textContent), 0);
+
+    totalRow.style.display = visibleRows.length > 0 ? 'table-row' : 'none';
 }
 
 // Popup and Form Handling
@@ -241,7 +254,6 @@ if (addProductForm) {
     addProductForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        // Validation
         const productCode = document.getElementById('productCode')?.value.trim();
         const productName = document.getElementById('productName')?.value.trim();
         const dateAdded = document.getElementById('dateAdded')?.value;
@@ -255,7 +267,7 @@ if (addProductForm) {
         }
 
         const newProduct = {
-            id: Date.now(), // Unique ID based on timestamp
+            id: Date.now(),
             product_code: productCode,
             product: productName,
             special_instructions: document.getElementById('specialInstructions')?.value || null,
@@ -266,14 +278,12 @@ if (addProductForm) {
             warehouse: warehouse
         };
 
-        // Check for unique ID
         const existingIds = inventory.map(item => item.id);
         if (existingIds.includes(newProduct.id)) {
             alert('A product with this ID already exists. Please try again.');
             return;
         }
 
-        // Add to inventory and DOM
         inventory.push(newProduct);
         const newRow = document.createElement('tr');
         newRow.setAttribute('data-id', newProduct.id);
@@ -293,24 +303,16 @@ if (addProductForm) {
         `;
         tbody.appendChild(newRow);
 
-        // Update metrics
-        const totalCapacity = 10000; // Fixed value from PHP
+        const totalCapacity = 10000;
         const currentItemCount = inventory.length;
         const currentFreeCapacity = parseInt(freeCapacityElement.textContent.split(' ')[0]) - newProduct.quantity;
         itemCountElement.textContent = currentItemCount;
         freeCapacityElement.textContent = `${currentFreeCapacity} units`;
 
-        // Show success message
         showSuccessMessage('Product added successfully!');
-
-        // Close popup
         closePopup('add');
-
-        // Reapply filters and pagination
         filterTable();
         updatePagination();
-
-        // Check for low stock
         const quantities = document.querySelectorAll('#productTableBody .low-stock');
         if (quantities.length > 0 && document.getElementById('lowStockAlert').style.display === 'none') {
             document.getElementById('lowStockAlert').style.display = 'block';
@@ -353,7 +355,6 @@ if (editProductForm) {
     editProductForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        // Validation
         const productCode = document.getElementById('editProductCode')?.value.trim();
         const productName = document.getElementById('editProductName')?.value.trim();
         const dateAdded = document.getElementById('editDateAdded')?.value;
@@ -373,7 +374,6 @@ if (editProductForm) {
             return;
         }
 
-        // Update inventory
         const oldQuantity = inventory[productIndex].quantity;
         inventory[productIndex] = {
             id: id,
@@ -387,7 +387,6 @@ if (editProductForm) {
             warehouse: warehouse
         };
 
-        // Update DOM
         const row = document.querySelector(`#productTableBody tr[data-id="${id}"]`);
         if (row) {
             row.cells[1].textContent = productCode;
@@ -403,21 +402,13 @@ if (editProductForm) {
             console.error('Row not found for ID:', id);
         }
 
-        // Update metrics
         const currentFreeCapacity = parseInt(freeCapacityElement.textContent.split(' ')[0]) + (oldQuantity - quantity);
         freeCapacityElement.textContent = `${currentFreeCapacity} units`;
 
-        // Show success message
         showSuccessMessage('Product updated successfully!');
-
-        // Close popup
         closePopup('edit');
-
-        // Reapply filters and pagination
         filterTable();
         updatePagination();
-
-        // Check for low stock
         const quantities = document.querySelectorAll('#productTableBody .low-stock');
         if (quantities.length > 0 && document.getElementById('lowStockAlert').style.display === 'none') {
             document.getElementById('lowStockAlert').style.display = 'block';
@@ -444,20 +435,14 @@ function deleteProduct(id) {
             console.error('Row not found for ID:', id);
         }
 
-        // Update metrics
         const currentItemCount = inventory.length;
         const currentFreeCapacity = parseInt(freeCapacityElement.textContent.split(' ')[0]) + quantity;
         itemCountElement.textContent = currentItemCount;
         freeCapacityElement.textContent = `${currentFreeCapacity} units`;
 
-        // Show success message
         showSuccessMessage('Product deleted successfully!');
-
-        // Reapply filters and pagination
         filterTable();
         updatePagination();
-
-        // Check for low stock
         const quantities = document.querySelectorAll('#productTableBody .low-stock');
         if (quantities.length > 0 && document.getElementById('lowStockAlert').style.display === 'none') {
             document.getElementById('lowStockAlert').style.display = 'block';
@@ -480,22 +465,18 @@ document.addEventListener('DOMContentLoaded', () => {
             date_added: cells[4].textContent,
             quantity: parseInt(cells[5].textContent),
             status: cells[6].textContent,
-            unit: cells[7].textContent, // Updated to match new column order
-            warehouse: cells[8].textContent // New warehouse column
+            unit: cells[7].textContent,
+            warehouse: cells[8].textContent
         };
     });
 
-    // Initially apply filters and pagination
     filterTable();
     updatePagination();
-
-    // Check for low stock on load
     const quantities = document.querySelectorAll('#productTableBody .low-stock');
     if (quantities.length > 0) {
         document.getElementById('lowStockAlert').style.display = 'block';
     }
 
-    // Debug: Verify success message elements exist
     if (!successMessage || !successText) {
         console.error('Success message elements not found on load:', { successMessage, successText });
     }

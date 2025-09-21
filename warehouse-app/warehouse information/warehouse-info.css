@@ -536,5 +536,42 @@ th {
     display: block;
     opacity: 1;
 }
+tfoot#totalRow {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    border-top: 2px solid #007bff;
+}
 
-/* Remaining styles remain unchanged */
+tfoot#totalRow td {
+    padding: 12px;
+    text-align: center;
+    font-size: 14px;
+}
+
+tfoot#totalRow td:first-child {
+    text-align: left;
+}
+
+tfoot#totalRow .label {
+    margin-right: 6px;
+    color: #333;
+    font-weight: 600;
+}
+
+tfoot#totalRow .value {
+    color: #007bff;
+    font-weight: bold;
+}
+
+/* Responsive Design *
+
+
+
+
+
+
+
+
+
+
+
