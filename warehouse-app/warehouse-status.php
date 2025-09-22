@@ -24,9 +24,12 @@ $allwarehouses = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 <head>
     <meta charset="UTF-8">
+    <title>Generate Receipt</title>
+    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
+    <link rel="stylesheet" href="..\include\sidebar.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warehouse Status</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .card:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -35,12 +38,12 @@ $allwarehouses = mysqli_fetch_all($result, MYSQLI_ASSOC);
     </style>
 </head>
 
-<body class="bg-gray-100 flex">
-
-    <!-- Sidebar -->
+<body class="bg-gray-100">
     <?php
-    // include '../include/Sidebar.php';
+    include '../include/Sidebar.php';
     ?>
+
+
 
     <!-- Main Content -->
     <div class="flex-1 p-6 ml-64">
