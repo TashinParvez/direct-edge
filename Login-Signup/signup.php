@@ -19,6 +19,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $confirm_password = $_POST['confirm_password'];
     $role = $_POST['usertype'];
 
+    // Initialize image_url as null
+    $image_url = null;
+
     // Allowed ENUM values
     $allowed_roles = ['Admin', 'Shop-Owner', 'Agent', 'User'];
     if (!in_array($role, $allowed_roles)) {
@@ -26,22 +29,69 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif ($password !== $confirm_password) {
         $message = "Passwords do not match!";
     } else {
-        // Hash password
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        // Handle file upload if a file was selected
+        if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = 'uploads/profile_pictures/';
 
-        // Insert query
-        $stmt = $conn->prepare("INSERT INTO users (full_name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $full_name, $email, $phone, $hashed_password, $role);
+            // Create directory if it doesn't exist
+            if (!file_exists($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
 
-        if ($stmt->execute()) {
-            // $message = "Sign up successful!";
-            header("Location: login.php");
-            exit();
-        } else {
-            $message = "❌ Error: " . $stmt->error;
+            $file_tmp_path = $_FILES['profile_picture']['tmp_name'];
+            $file_name = $_FILES['profile_picture']['name'];
+            $file_size = $_FILES['profile_picture']['size'];
+            $file_type = $_FILES['profile_picture']['type'];
+            $file_name_cmps = explode(".", $file_name);
+            $file_extension = strtolower(end($file_name_cmps));
+
+            // Allowed file extensions
+            $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+
+            if (in_array($file_extension, $allowed_extensions)) {
+                // Create unique filename
+                $new_file_name = uniqid() . '_' . time() . '.' . $file_extension;
+                $dest_path = $upload_dir . $new_file_name;
+
+                // Check file size (limit to 5MB)
+                if ($file_size < 5000000) {
+                    if (move_uploaded_file($file_tmp_path, $dest_path)) {
+                        $image_url = $dest_path;
+                    } else {
+                        $message = "❌ Error uploading profile picture.";
+                    }
+                } else {
+                    $message = "❌ File size too large. Maximum size is 5MB.";
+                }
+            } else {
+                $message = "❌ Invalid file type. Only JPG, JPEG, PNG, and GIF files are allowed.";
+            }
         }
 
-        $stmt->close();
+        // If no error with file upload, proceed with user registration
+        if ($message === "") {
+            // Hash password
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+            // Insert query with image_url
+            $stmt = $conn->prepare("INSERT INTO users (full_name, email, phone, password, role, image_url) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssss", $full_name, $email, $phone, $hashed_password, $role, $image_url);
+
+            if ($stmt->execute()) {
+                // $message = "Sign up successful!";
+                header("Location: login.php");
+                exit();
+            } else {
+                $message = "❌ Error: " . $stmt->error;
+
+                // If there was an error and we uploaded a file, delete it
+                if ($image_url && file_exists($image_url)) {
+                    unlink($image_url);
+                }
+            }
+
+            $stmt->close();
+        }
     }
 }
 
@@ -124,7 +174,7 @@ $conn->close();
                 </p>
             <?php } ?>
 
-            <form action="" method="post" class="space-y-4">
+            <form action="" method="post" enctype="multipart/form-data" class="space-y-4">
 
                 <div>
                     <label for="username" class="block text-sm font-medium">Full Name</label>
@@ -140,7 +190,7 @@ $conn->close();
 
                 <div>
                     <label for="phonenumber" class="block text-sm font-medium">Phone Number</label>
-                    <input type="text" id="phonenumber" name="phonenumber" placeholder="+8801744177620" required
+                    <input type="text" id="phonenumber" name="phonenumber" placeholder="+8.80174417762e+12" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
@@ -176,6 +226,14 @@ $conn->close();
                             <span>Admin</span>
                         </label>
                     </div>
+                </div>
+
+                <!-- Profile Picture Upload - Simple field at the end -->
+                <div>
+                    <label for="profile_picture" class="block text-sm font-medium">Profile Picture (Optional)</label>
+                    <input type="file" id="profile_picture" name="profile_picture" accept="image/*"
+                        class="mt-1 w-full rounded-md  px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="text-xs text-gray-500 mt-1">JPG, JPEG, PNG, or GIF. Max size: 5MB</p>
                 </div>
 
                 <button type="submit" class="w-full bg-green-600 text-white font-medium py-2 rounded-md hover:bg-green-700 transition">
