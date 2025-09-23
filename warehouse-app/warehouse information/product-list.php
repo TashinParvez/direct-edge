@@ -275,12 +275,8 @@ if ($result) {
                 </tbody>
                 <tfoot id="totalRow" style="display: none;">
                     <tr>
-                        <td colspan="2">Totals:</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td colspan="3">
-                            <span class="label">Products:</span>
+                        <td colspan="4">
+                            <span class="label">TotalProducts:</span>
                             <span class="value" id="totalProductsCount">0</span>
                         </td>
                         <td></td>
