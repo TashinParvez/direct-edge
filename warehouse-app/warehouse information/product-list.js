@@ -40,10 +40,6 @@ function showSuccessMessage(message) {
     }, 2000);
 }
 
-function showErrorMessage(message) {
-    alert(message); // Replace with a styled error message if desired
-}
-
 function closePopup(popupType = 'add') {
     const popupElement = popupType === 'edit' ? editProductPopup : popup;
     const formElement = popupType === 'edit' ? editProductForm : addProductForm;
@@ -210,24 +206,6 @@ function updateTotals() {
     totalRow.style.display = visibleRows.length > 0 ? 'table-row' : 'none';
 }
 
-async function checkProductName(name, productId = 0) {
-    try {
-        const formData = new FormData();
-        formData.append('name', name);
-        if (productId) formData.append('productId', productId);
-
-        const response = await fetch('check-product-name.php', {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-        return result;
-    } catch (error) {
-        console.error('Error checking product name:', error);
-        return { available: false, message: 'Error checking product name' };
-    }
-}
-
 if (addProductBtn) {
     addProductBtn.addEventListener('click', () => {
         if (popup) {
@@ -258,7 +236,7 @@ if (imageFileInput) {
         } else {
             imagePreview.innerHTML = '';
             imagePreview.style.display = 'none';
-            showErrorMessage('Please select a valid image file.');
+            alert('Please select a valid image file.');
         }
     });
 }
@@ -276,35 +254,8 @@ if (editImageFileInput) {
         } else {
             editImagePreview.innerHTML = '';
             editImagePreview.style.display = 'none';
-            showErrorMessage('Please select a valid image file.');
+            alert('Please select a valid image file.');
         }
-    });
-}
-
-if (addProductForm) {
-    addProductForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const productName = document.getElementById('productName').value.trim();
-        const result = await checkProductName(productName);
-        if (!result.available) {
-            showErrorMessage(result.message);
-            return;
-        }
-        addProductForm.submit();
-    });
-}
-
-if (editProductForm) {
-    editProductForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const productName = document.getElementById('editProductName').value.trim();
-        const productId = document.getElementById('editProductId').value;
-        const result = await checkProductName(productName, productId);
-        if (!result.available) {
-            showErrorMessage(result.message);
-            return;
-        }
-        editProductForm.submit();
     });
 }
 
