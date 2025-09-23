@@ -70,7 +70,6 @@ $available_products = mysqli_fetch_all($result);
     <!-- Sidebar -->
     <?php
     // include '../include/Sidebar.php'; 
-
     ?>
 
     <!-- Main Content -->
