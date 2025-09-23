@@ -12,53 +12,75 @@ if ($farmer_id <= 0) {
 // Handle form submission for update
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Collect form data
-    $full_name = $_POST['full_name'];
+    $full_name = trim($_POST['full_name']);
     $dob = $_POST['dob'];
-    $nid_number = $_POST['nid_number'];
-    $contact_number = $_POST['contact_number'];
-    $present_address = $_POST['present_address'];
+    $nid_number = trim($_POST['nid_number']);
+    $contact_number = trim($_POST['contact_number']);
+    $present_address = trim($_POST['present_address']);
     $farmer_type = $_POST['farmer_type'];
-    $crops_cultivated = $_POST['crops_cultivated'];
+    $crops_cultivated = trim($_POST['crops_cultivated']);
     $land_size = $_POST['land_size'];
     $land_ownership = $_POST['land_ownership'];
-    $fertilizer_usage = $_POST['fertilizer_usage'];
-    $bank_account = $_POST['bank_account'];
-    $mobile_banking_account = $_POST['mobile_banking_account'];
-    $training_received = $_POST['training_received'];
-    $avg_selling_price = $_POST['avg_selling_price'];
-    $additional_notes = $_POST['additional_notes'];
+    $fertilizer_usage = trim($_POST['fertilizer_usage']);
+    $bank_account = trim($_POST['bank_account']);
+    $mobile_banking_account = trim($_POST['mobile_banking_account']);
+    $training_received = trim($_POST['training_received']);
+    $avg_selling_price = trim($_POST['avg_selling_price']);
+    $additional_notes = trim($_POST['additional_notes']);
+
+    // Basic validation
+    $errors = [];
+    if (empty($full_name)) {
+        $errors[] = "Full name is required.";
+    }
+    if (empty($contact_number)) {
+        $errors[] = "Contact number is required.";
+    }
 
     // Handle profile picture update
     $profile_picture = $_POST['existing_profile_picture']; // Keep existing by default
     if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
         $target_dir = "uploads/";
         if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
-        $profile_picture = $target_dir . basename($_FILES["profile_picture"]["name"]);
-        move_uploaded_file($_FILES["profile_picture"]["tmp_name"], $profile_picture);
+
+        // Generate unique filename to avoid conflicts
+        $file_extension = pathinfo($_FILES["profile_picture"]["name"], PATHINFO_EXTENSION);
+        $unique_filename = time() . '_' . uniqid() . '.' . $file_extension;
+        $profile_picture = $target_dir . $unique_filename;
+
+        if (!move_uploaded_file($_FILES["profile_picture"]["tmp_name"], $profile_picture)) {
+            $errors[] = "Failed to upload profile picture.";
+            $profile_picture = $_POST['existing_profile_picture']; // Keep existing on error
+        }
     }
 
-    // Update in DB
-    $stmt = $conn->prepare("UPDATE farmers SET 
-        full_name = ?, dob = ?, nid_number = ?, contact_number = ?, present_address = ?, 
-        profile_picture = ?, farmer_type = ?, crops_cultivated = ?, land_size = ?, 
-        land_ownership = ?, fertilizer_usage = ?, bank_account = ?, mobile_banking_account = ?, 
-        training_received = ?, avg_selling_price = ?, additional_notes = ?, updated_at = NOW()
-        WHERE id = ?");
+    // Update in DB if no errors
+    if (empty($errors)) {
+        $stmt = $conn->prepare("UPDATE farmers SET 
+            full_name = ?, dob = ?, nid_number = ?, contact_number = ?, present_address = ?, 
+            profile_picture = ?, farmer_type = ?, crops_cultivated = ?, land_size = ?, 
+            land_ownership = ?, fertilizer_usage = ?, bank_account = ?, mobile_banking_account = ?, 
+            training_received = ?, avg_selling_price = ?, additional_notes = ?
+            WHERE id = ?");
 
-    $stmt->bind_param("ssssssssdsisssssi", 
-        $full_name, $dob, $nid_number, $contact_number, $present_address, 
-        $profile_picture, $farmer_type, $crops_cultivated, $land_size, 
-        $land_ownership, $fertilizer_usage, $bank_account, $mobile_banking_account, 
-        $training_received, $avg_selling_price, $additional_notes, $farmer_id);
+        $stmt->bind_param("ssssssssdsisssssi", 
+            $full_name, $dob, $nid_number, $contact_number, $present_address, 
+            $profile_picture, $farmer_type, $crops_cultivated, $land_size, 
+            $land_ownership, $fertilizer_usage, $bank_account, $mobile_banking_account, 
+            $training_received, $avg_selling_price, $additional_notes, $farmer_id);
 
-    if ($stmt->execute()) {
-        $message = "Farmer information updated successfully!";
-        $message_type = "success";
+        if ($stmt->execute()) {
+            $message = "Farmer information updated successfully!";
+            $message_type = "success";
+        } else {
+            $message = "Error updating farmer information: " . $stmt->error;
+            $message_type = "error";
+        }
+        $stmt->close();
     } else {
-        $message = "Error updating farmer information: " . $stmt->error;
+        $message = implode(" ", $errors);
         $message_type = "error";
     }
-    $stmt->close();
 }
 
 // Fetch current farmer information
@@ -86,8 +108,9 @@ $conn->close();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center py-8">
-    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl p-8">
+<body class="bg-gray-100 min-h-screen py-8">
+    <div class="px-8 md:px-16 lg:px-24 xl:px-32 2xl:px-40 flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-6">
 
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
@@ -100,11 +123,11 @@ $conn->close();
             </div>
             <div class="flex space-x-3">
                 <a href="farmer-profile.php?id=<?php echo $farmer_id; ?>" 
-                   class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                   class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition">
                     <i class="fas fa-eye mr-1"></i> View Profile
                 </a>
                 <a href="farmers-list.php" 
-                   class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                   class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition">
                     <i class="fas fa-list mr-1"></i> All Farmers
                 </a>
             </div>
@@ -117,6 +140,14 @@ $conn->close();
                     <i class="fas <?php echo $message_type == 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'; ?> mr-2"></i>
                     <?php echo $message; ?>
                 </div>
+                <?php if ($message_type == 'success'): ?>
+                    <div class="mt-3 flex space-x-3">
+                        <a href="farmer-profile.php?id=<?php echo $farmer_id; ?>" 
+                           class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition">
+                            <i class="fas fa-eye mr-1"></i>View Updated Profile
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
 
@@ -249,15 +280,21 @@ $conn->close();
 
             <!-- Action Buttons -->
             <div class="md:col-span-2 flex justify-center space-x-4">
-                <button type="submit" class="px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-400 transition">
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white font-semibold rounded text-sm hover:bg-green-700 focus:ring-2 focus:ring-green-400 transition">
                     <i class="fas fa-save mr-2"></i>Update Information
                 </button>
                 <a href="farmer-profile.php?id=<?php echo $farmer_id; ?>" 
-                   class="px-8 py-3 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 focus:ring-2 focus:ring-gray-400 transition">
+                   class="px-4 py-2 bg-gray-600 text-white font-semibold rounded text-sm hover:bg-gray-700 focus:ring-2 focus:ring-gray-400 transition">
                     <i class="fas fa-times mr-2"></i>Cancel
                 </a>
             </div>
+
+            <!-- Helper Text -->
+            <div class="md:col-span-2 text-center text-sm text-gray-500">
+                <p><span class="text-red-500">*</span> indicates required fields</p>
+            </div>
         </form>
+    </div>
     </div>
 </body>
 </html>

@@ -3,7 +3,7 @@
 include '../include/connect-db.php'; // Database connection
 
 // Get farmer ID from URL parameter
-$farmer_id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
+$farmer_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($farmer_id <= 0) {
     die("Invalid farmer ID");
@@ -21,6 +21,11 @@ if ($result->num_rows === 0) {
 
 $farmer = $result->fetch_assoc();
 $stmt->close();
+
+// Check if created_at column exists
+$columns_query = "SHOW COLUMNS FROM farmers LIKE 'created_at'";
+$has_created_at = $conn->query($columns_query)->num_rows > 0;
+
 $conn->close();
 
 // Helper function to display field
@@ -40,7 +45,8 @@ function displayField($label, $value, $default = "Not provided") {
 </head>
 
 <body class="bg-gray-100 min-h-screen py-8">
-    <div class="container mx-auto px-4">
+    <div class="px-8 md:px-16 lg:px-24 xl:px-32 2xl:px-40">
+    <div class="max-w-6xl mx-auto px-12 py-4">
 
         <!-- Header Section -->
         <div class="bg-white rounded-2xl shadow-xl mb-6 p-6">
@@ -50,10 +56,10 @@ function displayField($label, $value, $default = "Not provided") {
                     Back to Farmers List
                 </a>
                 <div class="flex space-x-3">
-                    <a href="edit-farmer.php?id=<?php echo $farmer['id']; ?>" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    <a href="edit-farmer.php?id=<?php echo $farmer['id']; ?>" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition">
                         <i class="fas fa-edit mr-1"></i> Edit Profile
                     </a>
-                    <button onclick="window.print()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition">
+                    <button onclick="window.print()" class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition">
                         <i class="fas fa-print mr-1"></i> Print
                     </button>
                 </div>
@@ -78,18 +84,22 @@ function displayField($label, $value, $default = "Not provided") {
                         <?php echo htmlspecialchars($farmer['full_name']); ?>
                     </h1>
                     <div class="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-gray-600">
-                        <span class="flex items-center">
-                            <i class="fas fa-id-card mr-2"></i>
-                            NID: <?php echo htmlspecialchars($farmer['nid_number']); ?>
-                        </span>
+                        <?php if ($farmer['nid_number']): ?>
+                            <span class="flex items-center">
+                                <i class="fas fa-id-card mr-2"></i>
+                                NID: <?php echo htmlspecialchars($farmer['nid_number']); ?>
+                            </span>
+                        <?php endif; ?>
                         <span class="flex items-center">
                             <i class="fas fa-phone mr-2"></i>
                             <?php echo htmlspecialchars($farmer['contact_number']); ?>
                         </span>
-                        <span class="flex items-center">
-                            <i class="fas fa-birthday-cake mr-2"></i>
-                            <?php echo date('d M Y', strtotime($farmer['dob'])); ?>
-                        </span>
+                        <?php if ($farmer['dob']): ?>
+                            <span class="flex items-center">
+                                <i class="fas fa-birthday-cake mr-2"></i>
+                                <?php echo date('d M Y', strtotime($farmer['dob'])); ?>
+                            </span>
+                        <?php endif; ?>
                     </div>
                     <div class="mt-3">
                         <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
@@ -118,7 +128,7 @@ function displayField($label, $value, $default = "Not provided") {
 
                     <div class="border-b pb-3">
                         <label class="block text-sm font-medium text-gray-500">Date of Birth</label>
-                        <p class="text-gray-800"><?php echo $farmer['dob'] ? date('d M Y', strtotime($farmer['dob'])) : 'Not provided'; ?></p>
+                        <p class="text-gray-800"><?php echo $farmer['dob'] ? date('d M Y', strtotime($farmer['dob'])) : '<span class="text-gray-400">Not provided</span>'; ?></p>
                     </div>
 
                     <div class="border-b pb-3">
@@ -213,20 +223,22 @@ function displayField($label, $value, $default = "Not provided") {
                         <p class="text-gray-800"><?php echo displayField('', $farmer['training_received']); ?></p>
                     </div>
 
-                    <div>
+                    <div class="<?php echo $has_created_at ? 'border-b pb-3' : ''; ?>">
                         <label class="block text-sm font-medium text-gray-500">Additional Notes</label>
                         <p class="text-gray-800"><?php echo displayField('', $farmer['additional_notes']); ?></p>
                     </div>
-                </div>
 
-                <!-- Registration Date -->
-                <div class="mt-6 pt-4 border-t">
-                    <div class="flex items-center text-sm text-gray-500">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        <span>Profile created: 
-                            <?php echo isset($farmer['created_at']) ? date('d M Y, g:i A', strtotime($farmer['created_at'])) : 'Unknown'; ?>
-                        </span>
-                    </div>
+                    <!-- Registration Date (only if created_at column exists) -->
+                    <?php if ($has_created_at && isset($farmer['created_at'])): ?>
+                        <div class="pt-4 border-t">
+                            <div class="flex items-center text-sm text-gray-500">
+                                <i class="fas fa-calendar-alt mr-2"></i>
+                                <span>Profile created: 
+                                    <?php echo date('d M Y, g:i A', strtotime($farmer['created_at'])); ?>
+                                </span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -234,11 +246,11 @@ function displayField($label, $value, $default = "Not provided") {
         <!-- Action Buttons (Mobile) -->
         <div class="mt-6 flex justify-center space-x-4 md:hidden">
             <a href="edit-farmer.php?id=<?php echo $farmer['id']; ?>" 
-               class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+               class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition">
                 <i class="fas fa-edit mr-2"></i> Edit Profile
             </a>
             <button onclick="window.print()" 
-                    class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition">
+                    class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700 transition">
                 <i class="fas fa-print mr-2"></i> Print
             </button>
         </div>
@@ -259,5 +271,6 @@ function displayField($label, $value, $default = "Not provided") {
             }
         }
     </style>
+    </div>
 </body>
 </html>
