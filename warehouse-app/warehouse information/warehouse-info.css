@@ -158,7 +158,32 @@ h1 {
     background: linear-gradient(90deg, #0056b3, #003d80);
 }
 
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    /* Ensure table cells adjust to content */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* Adjust as needed */
+}
+
 table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    table-layout: fixed; /* Helps with column width consistency */
+}
+
+/* Optional: Specific styling for the Warehouse column */
+td:nth-child(8) {
+    background-color: #f9f9f9; /* Light gray background for distinction */
+}
+
+/* table {
     width: 100%;
     border-collapse: collapse;
     background: #fff;
@@ -169,7 +194,7 @@ th, td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #ddd;
-}
+} */
 
 th {
     background: linear-gradient(90deg, #007bff, #218cff);
@@ -511,5 +536,42 @@ th {
     display: block;
     opacity: 1;
 }
+tfoot#totalRow {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    border-top: 2px solid #007bff;
+}
 
-/* Remaining styles remain unchanged */
+tfoot#totalRow td {
+    padding: 12px;
+    text-align: center;
+    font-size: 14px;
+}
+
+tfoot#totalRow td:first-child {
+    text-align: left;
+}
+
+tfoot#totalRow .label {
+    margin-right: 6px;
+    color: #333;
+    font-weight: 600;
+}
+
+tfoot#totalRow .value {
+    color: #007bff;
+    font-weight: bold;
+}
+
+/* Responsive Design *
+
+
+
+
+
+
+
+
+
+
+
