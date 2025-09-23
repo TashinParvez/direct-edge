@@ -1,10 +1,52 @@
 <?php
+include '../../include/connect-db.php'; // database connection
 
-// include '../../include/connect-db.php';
+// Handle status update requests (minimal inline endpoint)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['request_id'])) {
+    $action = $_POST['action'];
+    $requestId = (int)$_POST['request_id'];
+    if (in_array($action, ['Accept', 'Reject'], true) && $requestId > 0) {
+        $newStatus = $action === 'Accept' ? 'Done' : 'Rejected';
+        // Align to schema: table stockrequests, column requestid, status enum Pending,Done,Rejected,Working
+        $stmt = $conn->prepare("UPDATE stock_requests SET status = ?, updated_at = NOW() WHERE request_id = ?");
+        $stmt->bind_param('si', $newStatus, $requestId);
+        $ok = $stmt->execute();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $ok]);
+        exit;
+    }
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false]);
+    exit;
+}
 
+// Fetch all stock requests with items (exclude 'Done' status)
+// Keep original aliases used by the frontend
+$sql = "SELECT 
+            sr.request_id AS id,
+            p.name,
+            sri.category,
+            sri.required_space AS requiredSpace,
+            p.image_url AS image,
+            sri.quantity,
+            sr.requested_at AS requested_at,
+            sr.updated_at AS updated_at,
+            sr.status,
+            sr.notes,
+            u.full_name AS requester_name
+        FROM stock_requests sr
+        JOIN stock_request_items sri ON sr.request_id = sri.request_id
+        JOIN products p ON sri.product_id = p.product_id
+        JOIN users u ON sr.requester_id = u.user_id
+        WHERE sr.status != 'Done'
+        ORDER BY sr.requested_at DESC";
 
+$result = $conn->query($sql);
+$requests = [];
+while ($row = $result->fetch_assoc()) {
+    $requests[] = $row;
+}
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -15,7 +57,6 @@
     <title>Inventory Requests</title>
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="all-inventory-requests.css">
-    
 </head>
 
 <body>
@@ -34,18 +75,12 @@
         </div>
 
         <div class="main-container">
-            <!-- Filter column -->
+            <!-- Filter column (removed End Date and Duration filters) -->
             <div class="filter-column">
                 <!-- Volume -->
                 <div class="filter-group">
                     <label><span>Volume more than:</span> <input type="number" id="min-volume" step="0.1"><span>m³</span></label>
                     <label><span>Volume less than:</span> <input type="number" id="max-volume" step="0.1"><span>m³</span></label>
-                </div>
-
-                <!-- Duration -->
-                <div class="filter-group">
-                    <label><span>Duration more than:</span> <input type="number" id="min-duration" step="1"><span>days</span></label>
-                    <label><span>Duration less than:</span> <input type="number" id="max-duration" step="1"><span>days</span></label>
                 </div>
 
                 <!-- Start Date -->
@@ -55,16 +90,6 @@
                     <div class="date-options">
                         <label><input type="radio" name="start-date-option" value="before"> Before this date</label>
                         <label><input type="radio" name="start-date-option" value="after"> After this date</label>
-                    </div>
-                </div>
-
-                <!-- End Date -->
-                <div class="filter-group">
-                    <h3>End Date</h3>
-                    <input type="date" id="end-date">
-                    <div class="date-options">
-                        <label><input type="radio" name="end-date-option" value="before"> Before this date</label>
-                        <label><input type="radio" name="end-date-option" value="after"> After this date</label>
                     </div>
                 </div>
 
@@ -103,8 +128,6 @@
                             <option value="request-order" selected>Request Order (First Come, First Serve)</option>
                             <option value="volume-high-low">Volume (Highest to Lowest)</option>
                             <option value="volume-low-high">Volume (Lowest to Highest)</option>
-                            <option value="duration-high-low">Duration (Highest to Lowest)</option>
-                            <option value="duration-low-high">Duration (Lowest to Highest)</option>
                             <option value="a-z">A-Z</option>
                         </select>
                     </div>
@@ -136,8 +159,10 @@
                     <p><strong>Product Name:</strong> <span id="modalName"></span></p>
                     <p><strong>Category:</strong> <span id="modalCategory"></span></p>
                     <p><strong>Quantity:</strong> <span id="modalQuantity"></span></p>
-                    <p><strong>Inventory Need From:</strong> <span id="modalStartDate"></span></p>
-                    <p><strong>Duration:</strong> <span id="modalDuration"></span> days</p>
+                    <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                    <p><strong>Requested At:</strong> <span id="modalRequestedAt"></span></p>
+                    <p><strong>Notes:</strong> <span id="modalNotes"></span></p>
+                    <p><strong>Updated At:</strong> <span id="modalUpdatedAt"></span></p>
                 </div>
                 <div class="modal-buttons">
                     <a class="switch-branch" href="#">Switch to other branch</a>
@@ -147,290 +172,214 @@
             </div>
         </div>
     </section>
-</body>
 
-<script>
-    // Sample data
-    const items = [{
-            id: 1,
-            name: "Product 1",
-            category: "Fresh Produce",
-            requiredSpace: 50000.5,
-            duration: 30,
-            image: "../../include/All Images/Single-Produc-Images/istockphoto-510618777-612x612.jpg",
-            endDate: "2025-09-10",
-            startDate: "2025-08-01",
-            quantity: "100 kg"
-        },
-        {
-            id: 2,
-            name: "Product 2",
-            category: "Dairy & Eggs",
-            requiredSpace: 120000.2,
-            duration: 45,
-            image: "../../include/All Images/Single-Produc-Images/istockphoto-510015094-612x612.jpg",
-            endDate: "2025-09-20",
-            startDate: "2025-08-05",
-            quantity: "50 litres"
-        },
-        {
-            id: 3,
-            name: "Product 3",
-            category: "Meat & Poultry",
-            requiredSpace: 30000,
-            duration: 60,
-            image: "../../include/All Images/Single-Produc-Images/istockphoto-1346380707-612x612.jpg",
-            endDate: "2025-10-05",
-            startDate: "2025-08-10",
-            quantity: "200 pcs"
-        },
-        {
-            id: 4,
-            name: "Product 4",
-            category: "Seafood",
-            requiredSpace: 80000.7,
-            duration: 20,
-            image: "../../include/All Images/Single-Produc-Images/istockphoto-2204214171-612x612.jpg",
-            endDate: "2025-09-15",
-            startDate: "2025-08-15",
-            quantity: "75 kg"
-        },
-        {
-            id: 5,
-            name: "Product 5",
-            category: "Bakery",
-            requiredSpace: 150000,
-            duration: 90,
-            image: "../../include/All Images/Single-Produc-Images/istockphoto-2226910903-612x612.jpg",
-            endDate: "2025-10-15",
-            startDate: "2025-08-20",
-            quantity: "120 pcs"
-        },
-        {
-            id: 6,
-            name: "Product 6",
-            category: "Frozen Foods",
-            requiredSpace: 20000.3,
-            duration: 15,
-            image: "../../include/All Images/Single-Produc-Images/istockphoto-2182314369-612x612.jpg",
-            endDate: "2025-09-25",
-            startDate: "2025-08-25",
-            quantity: "30 litres"
-        },
-        {
-            id: 7,
-            name: "Product 7",
-            category: "Canned Goods",
-            requiredSpace: 60000,
-            duration: 50,
-            image: "../../include/All Images/Single-Produc-Images/istockphoto-2234472958-612x612.jpg",
-            endDate: "2025-10-01",
-            startDate: "2025-08-30",
-            quantity: "150 pcs"
-        },
-        {
-            id: 8,
-            name: "Product 8",
-            category: "Snacks & Sweets",
-            requiredSpace: 90000.9,
-            duration: 25,
-            image: "../../include/All Images/Single-Produc-Images/istockphoto-695597866-612x612.jpg",
-            endDate: "2025-09-18",
-            startDate: "2025-09-01",
-            quantity: "80 kg"
-        },
-        {
-            id: 9,
-            name: "Product 9",
-            category: "Beverages",
-            requiredSpace: 40000,
-            duration: 35,
-            image: "../../include/All Images/Single-Produc-Images/istockphoto-2204214171-612x612.jpg",
-            endDate: "2025-10-10",
-            startDate: "2025-09-05",
-            quantity: "200 litres"
-        },
-        {
-            id: 10,
-            name: "Product 10",
-            category: "Household Essentials",
-            requiredSpace: 70000.4,
-            duration: 40,
-            image: "../../include/All Images/Single-Produc-Images/istockphoto-2233520596-612x612.jpg",
-            endDate: "2025-09-30",
-            startDate: "2025-09-10",
-            quantity: "90 pcs"
-        }
-    ];
+    <script>
+        // Data from PHP
+        const items = <?php echo json_encode($requests); ?>;
 
-    // Event listeners for filters
-    const filterElements = [
-        document.getElementById('min-volume'),
-        document.getElementById('max-volume'),
-        document.getElementById('min-duration'),
-        document.getElementById('max-duration'),
-        document.getElementById('start-date'),
-        ...document.querySelectorAll('input[name="start-date-option"]'),
-        document.getElementById('end-date'),
-        ...document.querySelectorAll('input[name="end-date-option"]'),
-        ...document.querySelectorAll('.category-checkbox'),
-        document.getElementById('per-page'),
-        document.getElementById('sort-by'),
-        document.getElementById('search-input')
-    ];
+        // Event listeners for filters
+        const filterElements = [
+            document.getElementById('min-volume'),
+            document.getElementById('max-volume'),
+            document.getElementById('start-date'),
+            ...document.querySelectorAll('input[name="start-date-option"]'),
+            ...document.querySelectorAll('.category-checkbox'),
+            document.getElementById('per-page'),
+            document.getElementById('sort-by'),
+            document.getElementById('search-input')
+        ];
 
-    filterElements.forEach(el => {
-        const eventType = el.type === 'radio' || el.type === 'checkbox' ? 'change' : 'input';
-        el.addEventListener(eventType, renderCards);
-    });
+        filterElements.forEach(el => {
+            const eventType = el.type === 'radio' || el.type === 'checkbox' ? 'change' : 'input';
+            el.addEventListener(eventType, renderCards);
+        });
 
-    // Pagination buttons
-    document.getElementById('first-page').addEventListener('click', () => {
-        currentPage = 0;
-        renderCards();
-    });
+        // Pagination buttons
+        document.getElementById('first-page').addEventListener('click', () => {
+            currentPage = 0;
+            renderCards();
+        });
 
-    document.getElementById('prev-page').addEventListener('click', () => {
-        if (currentPage > 0) currentPage--;
-        renderCards();
-    });
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 0) currentPage--;
+            renderCards();
+        });
 
-    document.getElementById('next-page').addEventListener('click', () => {
-        if (currentPage < totalPages - 1) currentPage++;
-        renderCards();
-    });
+        document.getElementById('next-page').addEventListener('click', () => {
+            if (currentPage < totalPages - 1) currentPage++;
+            renderCards();
+        });
 
-    document.getElementById('last-page').addEventListener('click', () => {
-        currentPage = totalPages - 1;
-        renderCards();
-    });
+        document.getElementById('last-page').addEventListener('click', () => {
+            currentPage = totalPages - 1;
+            renderCards();
+        });
 
-    // Modal functionality
-    const modal = document.getElementById('requestModal');
-    const closeModal = document.querySelector('.close-modal');
+        // Modal functionality
+        const modal = document.getElementById('requestModal');
+        const closeModalBtn = document.querySelector('.close-modal');
 
-    closeModal.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
+        closeModalBtn.addEventListener('click', () => {
             modal.style.display = 'none';
-        }
-    });
-
-    // Initial render
-    let currentPage = 0;
-    let totalPages = 1;
-    renderCards();
-
-    function renderCards() {
-        const minVolume = parseFloat(document.getElementById('min-volume').value) || 0;
-        const maxVolume = parseFloat(document.getElementById('max-volume').value) || Infinity;
-        const minDuration = parseInt(document.getElementById('min-duration').value, 10) || 0;
-        const maxDuration = parseInt(document.getElementById('max-duration').value, 10) || Infinity;
-        const startDate = document.getElementById('start-date').value;
-        const startOption = document.querySelector('input[name="start-date-option"]:checked')?.value;
-        const endDate = document.getElementById('end-date').value;
-        const endOption = document.querySelector('input[name="end-date-option"]:checked')?.value;
-        const selectedCategories = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
-        const searchQuery = document.getElementById('search-input').value.toLowerCase();
-        const sortValue = document.getElementById('sort-by').value;
-        const perPage = document.getElementById('per-page').value === 'all' ? items.length : parseInt(document.getElementById('per-page').value, 10);
-
-        let filtered = items.filter(item => {
-            if (item.requiredSpace < minVolume || item.requiredSpace > maxVolume) return false;
-            if (item.duration < minDuration || item.duration > maxDuration) return false;
-            if (selectedCategories.length > 0 && !selectedCategories.includes(item.category)) return false;
-            if (searchQuery && !item.name.toLowerCase().includes(searchQuery)) return false;
-
-            if (startDate && startOption) {
-                const itemStart = new Date(item.startDate);
-                const selected = new Date(startDate);
-                if (startOption === 'before' && itemStart >= selected) return false;
-                if (startOption === 'after' && itemStart <= selected) return false;
-            }
-
-            if (endDate && endOption) {
-                const itemEnd = new Date(item.endDate);
-                const selected = new Date(endDate);
-                if (endOption === 'before' && itemEnd >= selected) return false;
-                if (endOption === 'after' && itemEnd <= selected) return false;
-            }
-
-            return true;
         });
 
-        // Sort
-        if (sortValue === 'volume-high-low') {
-            filtered.sort((a, b) => b.requiredSpace - a.requiredSpace);
-        } else if (sortValue === 'volume-low-high') {
-            filtered.sort((a, b) => a.requiredSpace - b.requiredSpace);
-        } else if (sortValue === 'duration-high-low') {
-            filtered.sort((a, b) => b.duration - a.duration);
-        } else if (sortValue === 'duration-low-high') {
-            filtered.sort((a, b) => a.duration - b.duration);
-        } else if (sortValue === 'a-z') {
-            filtered.sort((a, b) => a.name.localeCompare(b.name));
-        } else if (sortValue === 'request-order') {
-            filtered.sort((a, b) => a.id - b.id);
-        }
-
-        // Update header
-        const header = document.getElementById('requests-header');
-        header.innerText = filtered.length === items.length ? 'All Requests' : 'Filtered Requests';
-
-        // Pagination
-        totalPages = Math.ceil(filtered.length / perPage);
-        if (currentPage > totalPages - 1) currentPage = 0;
-        const start = currentPage * perPage;
-        const pageItems = filtered.slice(start, start + perPage);
-
-        // Render cards
-        const container = document.querySelector('.products-container');
-        container.innerHTML = '';
-        pageItems.forEach(item => {
-            const card = document.createElement('div');
-            card.classList.add('product-row');
-            card.innerHTML = `
-                <img src="${item.image}" alt="${item.name}">
-                <div class="product-info">
-                    <h3>${item.name}</h3>
-                    <span>Category: ${item.category}</span>
-                    <span>Required Space: ${item.requiredSpace} m³</span>
-                    <span>Duration: ${item.duration} days</span>
-                    <a class="view-details-link" href="#" data-id="${item.id}">View Details</a>
-                </div>
-            `;
-            container.appendChild(card);
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
         });
 
-        // Add event listeners for view details
-        document.querySelectorAll('.view-details-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const itemId = parseInt(link.getAttribute('data-id'));
-                const item = items.find(i => i.id === itemId);
-                if (item) {
-                    document.getElementById('modalHeading').textContent = `Inventory Request for ${item.requiredSpace} m³`;
-                    document.getElementById('modalImage').src = item.image;
-                    document.getElementById('modalName').textContent = item.name;
-                    document.getElementById('modalCategory').textContent = item.category;
-                    document.getElementById('modalQuantity').textContent = item.quantity;
-                    document.getElementById('modalStartDate').textContent = item.startDate;
-                    document.getElementById('modalDuration').textContent = item.duration;
-                    modal.style.display = 'block';
+        // Track selected item id for actions
+        let selectedRequestId = null;
+
+        // Initial render
+        let currentPage = 0;
+        let totalPages = 1;
+        renderCards();
+
+        function renderCards() {
+            const minVolume = parseFloat(document.getElementById('min-volume').value) || 0;
+            const maxVolume = parseFloat(document.getElementById('max-volume').value) || Infinity;
+            const startDate = document.getElementById('start-date').value;
+            const startOption = document.querySelector('input[name="start-date-option"]:checked')?.value;
+            const selectedCategories = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            const sortValue = document.getElementById('sort-by').value;
+            const perPage = document.getElementById('per-page').value === 'all' ? items.length : parseInt(document.getElementById('per-page').value, 10);
+
+            let filtered = items.filter(item => {
+                if (item.requiredSpace < minVolume || item.requiredSpace > maxVolume) return false;
+                if (selectedCategories.length > 0 && !selectedCategories.includes(item.category)) return false;
+                if (searchQuery && !item.name.toLowerCase().includes(searchQuery)) return false;
+
+                if (startDate && startOption) {
+                    const itemStart = new Date(item.requested_at);
+                    const selected = new Date(startDate);
+                    if (startOption === 'before' && itemStart >= selected) return false;
+                    if (startOption === 'after' && itemStart <= selected) return false;
                 }
-            });
-        });
 
-        // Update pagination info
-        document.getElementById('page-info').innerText = `${totalPages > 0 ? currentPage + 1 : 0} / ${totalPages || 1}`;
-        document.getElementById('first-page').disabled = currentPage === 0;
-        document.getElementById('prev-page').disabled = currentPage === 0;
-        document.getElementById('next-page').disabled = currentPage >= totalPages - 1;
-        document.getElementById('last-page').disabled = currentPage >= totalPages - 1;
-    }
-</script>
+                return true;
+            });
+
+            // Sort
+            if (sortValue === 'volume-high-low') {
+                filtered.sort((a, b) => b.requiredSpace - a.requiredSpace);
+            } else if (sortValue === 'volume-low-high') {
+                filtered.sort((a, b) => a.requiredSpace - b.requiredSpace);
+            } else if (sortValue === 'a-z') {
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortValue === 'request-order') {
+                filtered.sort((a, b) => a.id - b.id);
+            }
+
+            // Update header
+            const header = document.getElementById('requests-header');
+            header.innerText = filtered.length === items.length ? 'All Requests' : 'Filtered Requests';
+
+            // Pagination
+            totalPages = Math.ceil(filtered.length / perPage);
+            if (currentPage > totalPages - 1) currentPage = 0;
+            const start = currentPage * perPage;
+            const pageItems = filtered.slice(start, start + perPage);
+
+            // Render cards
+            const container = document.querySelector('.products-container');
+            container.innerHTML = '';
+            pageItems.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('product-row');
+                card.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}">
+                    <div class="product-info">
+                        <h3>${item.name}</h3>
+                        <span>Category: ${item.category}</span>
+                        <span>Required Space: ${item.requiredSpace} m³</span>
+                        <span>Requested At: ${item.requested_at}</span>
+                        <a class="view-details-link" href="#" data-id="${item.id}">View Details</a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Add event listeners for view details
+            document.querySelectorAll('.view-details-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const itemId = parseInt(link.getAttribute('data-id'));
+                    const item = items.find(i => i.id == itemId); // allow string/number id
+                    if (item) {
+                        selectedRequestId = item.id;
+                        document.getElementById('modalHeading').textContent = `Inventory Request for ${item.requiredSpace} m³`;
+                        document.getElementById('modalImage').src = item.image;
+                        document.getElementById('modalName').textContent = item.name;
+                        document.getElementById('modalCategory').textContent = item.category;
+                        document.getElementById('modalQuantity').textContent = item.quantity;
+                        document.getElementById('modalStatus').textContent = item.status;
+                        document.getElementById('modalRequestedAt').textContent = item.requested_at;
+                        document.getElementById('modalNotes').textContent = item.notes;
+                        document.getElementById('modalUpdatedAt').textContent = item.updated_at;
+                        modal.style.display = 'block';
+                    }
+                });
+            });
+
+            // Wire up Accept/Reject buttons once modal exists
+            const acceptBtn = document.querySelector('.accept');
+            const rejectBtn = document.querySelector('.reject');
+
+            if (acceptBtn && !acceptBtn._bound) {
+                acceptBtn._bound = true;
+                acceptBtn.addEventListener('click', async () => {
+                    if (!selectedRequestId) return;
+                    await updateRequestStatus('Accept', selectedRequestId);
+                });
+            }
+            if (rejectBtn && !rejectBtn._bound) {
+                rejectBtn._bound = true;
+                rejectBtn.addEventListener('click', async () => {
+                    if (!selectedRequestId) return;
+                    await updateRequestStatus('Reject', selectedRequestId);
+                });
+            }
+
+            // Update pagination info
+            document.getElementById('page-info').innerText = `${totalPages > 0 ? currentPage + 1 : 0} / ${totalPages || 1}`;
+            document.getElementById('first-page').disabled = currentPage === 0;
+            document.getElementById('prev-page').disabled = currentPage === 0;
+            document.getElementById('next-page').disabled = currentPage >= totalPages - 1;
+            document.getElementById('last-page').disabled = currentPage >= totalPages - 1;
+        }
+
+        async function updateRequestStatus(action, requestId) {
+            try {
+                const formData = new FormData();
+                formData.append('action', action);
+                formData.append('request_id', requestId);
+
+                const res = await fetch(location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data && data.success) {
+                    // Update local state to reflect the change (status field)
+                    const idx = items.findIndex(i => i.id == requestId);
+                    if (idx > -1) {
+                        items[idx].status = action === 'Accept' ? 'Done' : 'Rejected';
+                    }
+                    // Close modal and re-render to remove Done items from list
+                    document.getElementById('requestModal').style.display = 'none';
+                    renderCards();
+                } else {
+                    alert('Failed to update status.');
+                }
+            } catch (e) {
+                alert('Error updating status.');
+            }
+        }
+    </script>
+
+</body>
 
 </html>
