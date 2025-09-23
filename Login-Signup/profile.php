@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
 }
 
 // Fetch current user data
-$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at FROM users WHERE user_id = ?");
+$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
