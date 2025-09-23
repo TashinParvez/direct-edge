@@ -27,8 +27,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Verify password
         if (password_verify($password, $user['password'])) {
+            // Store all user information in session for profile page
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['phone'] = $user['phone'];
+            $_SESSION['full_name'] = $user['full_name'];
+            $_SESSION['email'] = $user['email'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['created_at'] = $user['created_at'];
+
+            // Optional: Store login time for security
+            $_SESSION['login_time'] = date('Y-m-d H:i:s');
 
             header("Location: profile.php");
             exit();
@@ -40,8 +48,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -173,7 +179,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             alert("<?php echo $error; ?>");
         </script>
     <?php endif; ?>
-
 
 </body>
 
