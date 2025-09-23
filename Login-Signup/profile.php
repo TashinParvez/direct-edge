@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
 }
 
 // Fetch current user data
-$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at FROM users WHERE user_id = ?");
+$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at, image_url FROM users WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -107,8 +107,12 @@ $conn->close();
                 </div>
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
-                            <span class="text-white text-sm font-medium"><?php echo strtoupper(substr($user['full_name'], 0, 1)); ?></span>
+                        <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center overflow-hidden">
+                            <?php if (!empty($user['image_url']) && file_exists($user['image_url'])): ?>
+                        <img src="<?php echo htmlspecialchars($user['image_url']); ?>" alt="Profile" class="w-full h-full object-cover">
+                    <?php else: ?>
+                        <span class="text-white text-sm font-medium"><?php echo strtoupper(substr($user['full_name'], 0, 1)); ?></span>
+                    <?php endif; ?>
                         </div>
                         <span class="text-gray-700 text-sm font-medium"><?php echo htmlspecialchars($user['full_name']); ?></span>
                     </div>
@@ -125,8 +129,12 @@ $conn->close();
         <div class="bg-white overflow-hidden shadow rounded-lg mb-6">
             <div class="bg-gradient-to-r from-green-600 to-blue-600 px-4 py-5 sm:px-6">
                 <div class="flex items-center">
-                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
-                        <span class="text-3xl font-bold text-green-600"><?php echo strtoupper(substr($user['full_name'], 0, 1)); ?></span>
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+                        <?php if (!empty($user['image_url']) && file_exists($user['image_url'])): ?>
+                    <img src="<?php echo htmlspecialchars($user['image_url']); ?>" alt="<?php echo htmlspecialchars($user['full_name']); ?>" class="w-full h-full object-cover">
+                <?php else: ?>
+                    <span class="text-3xl font-bold text-green-600"><?php echo strtoupper(substr($user['full_name'], 0, 1)); ?></span>
+                <?php endif; ?>
                     </div>
                     <div class="ml-6">
                         <h1 class="text-2xl font-bold text-white"><?php echo htmlspecialchars($user['full_name']); ?></h1>
@@ -305,7 +313,7 @@ $conn->close();
 
                                 <button type="submit" name="update_profile"
                                     class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-sm">
-                                    💾 Save Changes
+                                    Save Changes
                                 </button>
                             </div>
                         </form>
