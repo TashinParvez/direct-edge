@@ -1,5 +1,6 @@
 <?php
-// Database connection
+session_start();
+
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -10,39 +11,29 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-session_start();
-
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $phone = mysqli_real_escape_string($conn, $_POST['phone']);
     $password = $_POST['password'];
 
-    // Fetch user by phone - get ALL fields needed for profile page
-    $sql = "SELECT user_id, full_name, email, phone, password, role, created_at FROM users WHERE phone = '$phone' LIMIT 1";
+    $sql = "SELECT user_id, full_name, email, phone, password, role, created_at 
+            FROM users WHERE phone = '$phone' LIMIT 1";
     $result = mysqli_query($conn, $sql);
 
     if ($result && mysqli_num_rows($result) > 0) {
         $user = mysqli_fetch_assoc($result);
 
-        // Verify password
         if (password_verify($password, $user['password'])) {
-            // Store ALL user information in session for profile page
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['phone'] = $user['phone'];
+            // ✅ Fix user_id mismatch
+            $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['full_name'] = $user['full_name'];
             $_SESSION['email'] = $user['email'];
+            $_SESSION['phone'] = $user['phone'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['created_at'] = $user['created_at'];
             $_SESSION['login_time'] = date('Y-m-d H:i:s');
 
-            // Debug: Check if session data is set
-            error_log("Session data set: " . json_encode($_SESSION));
-
-            // Close database connection before redirect
-            mysqli_close($conn);
-
-            // Redirect to profile page
             header("Location: profile.php");
             exit();
         } else {
@@ -53,11 +44,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-// Close connection if still open
-if ($conn) {
-    mysqli_close($conn);
-}
+mysqli_close($conn);
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -167,7 +156,7 @@ if ($conn) {
                 </div>
             <?php endif; ?>
 
-            <form action="profile.php" method="POST" class="space-y-4">
+            <form action="login.php" method="POST" class="space-y-4">
                 <div>
                     <label for="phone" class="block mb-1 text-sm font-medium text-gray-700">Phone Number</label>
                     <input type="text" id="phone" name="phone" placeholder="+8801744177620" required

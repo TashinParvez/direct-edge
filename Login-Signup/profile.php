@@ -34,14 +34,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
     if (!empty($_POST['new_password'])) {
         if ($_POST['new_password'] === $_POST['confirm_password']) {
             $hashed_password = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, role = ?, password = ? WHERE id = ?");
+            $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, role = ?, password = ? WHERE user_id = ?");
             $stmt->bind_param("sssssi", $full_name, $email, $phone, $role, $hashed_password, $user_id);
         } else {
             $message = "New passwords do not match!";
             $messageType = "error";
         }
     } else {
-        $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, role = ? WHERE id = ?");
+        $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, role = ? WHERE user_id = ?");
         $stmt->bind_param("ssssi", $full_name, $email, $phone, $role, $user_id);
     }
 
@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
 }
 
 // Fetch current user data
-$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at FROM users WHERE id = ?");
+$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at FROM users WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -78,6 +78,7 @@ $conn->close();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -88,7 +89,7 @@ $conn->close();
 </head>
 
 <body class="bg-gray-50">
-    <!-- Navigation Header -->
+    <!-- Navigation Header
     <nav class="bg-white shadow-lg border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -117,7 +118,7 @@ $conn->close();
                 </div>
             </div>
         </div>
-    </nav>
+    </nav> -->
 
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <!-- Profile Header -->
@@ -130,10 +131,10 @@ $conn->close();
                     <div class="ml-6">
                         <h1 class="text-2xl font-bold text-white"><?php echo htmlspecialchars($user['full_name']); ?></h1>
                         <p class="text-green-100">
-                            <?php 
+                            <?php
                             $roleDisplay = [
                                 'Admin' => '🔧 Administrator',
-                                'Shop-Owner' => '🏪 Shop Owner', 
+                                'Shop-Owner' => '🏪 Shop Owner',
                                 'Agent' => '🌾 Agricultural Agent',
                                 'User' => '👤 Platform User'
                             ];
@@ -174,12 +175,19 @@ $conn->close();
                                 <dt class="text-sm font-medium text-gray-500">Account Type</dt>
                                 <dd class="mt-1">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                        <?php 
-                                        switch($user['role']) {
-                                            case 'Admin': echo 'bg-red-100 text-red-800'; break;
-                                            case 'Shop-Owner': echo 'bg-purple-100 text-purple-800'; break;
-                                            case 'Agent': echo 'bg-green-100 text-green-800'; break;
-                                            default: echo 'bg-blue-100 text-blue-800';
+                                        <?php
+                                        switch ($user['role']) {
+                                            case 'Admin':
+                                                echo 'bg-red-100 text-red-800';
+                                                break;
+                                            case 'Shop-Owner':
+                                                echo 'bg-purple-100 text-purple-800';
+                                                break;
+                                            case 'Agent':
+                                                echo 'bg-green-100 text-green-800';
+                                                break;
+                                            default:
+                                                echo 'bg-blue-100 text-blue-800';
                                         }
                                         ?>">
                                         <?php echo htmlspecialchars($user['role']); ?>
@@ -290,7 +298,7 @@ $conn->close();
 
                             <!-- Form Actions -->
                             <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-                                <button type="button" onclick="window.location.reload()" 
+                                <button type="button" onclick="window.location.reload()"
                                     class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                     Cancel
                                 </button>
@@ -411,4 +419,5 @@ $conn->close();
         console.log('DirectEdge Profile Page Loaded Successfully');
     </script>
 </body>
+
 </html>
