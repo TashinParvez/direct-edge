@@ -39,7 +39,7 @@
         $usedCapacity = array_sum(array_column($inventory, 'quantity'));
         $freeCapacity = $totalCapacity - $usedCapacity;
         $itemCount = count($inventory);
-        $currentDate = new DateTime('2025-09-23'); // Today's date as per system
+        $currentDate = new DateTime('2025-09-23');
         ?>
         <div class="metrics-grid">
             <div class="metric-card">
@@ -65,27 +65,27 @@
                     <div class="dropdown-menu" id="dropdownMenu">
                         <div class="group">
                             <span class="group-title">Status</span>
-                            <label><input type="checkbox" class="filter-option" value="all"> all</label>
+                            <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
                             <label><input type="checkbox" class="filter-option" value="In progress"> In progress</label>
                             <label><input type="checkbox" class="filter-option" value="Completed"> Completed</label>
                         </div>
                         <div class="group">
                             <span class="group-title">Capacity</span>
-                            <label><input type="checkbox" class="filter-option" value="all"> all</label>
+                            <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
                             <label><input type="checkbox" class="filter-option" value="low"> low</label>
                             <label><input type="checkbox" class="filter-option" value="medium"> medium</label>
                             <label><input type="checkbox" class="filter-option" value="high"> high</label>
                         </div>
                         <div class="group">
                             <span class="group-title">Warehouse</span>
-                            <label><input type="checkbox" class="filter-option" value="all"> all</label>
+                            <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
                             <label><input type="checkbox" class="filter-option" value="Warehouse A"> Warehouse A</label>
                             <label><input type="checkbox" class="filter-option" value="Warehouse B"> Warehouse B</label>
                             <label><input type="checkbox" class="filter-option" value="Warehouse C"> Warehouse C</label>
                         </div>
                         <div class="group">
                             <span class="group-title">Unit</span>
-                            <label><input type="checkbox" class="filter-option" value="all"> all</label>
+                            <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
                             <label><input type="checkbox" class="filter-option" value="kg"> kg</label>
                             <label><input type="checkbox" class="filter-option" value="units"> units</label>
                         </div>
@@ -112,7 +112,6 @@
             <table id="productTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Product Code</th>
                         <th>Product Name</th>
                         <th>Special Instructions</th>
@@ -134,7 +133,6 @@
                         $offerSuggestion = ($item['quantity'] < 50 || $monthsDiff >= 6) ? '10% Discount' : 'No Offer';
                         echo "
                         <tr data-id='{$item['id']}' data-offer='$offerSuggestion'>
-                            <td>{$item['id']}</td>
                             <td>{$item['product_code']}</td>
                             <td>{$item['product']}</td>
                             <td>" . ($item['special_instructions'] ?? '—') . "</td>
@@ -152,20 +150,17 @@
                         </tr>";
                     } ?>
                 </tbody>
-                <tfoot id="totalRow" style="display: none;">
+                <tfoot id="totalRow">
                     <tr>
-                        <td colspan="2">Totals:</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td colspan="3">
-                            <span class="label">Items:</span>
+                       
+                        <td colspan="4" >
+                            <span class="label">TotalItems:</span>
                             <span class="value" id="totalItems">0</span>
+                            
                         </td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td colspan="6"><span class="label">TotalQuantity:</span>
+                            <span class="value" id="totalQuantity">0</span></td>
+                       
                     </tr>
                 </tfoot>
             </table>
@@ -186,7 +181,7 @@
 
         <div id="addProductPopup" class="popup">
             <div class="popup-content">
-                <span class="close-btn" onclick="closePopup()">&times;</span>
+                <span class="close-btn" onclick="closePopup('add')">&times;</span>
                 <h2>Add New Product</h2>
                 <form id="addProductForm">
                     <label for="productCode">Product Code:</label>

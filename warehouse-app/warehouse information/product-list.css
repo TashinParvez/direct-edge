@@ -9,8 +9,18 @@ body {
     max-width: 1200px;
     margin: 20px auto;
     padding: 20px;
+    border: 2px solid red;
+  border-radius: 25px;
+animation: borderColor 3s linear infinite;
 }
 
+@keyframes borderColor {
+  0%   { border-color: red; }
+  25%  { border-color: blue; }
+  50%  { border-color: green; }
+  75%  { border-color: orange; }
+  100% { border-color: red; }
+}
 h1 {
     text-align: center;
     color: #333;
@@ -28,10 +38,14 @@ h1 {
     font-family: Arial, sans-serif;
     position: relative;
     display: inline-block;
+    padding: 10px;
+     /* border: 2px solid red;
+    border-radius: 25px; */
 }
 
 .dropdown-toggle {
     padding: 8px 12px;
+    
     border-radius: 20px;
     border: 1px solid #bcd;
     background: #f9f9f9;
@@ -87,13 +101,13 @@ h1 {
 .dropdown-footer button {
     background: none;
     border: none;
-    color: #007bff;
+    color: #fc2c2c;
     cursor: pointer;
     font-size: 14px;
 }
 
 .apply-btn {
-    background-color: #007bff;
+    background-color: #e50a0a;
     color: white;
     padding: 6px 14px;
     border-radius: 20px;
@@ -110,13 +124,13 @@ h1 {
 }
 
 #searchInput:focus {
-    border-color: #007bff;
+    border-color: #fc2c2c;
     outline: none;
 }
 
 #addProductBtn {
     padding: 10px 20px;
-    background: linear-gradient(90deg, #007bff, #0056b3);
+    background: linear-gradient(90deg, #fc2c2c, #ff3939);
     color: white;
     border: none;
     border-radius: 4px;
@@ -127,7 +141,7 @@ h1 {
 
 #addProductBtn:hover {
     transform: scale(1.05);
-    background: linear-gradient(90deg, #0056b3, #003d80);
+    background: linear-gradient(90deg,  #f31010, #a10404);
 }
 
 table {
@@ -135,6 +149,7 @@ table {
     border-collapse: collapse;
     background: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    
 }
 
 th, td {
@@ -148,7 +163,7 @@ th, td {
 }
 
 th {
-    background: linear-gradient(90deg, #007bff, #218cff);
+    background: linear-gradient(90deg, #fc2c2c, #ff3939);
     color: #fff;
 }
 
@@ -177,7 +192,7 @@ th:nth-child(9), td:nth-child(9) { width: 8%; } /* Actions */
 }
 
 .edit-btn:hover {
-    color: #007bff;
+    color: #005dc8;
     transform: scale(1.2);
 }
 
@@ -196,7 +211,7 @@ th:nth-child(9), td:nth-child(9) { width: 8%; } /* Actions */
 
 .pagination button {
     padding: 5px 10px;
-    border: 1px solid #007bff;
+    border: 1px solid #fc2c2c;
     background: #fff;
     cursor: pointer;
     border-radius: 4px;
@@ -204,7 +219,7 @@ th:nth-child(9), td:nth-child(9) { width: 8%; } /* Actions */
 }
 
 .pagination button:hover:not(:disabled) {
-    background: #007bff;
+    background: #fc2c2c;
     color: #fff;
     transform: translateY(-2px);
 }
@@ -220,7 +235,7 @@ th:nth-child(9), td:nth-child(9) { width: 8%; } /* Actions */
 }
 
 .pagination #pageNumbers .active {
-    background: #007bff;
+    background: #fc2c2c;
     color: #fff;
 }
 
@@ -232,7 +247,7 @@ th:nth-child(9), td:nth-child(9) { width: 8%; } /* Actions */
 }
 
 .pagination select:focus {
-    border-color: #007bff;
+    border-color: #fc2c2c;
     outline: none;
 }
 
@@ -250,7 +265,7 @@ th:nth-child(9), td:nth-child(9) { width: 8%; } /* Actions */
     position: fixed;
     top: 20px;
     right: 20px;
-    background: #4caf50;
+    background: #fc2c2c;
     color: white;
     padding: 12px 20px;
     border-radius: 6px;
@@ -357,14 +372,14 @@ th:nth-child(9), td:nth-child(9) { width: 8%; } /* Actions */
 }
 
 #addProductForm input:focus, #addProductForm select:focus, #editProductForm input:focus, #editProductForm select:focus {
-    border-color: #007bff;
+    border-color: #fc2c2c;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     outline: none;
 }
 
 #addProductForm button[type="submit"], #editProductForm button[type="submit"] {
     padding: 12px;
-    background: linear-gradient(90deg, #28a745, #218838);
+    background: linear-gradient(90deg, #fc2c2c, #ff3939);
     color: white;
     border: none;
     border-radius: 6px;
@@ -376,7 +391,7 @@ th:nth-child(9), td:nth-child(9) { width: 8%; } /* Actions */
 
 #addProductForm button[type="submit"]:hover, #editProductForm button[type="submit"]:hover {
     transform: scale(1.05);
-    background: linear-gradient(90deg, #218838, #1e7e34);
+    background: linear-gradient(90deg, #a50909, #940b0b);
 }
 
 #addProductForm::-webkit-scrollbar, #editProductForm::-webkit-scrollbar {
@@ -389,12 +404,12 @@ th:nth-child(9), td:nth-child(9) { width: 8%; } /* Actions */
 }
 
 #addProductForm::-webkit-scrollbar-thumb, #editProductForm::-webkit-scrollbar-thumb {
-    background: #007bff;
+    background: #fc2c2c;
     border-radius: 4px;
 }
 
 #addProductForm::-webkit-scrollbar-thumb:hover, #editProductForm::-webkit-scrollbar-thumb:hover {
-    background: #0056b3;
+    background:#fc2c2c;
 }
 
 .image-preview {
@@ -420,7 +435,7 @@ th:nth-child(9), td:nth-child(9) { width: 8%; } /* Actions */
 tfoot#totalRow {
     background-color: #f0f0f0;
     font-weight: bold;
-    border-top: 2px solid #007bff;
+    border-top: 2px solid #fc2c2c;
 }
 
 tfoot#totalRow td {
@@ -440,6 +455,6 @@ tfoot#totalRow .label {
 }
 
 tfoot#totalRow .value {
-    color: #007bff;
+    color: #fc2c2c;
     font-weight: bold;
 }
