@@ -142,7 +142,7 @@ h1 {
     outline: none;
 }
 
-#addProductBtn {
+#addProductBtn, #createOfferBtn {
     padding: 10px 20px;
     background: linear-gradient(90deg, #007bff, #0056b3);
     color: white;
@@ -153,21 +153,9 @@ h1 {
     transition: transform 0.2s, background 0.3s;
 }
 
-#addProductBtn:hover {
+#addProductBtn:hover, #createOfferBtn:hover {
     transform: scale(1.05);
     background: linear-gradient(90deg, #0056b3, #003d80);
-}
-
-
-th, td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-    /* Ensure table cells adjust to content */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 150px; /* Adjust as needed */
 }
 
 table {
@@ -175,50 +163,62 @@ table {
     border-collapse: collapse;
     background: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    table-layout: fixed; /* Helps with column width consistency */
-}
-
-/* Optional: Specific styling for the Warehouse column */
-td:nth-child(8) {
-    background-color: #f9f9f9; /* Light gray background for distinction */
-}
-
-/* table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 th, td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #ddd;
-} */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
 
 th {
     background: linear-gradient(90deg, #007bff, #218cff);
     color: #fff;
 }
 
+td:nth-child(8) {
+    background-color: #f9f9f9;
+}
+
+th:nth-child(9), td:nth-child(9), th:nth-child(3), td:nth-child(3), th:nth-child(2), td:nth-child(2), th:nth-child(1), td:nth-child(1) {
+    max-width: 200px;
+    white-space: normal;
+    overflow: visible;
+}
+
+/* Increase column widths */
+th:nth-child(1), td:nth-child(1) { width: 5%; } /* Product Code */
+th:nth-child(2), td:nth-child(2) { width: 10%; } /* Name */
+th:nth-child(3), td:nth-child(3) { width: 15%; } /* Special Instructions */
+th:nth-child(4), td:nth-child(4) { width: 10%; } /* Date */
+th:nth-child(5), td:nth-child(5) { width: 10%; } /* Quantity */
+th:nth-child(6), td:nth-child(6) { width: 8%; } /* Unit */
+th:nth-child(7), td:nth-child(7) { width: 10%; } /* Status */
+th:nth-child(8), td:nth-child(8) { width: 10%; } /* Warehouse */
+th:nth-child(9), td:nth-child(9) { width: 10%; } /* Offer Suggestion */
+th:nth-child(10), td:nth-child(10) { width: 10%; } /* Actions */
+
 .low-stock {
     color: #dc3545;
 }
 
 .in-progress {
-    color: #ffc107; /* Yellow for "In progress" */
+    color: #ffc107;
 }
 
 .completed {
-    color: #28a745; /* Green for "Completed" */
+    color: #28a745;
 }
 
 .action-btn {
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 16px;
-    margin-right: 5px;
+    font-size: 20px;
     transition: color 0.3s;
 }
 
@@ -229,6 +229,15 @@ th {
 
 .delete-btn:hover {
     color: #dc3545;
+    transform: scale(1.2);
+}
+
+.offer-btn {
+    color: #28a745;
+}
+
+.offer-btn:hover {
+    color: #1e7e34;
     transform: scale(1.2);
 }
 
@@ -291,26 +300,26 @@ th {
     animation: fadeIn 0.5s;
 }
 
-/* .success-message {
-    padding: 10px;
-    background: #d4edda;
-    color: #155724;
-    border-radius: 4px;
-    text-align: center;
-    margin-bottom: 20px;
-    animation: fadeIn 0.5s;
+#successMessage {
     display: none;
     position: fixed;
     top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1001;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    right: 20px;
+    background: #4caf50;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
 }
 
-.success-message.show {
+#successMessage.show {
     display: block;
-} */
+    opacity: 1;
+}
 
 @keyframes fadeIn {
     from { opacity: 0; }
@@ -322,7 +331,6 @@ th {
     to { opacity: 0; }
 }
 
-/* Popup Styles with Animation */
 .popup {
     display: none;
     position: fixed;
@@ -366,45 +374,43 @@ th {
     transform: rotate(90deg);
 }
 
-#addProductForm {
+#addProductForm, #editProductForm, #offerForm {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    max-height: 60vh; /* Limit height to 60% of viewport height */
-    overflow-y: auto; /* Vertical scrollbar only */
-    overflow-x: hidden; /* Prevent horizontal scrollbar */
-    padding-right: 10px; /* Space for scrollbar */
+    max-height: 60vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
 }
 
-#addProductForm label {
+#addProductForm label, #editProductForm label, #offerForm label {
     font-weight: bold;
     color: #333;
     padding-left: 5px;
     transition: color 0.3s;
 }
 
-#addProductForm label:hover {
+#addProductForm label:hover, #editProductForm label:hover, #offerForm label:hover {
     color: #0056b3;
 }
 
-#addProductForm input,
-#addProductForm select {
+#addProductForm input, #addProductForm select, #editProductForm input, #editProductForm select, #offerForm input, #offerForm select {
     padding: 10px;
     border: 2px solid #ddd;
     border-radius: 6px;
     font-size: 14px;
     transition: border-color 0.3s, box-shadow 0.3s;
-    width: 100%; /* Ensure inputs take full width */
+    width: 100%;
 }
 
-#addProductForm input:focus,
-#addProductForm select:focus {
+#addProductForm input:focus, #addProductForm select:focus, #editProductForm input:focus, #editProductForm select:focus, #offerForm input:focus, #offerForm select:focus {
     border-color: #007bff;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     outline: none;
 }
 
-#addProductForm button[type="submit"] {
+#addProductForm button[type="submit"], #editProductForm button[type="submit"], #offerForm button[type="submit"] {
     padding: 12px;
     background: linear-gradient(90deg, #28a745, #218838);
     color: white;
@@ -413,129 +419,36 @@ th {
     cursor: pointer;
     font-weight: bold;
     transition: transform 0.3s, background 0.3s;
-    width: 100%; /* Ensure button takes full width */
+    width: 100%;
 }
 
-#addProductForm button[type="submit"]:hover {
+#addProductForm button[type="submit"]:hover, #editProductForm button[type="submit"]:hover, #offerForm button[type="submit"]:hover {
     transform: scale(1.05);
     background: linear-gradient(90deg, #218838, #1e7e34);
 }
 
-/* Scrollbar Styling (Vertical only) */
-#addProductForm::-webkit-scrollbar {
-    width: 8px; /* Thin vertical scrollbar */
+#addProductForm::-webkit-scrollbar, #editProductForm::-webkit-scrollbar, #offerForm::-webkit-scrollbar {
+    width: 8px;
 }
 
-#addProductForm::-webkit-scrollbar-track {
+#addProductForm::-webkit-scrollbar-track, #editProductForm::-webkit-scrollbar-track, #offerForm::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
 }
 
-#addProductForm::-webkit-scrollbar-thumb {
+#addProductForm::-webkit-scrollbar-thumb, #editProductForm::-webkit-scrollbar-thumb, #offerForm::-webkit-scrollbar-thumb {
     background: #007bff;
     border-radius: 4px;
 }
 
-#addProductForm::-webkit-scrollbar-thumb:hover {
+#addProductForm::-webkit-scrollbar-thumb:hover, #editProductForm::-webkit-scrollbar-thumb:hover, #offerForm::-webkit-scrollbar-thumb:hover {
     background: #0056b3;
 }
 
-#editProductForm {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-height: 60vh; /* Limit height to 60% of viewport height */
-    overflow-y: auto; /* Vertical scrollbar only */
-    overflow-x: hidden; /* Prevent horizontal scrollbar */
-    padding-right: 10px; /* Space for scrollbar */
+.list-view {
+    overflow-x: auto;
 }
 
-#editProductForm label {
-    font-weight: bold;
-    color: #333;
-    padding-left: 5px;
-    transition: color 0.3s;
-}
-
-#editProductForm label:hover {
-    color: #0056b3;
-}
-
-#editProductForm input,
-#editProductForm select {
-    padding: 10px;
-    border: 2px solid #ddd;
-    border-radius: 6px;
-    font-size: 14px;
-    transition: border-color 0.3s, box-shadow 0.3s;
-    width: 100%; /* Ensure inputs take full width */
-}
-
-#editProductForm input:focus,
-#editProductForm select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    outline: none;
-}
-
-#editProductForm button[type="submit"] {
-    padding: 12px;
-    background: linear-gradient(90deg, #28a745, #218838);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: transform 0.3s, background 0.3s;
-    width: 100%; /* Ensure button takes full width */
-}
-
-#editProductForm button[type="submit"]:hover {
-    transform: scale(1.05);
-    background: linear-gradient(90deg, #218838, #1e7e34);
-}
-
-/* Scrollbar Styling (Vertical only) for edit form */
-#editProductForm::-webkit-scrollbar {
-    width: 8px; /* Thin vertical scrollbar */
-}
-
-#editProductForm::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
-
-#editProductForm::-webkit-scrollbar-thumb {
-    background: #007bff;
-    border-radius: 4px;
-}
-
-#editProductForm::-webkit-scrollbar-thumb:hover {
-    background: #0056b3;
-}
-
-
-
-#successMessage {
-    display: none;
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #4caf50; /* Green success color */
-    color: white;
-    padding: 12px 20px;
-    border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-size: 14px;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-}
-
-#successMessage.show {
-    display: block;
-    opacity: 1;
-}
 tfoot#totalRow {
     background-color: #f0f0f0;
     font-weight: bold;
@@ -562,16 +475,3 @@ tfoot#totalRow .value {
     color: #007bff;
     font-weight: bold;
 }
-
-/* Responsive Design *
-
-
-
-
-
-
-
-
-
-
-

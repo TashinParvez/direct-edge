@@ -39,6 +39,7 @@
         $usedCapacity = array_sum(array_column($inventory, 'quantity'));
         $freeCapacity = $totalCapacity - $usedCapacity;
         $itemCount = count($inventory);
+        $currentDate = new DateTime('2025-09-23');
         ?>
         <div class="metrics-grid">
             <div class="metric-card">
@@ -64,23 +65,29 @@
                     <div class="dropdown-menu" id="dropdownMenu">
                         <div class="group">
                             <span class="group-title">Status</span>
-                            <label><input type="checkbox" class="filter-option" value="all"> all</label>
+                            <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
                             <label><input type="checkbox" class="filter-option" value="In progress"> In progress</label>
                             <label><input type="checkbox" class="filter-option" value="Completed"> Completed</label>
                         </div>
                         <div class="group">
                             <span class="group-title">Capacity</span>
-                            <label><input type="checkbox" class="filter-option" value="all"> all</label>
+                            <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
                             <label><input type="checkbox" class="filter-option" value="low"> low</label>
                             <label><input type="checkbox" class="filter-option" value="medium"> medium</label>
                             <label><input type="checkbox" class="filter-option" value="high"> high</label>
                         </div>
                         <div class="group">
                             <span class="group-title">Warehouse</span>
-                            <label><input type="checkbox" class="filter-option" value="all"> all</label>
+                            <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
                             <label><input type="checkbox" class="filter-option" value="Warehouse A"> Warehouse A</label>
                             <label><input type="checkbox" class="filter-option" value="Warehouse B"> Warehouse B</label>
                             <label><input type="checkbox" class="filter-option" value="Warehouse C"> Warehouse C</label>
+                        </div>
+                        <div class="group">
+                            <span class="group-title">Unit</span>
+                            <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
+                            <label><input type="checkbox" class="filter-option" value="kg"> kg</label>
+                            <label><input type="checkbox" class="filter-option" value="units"> units</label>
                         </div>
                         <div class="dropdown-footer">
                             <button type="button" onclick="selectAll()">Select all</button>
@@ -90,6 +97,7 @@
                 </div>
             </div>
             <button id="addProductBtn">Add Product</button>
+            <button id="createOfferBtn">Create Offer</button>
         </div>
 
         <div id="successMessage" class="success-message" style="display: none;">
@@ -104,14 +112,15 @@
             <table id="productTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Product Code</th>
                         <th>Product Name</th>
                         <th>Special Instructions</th>
                         <th>Date</th>
                         <th>Quantity</th>
+                        <th>Unit</th>
                         <th>Status</th>
                         <th>Warehouse</th>
+                        <th>Offer Suggestion</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -119,41 +128,41 @@
                     <?php foreach ($inventory as $item) {
                         $statusClass = strtolower($item['status']) === 'completed' ? 'completed' : 'in-progress';
                         $lowStock = $item['quantity'] < 10 ? 'low-stock' : '';
+                        $itemDate = new DateTime($item['date_added']);
+                        $monthsDiff = $currentDate->diff($itemDate)->m + ($currentDate->diff($itemDate)->y * 12);
+                        $offerSuggestion = ($item['quantity'] < 50 || $monthsDiff >= 6) ? '10% Discount' : 'No Offer';
                         echo "
-                        <tr data-id='{$item['id']}'>
-                            <td>{$item['id']}</td>
+                        <tr data-id='{$item['id']}' data-offer='$offerSuggestion'>
                             <td>{$item['product_code']}</td>
                             <td>{$item['product']}</td>
                             <td>" . ($item['special_instructions'] ?? '—') . "</td>
                             <td>{$item['date_added']}</td>
                             <td class='$lowStock'>{$item['quantity']}</td>
+                            <td>{$item['unit']}</td>
                             <td class='$statusClass'>{$item['status']}</td>
                             <td>{$item['warehouse']}</td>
+                            <td>$offerSuggestion</td>
                             <td>
                                 <button class='action-btn edit-btn' onclick='editProduct({$item['id']})'>✎</button>
                                 <button class='action-btn delete-btn' onclick='deleteProduct({$item['id']})'>🗑</button>
+                                <button class='action-btn offer-btn' onclick='manageOffer({$item['id']})'>🏷️</button>
                             </td>
                         </tr>";
                     } ?>
                 </tbody>
-                <tfoot id="totalRow" style="display: none;">
-    <tr>
-        <td colspan="2">Totals:</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td>
-            <span class="label">Total Items:</span>
-            <span class="value" id="totalItems">0</span>
-        </td>
-        <td></td>
-        <td>
-            <span class="label">Total Quantity:</span>
-            <span class="value" id="totalQuantity">0</span>
-        </td>
-        <td></td>
-    </tr>
-</tfoot>
+                <tfoot id="totalRow">
+                    <tr>
+                       
+                        <td colspan="4" >
+                            <span class="label">TotalItems:</span>
+                            <span class="value" id="totalItems">0</span>
+                            
+                        </td>
+                        <td colspan="6"><span class="label">TotalQuantity:</span>
+                            <span class="value" id="totalQuantity">0</span></td>
+                       
+                    </tr>
+                </tfoot>
             </table>
         </div>
 
@@ -172,7 +181,7 @@
 
         <div id="addProductPopup" class="popup">
             <div class="popup-content">
-                <span class="close-btn" onclick="closePopup()">&times;</span>
+                <span class="close-btn" onclick="closePopup('add')">&times;</span>
                 <h2>Add New Product</h2>
                 <form id="addProductForm">
                     <label for="productCode">Product Code:</label>
@@ -190,14 +199,17 @@
                     <label for="quantity">Quantity:</label>
                     <input type="number" id="quantity" name="quantity" min="1" required>
 
+                    <label for="unit">Unit:</label>
+                    <select id="unit" name="unit" required>
+                        <option value="kg">kg</option>
+                        <option value="units">units</option>
+                    </select>
+
                     <label for="status">Status:</label>
                     <select id="status" name="status" required>
                         <option value="In progress">In progress</option>
                         <option value="Completed">Completed</option>
                     </select>
-
-                    <label for="unit">Unit:</label>
-                    <input type="text" id="unit" name="unit" value="units" required>
 
                     <label for="warehouse">Warehouse:</label>
                     <select id="warehouse" name="warehouse" required>
@@ -232,14 +244,17 @@
                     <label for="editQuantity">Quantity:</label>
                     <input type="number" id="editQuantity" name="editQuantity" min="1" required>
 
+                    <label for="editUnit">Unit:</label>
+                    <select id="editUnit" name="editUnit" required>
+                        <option value="kg">kg</option>
+                        <option value="units">units</option>
+                    </select>
+
                     <label for="editStatus">Status:</label>
                     <select id="editStatus" name="editStatus" required>
                         <option value="In progress">In progress</option>
                         <option value="Completed">Completed</option>
                     </select>
-
-                    <label for="editUnit">Unit:</label>
-                    <input type="text" id="editUnit" name="editUnit" value="units" required>
 
                     <label for="editWarehouse">Warehouse:</label>
                     <select id="editWarehouse" name="editWarehouse" required>
@@ -249,6 +264,27 @@
                     </select>
 
                     <button type="submit">Update Product</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="offerPopup" class="popup">
+            <div class="popup-content">
+                <span class="close-btn" onclick="closePopup('offer')">&times;</span>
+                <h2>Manage Offer</h2>
+                <form id="offerForm">
+                    <label for="offerProductId">Product:</label>
+                    <select id="offerProductId" name="offerProductId" required></select>
+                    <label for="offerDiscount">Discount (%):</label>
+                    <input type="number" id="offerDiscount" name="offerDiscount" min="0" max="100" required>
+
+                    <label for="offerStartDate">Start Date:</label>
+                    <input type="date" id="offerStartDate" name="offerStartDate" required>
+
+                    <label for="offerEndDate">End Date:</label>
+                    <input type="date" id="offerEndDate" name="offerEndDate" required>
+
+                    <button type="submit">Save Offer</button>
                 </form>
             </div>
         </div>
