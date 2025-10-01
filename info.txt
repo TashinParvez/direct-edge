@@ -1,0 +1,18 @@
+need a page for the shop owner 
+page will handhle self_service_orders 
+page will contain 3 coll 
+1st coll those orders that are not handeled yet 
+2nd coll those order ar running 
+3rd coll finied / done 
+all collwws each row will contain single card 
+
+order id 
+buyer name 
+total amount 
+
+by clicking the cards there will be a model open to see order details 
+and make order done , running, cancle 
+
+
+take time think wisly give me code of the fill page 
+dont include slide bar 
