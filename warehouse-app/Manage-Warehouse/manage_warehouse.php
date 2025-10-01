@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateWarehouse'])) {
 
 //======================== Fetch products of this warehouse (added product_id)
 $productStmt = $conn->prepare("
-    SELECT wp.id as wp_id, wp.product_id, p.name AS product_name, wp.quantity, wp.expiry_date, wp.unit_volume, wp.image_url, wp.request_status
+    SELECT wp.id as wp_id, wp.product_id, p.name AS product_name, wp.quantity, wp.expiry_date, wp.unit_volume, p.img_url, wp.request_status
     FROM warehouse_products wp
     JOIN products p ON wp.product_id = p.product_id
     WHERE wp.warehouse_id = ?
@@ -223,8 +223,8 @@ while ($row = $result->fetch_assoc()) {
                     <?php foreach ($productsArray as $row): ?>
                         <tr class="hover:bg-gray-50">
                             <td class="p-3">
-                                <?php if ($row['image_url']): ?>
-                                    <img src="<?= '../' . htmlspecialchars($row['image_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-16 w-16 object-cover rounded">
+                                <?php if ($row['img_url']): ?>
+                                    <img src="<?= '../../'. htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-16 w-16 object-cover rounded">
                                 <?php else: ?>
                                     <span class="text-gray-400 italic">No Image</span>
                                 <?php endif; ?>
