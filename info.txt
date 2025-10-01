@@ -1,0 +1,9 @@
+dashboard
+agents
+Inventory request 
+Stock request 
+Warehouse 
+Orders
+Products 
+Add New Warehouse
+
