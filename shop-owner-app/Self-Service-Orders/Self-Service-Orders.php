@@ -1,20 +1,67 @@
 <?php
-// self_service_orders.php
-
 
 include '../../include/connect-db.php';
 
-$orders = [
-    ['id' => 101, 'buyer' => 'Alice', 'amount' => 500, 'status' => 'Not Handled', 'products' => [['name' => 'Rice', 'qty' => 5, 'unit_price' => 50]]],
-    ['id' => 102, 'buyer' => 'Bob', 'amount' => 1200, 'status' => 'Running', 'products' => [['name' => 'Wheat', 'qty' => 10, 'unit_price' => 120]]],
-    ['id' => 103, 'buyer' => 'Charlie', 'amount' => 800, 'status' => 'Done', 'products' => [['name' => 'Corn', 'qty' => 8, 'unit_price' => 100]]],
-    ['id' => 104, 'buyer' => 'David', 'amount' => 450, 'status' => 'Not Handled', 'products' => [['name' => 'Sugar', 'qty' => 3, 'unit_price' => 150]]],
-    ['id' => 105, 'buyer' => 'Eva', 'amount' => 950, 'status' => 'Running', 'products' => [['name' => 'Oil', 'qty' => 5, 'unit_price' => 190]]],
-];
+$shop_id = 6;
 
-$notHandled = array_filter($orders, fn($o) => $o['status'] == 'Not Handled');
+
+
+// ====================
+// ====================
+
+$sql = "SELECT 
+            o.order_id,
+            o.user_name,
+            o.total_amount,
+            o.status,
+            i.product_id,
+            i.quantity,
+            i.price AS unit_price,
+            p.name AS product_name,
+            shop_id
+        FROM self_service_orders o
+        JOIN self_service_order_items i ON o.order_id = i.order_id
+        JOIN products p ON i.product_id = p.`product_id`
+        WHERE `shop_id` = 6
+        ORDER BY o.order_id;";
+
+$result = $conn->query($sql);
+
+$orders = [];
+
+while ($row = $result->fetch_assoc()) {
+    $id = $row['order_id'];
+
+    if (!isset($orders[$id])) {
+        $orders[$id] = [
+            'id' => $id,
+            'buyer' => $row['user_name'],
+            'amount' => (float)$row['total_amount'],
+            'status' => $row['status'],
+            'products' => []
+        ];
+    }
+
+    $orders[$id]['products'][] = [
+        'name' => $row['product_name'],
+        'qty' => (int)$row['quantity'],
+        'unit_price' => (float)$row['unit_price']
+    ];
+}
+
+// Reset keys to 0,1,2...
+$orders = array_values($orders);
+
+// print_r($orders);
+
+
+
+
+
+$notHandled = array_filter($orders, fn($o) => $o['status'] == 'In queue');
 $running = array_filter($orders, fn($o) => $o['status'] == 'Running');
 $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
+
 ?>
 
 <!DOCTYPE html>
@@ -59,9 +106,9 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
     <h1 class="text-3xl font-bold text-black-custom mb-8 text-center">Self Service Orders</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <!-- Not Handled -->
+        <!-- In queue -->
         <div class="bg-white rounded-lg shadow p-4">
-            <h2 class="text-xl font-semibold mb-4 text-black-custom border-b pb-2">Not Handled</h2>
+            <h2 class="text-xl font-semibold mb-4 text-black-custom border-b pb-2">In queue</h2>
             <div class="space-y-4">
                 <?php foreach ($notHandled as $order): ?>
                     <div class="bg-gray-50 shadow rounded-lg p-4 cursor-pointer hover:ring hover:ring-green-300 transition" onclick="openModal(<?= $order['id'] ?>)">
@@ -166,7 +213,7 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
                 document.getElementById('btnRunning').disabled = true;
                 document.getElementById('btnDone').disabled = true;
                 document.getElementById('btnCancel').disabled = true;
-            } else { // Not Handled
+            } else { // In queue
                 document.getElementById('btnRunning').disabled = false;
                 document.getElementById('btnDone').disabled = false;
                 document.getElementById('btnCancel').disabled = false;
@@ -226,10 +273,40 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
             if (e.target === modal) closeModal();
         });
 
-        // Dummy update function
+
+
         function updateStatus(orderId, status) {
-            alert(`Order #${orderId} marked as ${status}`);
-            closeModal();
+            fetch('update_order_status.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        orderId,
+                        status
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Order #${orderId} marked as ${status}`);
+
+                        // Update the order status in JS to reflect changes in modal
+                        const order = orders.find(o => o.id == orderId);
+                        if (order) order.status = status;
+
+                        closeModal();
+
+                        // Optionally, refresh the page to update the columns
+                        location.reload();
+                    } else {
+                        alert('Failed to update order: ' + data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Something went wrong');
+                });
         }
     </script>
 </body>
