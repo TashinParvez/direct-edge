@@ -34,8 +34,7 @@ $sql = "SELECT
         JOIN warehouses w ON w.warehouse_id = aac.city_id  -- assuming each city has a warehouse; adjust if needed
         LEFT JOIN stock_requests sr ON sr.requester_id = u.user_id
         WHERE u.role = 'Agent'
-        GROUP BY u.user_id, u.full_name, u.email, u.phone, c.name, w.name, u.image_url;
-";
+        GROUP BY u.user_id, u.full_name, u.email, u.phone, c.name, w.name, u.image_url;";
 
 
 $result = mysqli_query($conn, $sql);
