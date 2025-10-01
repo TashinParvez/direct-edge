@@ -4,6 +4,7 @@
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/heroicons@1.0.6/outline/index.css">
 </head>
+
 <body class="bg-white">
     <!-- Navigation Header -->
     <nav class="bg-white shadow-lg fixed w-full z-50">
@@ -46,12 +48,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
                 <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-                    Revolutionize Your 
+                    Revolutionize Your
                     <span class="text-green-600">Agricultural Supply Chain</span>
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                    Connect farmers, distributors, and shop owners in one unified platform. 
-                    Powered by AI and computer vision for smarter inventory management, 
+                    Connect farmers, distributors, and shop owners in one unified platform.
+                    Powered by AI and computer vision for smarter inventory management,
                     demand forecasting, and transparent pricing.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
@@ -416,7 +418,7 @@
     <script>
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
+            anchor.addEventListener('click', function(e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
@@ -436,4 +438,5 @@
     </script>
 
 </body>
+
 </html>

@@ -14,6 +14,7 @@
     <title>Available Product</title>
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../Available-Products-List/available-products-list.css">
+    <link rel="stylesheet" href="available-products-list.css">
 
 </head>
 
