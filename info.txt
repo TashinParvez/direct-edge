@@ -27,8 +27,10 @@ Warehouse Products
 
 📌Agent (Sidebar)
 ==============================
-
-
+1. Agent Profile
+2. Farmer under Agent
+3. Payment info (under a specific agent)
+4. Add Farmer
 
 
 
