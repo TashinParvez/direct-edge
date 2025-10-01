@@ -8,9 +8,9 @@
             <a href="dashboard.php" class="text-white text-lg font-bold">DirectEdge</a>
         </div>
         <div class="space-x-6">
-            <a href="dashboard.php" class="text-white hover:text-gray-200 transition">Dashboard</a>
-            <a href="aboutus.php" class="text-white hover:text-gray-200 transition">About Us</a>
-            <a href="updateprofile.php" class="text-white hover:text-gray-200 transition">Update Profile</a>
+            <a href="../User/dashboard.php" class="text-white hover:text-gray-200 transition">Dashboard</a>
+            <a href="../User/about-us.php" class="text-white hover:text-gray-200 transition">About Us</a>
+            <a href="../User/edit-profile.php" class="text-white hover:text-gray-200 transition">Update Profile</a>
         </div>
     </div>
 </nav>
