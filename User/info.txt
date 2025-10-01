@@ -1,4 +1,4 @@
-📌Admin (Sidebar)
+📌Admin Sidebar
 ==============================
 1. Dashboard
 
@@ -25,7 +25,7 @@ Warehouse Products
 
 
 
-📌Agent (Sidebar)
+📌Agent Sidebar
 ==============================
 
 
@@ -33,7 +33,8 @@ Warehouse Products
 
 
 
-📌Shop-owner (Sidebar)
+
+📌Shop-owner Sidebar
 ==============================
 1. Buy Products
 2. Self-Service-Orders
@@ -42,14 +43,3 @@ Warehouse Products
 5. Home (available Products)
 6. Request Products
 7. 
-
-
-
-
-📌User (Navbar)
-==============================
-Update Profile
-Dashboard
-About Us
-
-
