@@ -1,3 +1,103 @@
+<?php
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$databasename = "direct-edge";
+
+$conn = mysqli_connect($servername, $username, $password, $databasename);
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+$message = "";
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $full_name = $_POST['username'];
+    $email = $_POST['mail'];
+    $phone = $_POST['phonenumber'];
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+    $role = $_POST['usertype'];
+
+    // Initialize image_url as null
+    $image_url = null;
+
+    // Allowed ENUM values
+    $allowed_roles = ['Admin', 'Shop-Owner', 'Agent', 'User'];
+    if (!in_array($role, $allowed_roles)) {
+        $message = "Invalid role selected!";
+    } elseif ($password !== $confirm_password) {
+        $message = "Passwords do not match!";
+    } else {
+        // Handle file upload if a file was selected
+        if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+            $upload_dir = 'uploads/profile_pictures/';
+
+            // Create directory if it doesn't exist
+            if (!file_exists($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
+
+            $file_tmp_path = $_FILES['profile_picture']['tmp_name'];
+            $file_name = $_FILES['profile_picture']['name'];
+            $file_size = $_FILES['profile_picture']['size'];
+            $file_type = $_FILES['profile_picture']['type'];
+            $file_name_cmps = explode(".", $file_name);
+            $file_extension = strtolower(end($file_name_cmps));
+
+            // Allowed file extensions
+            $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+
+            if (in_array($file_extension, $allowed_extensions)) {
+                // Create unique filename
+                $new_file_name = uniqid() . '_' . time() . '.' . $file_extension;
+                $dest_path = $upload_dir . $new_file_name;
+
+                // Check file size (limit to 5MB)
+                if ($file_size < 5000000) {
+                    if (move_uploaded_file($file_tmp_path, $dest_path)) {
+                        $image_url = $dest_path;
+                    } else {
+                        $message = "❌ Error uploading profile picture.";
+                    }
+                } else {
+                    $message = "❌ File size too large. Maximum size is 5MB.";
+                }
+            } else {
+                $message = "❌ Invalid file type. Only JPG, JPEG, PNG, and GIF files are allowed.";
+            }
+        }
+
+        // If no error with file upload, proceed with user registration
+        if ($message === "") {
+            // Hash password
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+            // Insert query with image_url
+            $stmt = $conn->prepare("INSERT INTO users (full_name, email, phone, password, role, image_url) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssss", $full_name, $email, $phone, $hashed_password, $role, $image_url);
+
+            if ($stmt->execute()) {
+                // $message = "Sign up successful!";
+                header("Location: login.php");
+                exit();
+            } else {
+                $message = "❌ Error: " . $stmt->error;
+
+                // If there was an error and we uploaded a file, delete it
+                if ($image_url && file_exists($image_url)) {
+                    unlink($image_url);
+                }
+            }
+
+            $stmt->close();
+        }
+    }
+}
+
+$conn->close();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,7 +113,6 @@
 
     <div class="bg-white shadow rounded-lg p-6 md:p-10 flex flex-col md:flex-row items-center gap-8 w-full max-w-5xl">
 
-        <!-- SVG Section -->
         <div class="flex-1 flex justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="350" height="250" viewBox="0 0 841.59024 589">
                 <polygon points="743.208 574.193 729.128 574.192 722.43 519.885 743.21 519.886 743.208 574.193" fill="#ffb8b8" />
@@ -69,57 +168,78 @@
         <div class="flex-1 w-full">
             <h2 class="text-2xl font-bold text-center mb-6">Sign Up</h2>
 
-            <form action="signUpHandler.php" method="post" class="space-y-4">
+            <?php if ($message != "") { ?>
+                <p class="text-center mb-4 font-medium <?php echo (strpos($message, '✅') !== false) ? 'text-green-600' : 'text-red-600'; ?>">
+                    <?php echo $message; ?>
+                </p>
+            <?php } ?>
 
-                <!-- Username -->
+            <form action="" method="post" enctype="multipart/form-data" class="space-y-4">
+
                 <div>
-                    <label for="username" class="block text-sm font-medium">User Name</label>
+                    <label for="username" class="block text-sm font-medium">Full Name</label>
                     <input type="text" id="username" name="username" placeholder="Mahbub" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                <!-- Phone Number -->
                 <div>
-                    <label for="phonenumber" class="block text-sm font-medium">Phone Number</label>
-                    <input type="text" id="phonenumber" name="phonenumber" placeholder="+8801744177620" required
+                    <label for="mail" class="block text-sm font-medium">Email</label>
+                    <input type="email" id="mail" name="mail" placeholder="example@mail.com" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                <!-- Password -->
+                <div>
+                    <label for="phonenumber" class="block text-sm font-medium">Phone Number</label>
+                    <input type="text" id="phonenumber" name="phonenumber" placeholder="+8.80174417762e+12" required
+                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
                 <div>
                     <label for="password" class="block text-sm font-medium">Password</label>
                     <input type="password" id="password" name="password" placeholder="Password" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                <!-- Confirm Password -->
                 <div>
                     <label for="confirm_password" class="block text-sm font-medium">Confirm Password</label>
                     <input type="password" id="confirm_password" name="confirm_password" placeholder="Password" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                <!-- User Type -->
                 <div>
                     <label class="block text-sm font-medium">User Type</label>
-                    <div class="flex gap-4 mt-2">
+                    <div class="flex flex-wrap gap-4 mt-2">
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="usertype" value="consumer" required class="text-blue-600 focus:ring-blue-500">
-                            <span>Consumer</span>
+                            <input type="radio" name="usertype" value="User" required class="text-blue-600 focus:ring-blue-500">
+                            <span>User</span>
                         </label>
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="usertype" value="consumer_seller" required class="text-blue-600 focus:ring-blue-500">
-                            <span>Consumer and Seller</span>
+                            <input type="radio" name="usertype" value="Shop-Owner" required class="text-blue-600 focus:ring-blue-500">
+                            <span>Shop Owner</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="usertype" value="Agent" required class="text-blue-600 focus:ring-blue-500">
+                            <span>Agent</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="radio" name="usertype" value="Admin" required class="text-blue-600 focus:ring-blue-500">
+                            <span>Admin</span>
                         </label>
                     </div>
                 </div>
 
-                <!-- Submit -->
+                <!-- Profile Picture Upload - Simple field at the end -->
+                <div>
+                    <label for="profile_picture" class="block text-sm font-medium">Profile Picture (Optional)</label>
+                    <input type="file" id="profile_picture" name="profile_picture" accept="image/*"
+                        class="mt-1 w-full rounded-md  px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="text-xs text-gray-500 mt-1">JPG, JPEG, PNG, or GIF. Max size: 5MB</p>
+                </div>
+
                 <button type="submit" class="w-full bg-green-600 text-white font-medium py-2 rounded-md hover:bg-green-700 transition">
                     Sign Up
                 </button>
 
-                <!-- Already have account -->
                 <p class="text-center text-sm mt-3">
                     Already have an account?
                     <a href="login.php" class="text-green-600 hover:underline">Log in</a>

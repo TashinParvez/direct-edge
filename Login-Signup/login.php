@@ -1,3 +1,53 @@
+<?php
+session_start();
+
+$servername = "localhost";
+$username = "root";
+$password = "";
+$databasename = "direct-edge";
+
+$conn = mysqli_connect($servername, $username, $password, $databasename);
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+
+$error = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+    $password = $_POST['password'];
+
+    $sql = "SELECT user_id, full_name, email, phone, password, role, created_at 
+            FROM users WHERE phone = '$phone' LIMIT 1";
+    $result = mysqli_query($conn, $sql);
+
+    if ($result && mysqli_num_rows($result) > 0) {
+        $user = mysqli_fetch_assoc($result);
+
+        if (password_verify($password, $user['password'])) {
+            // ✅ Fix user_id mismatch
+            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['full_name'] = $user['full_name'];
+            $_SESSION['email'] = $user['email'];
+            $_SESSION['phone'] = $user['phone'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['created_at'] = $user['created_at'];
+            $_SESSION['login_time'] = date('Y-m-d H:i:s');
+
+            header("Location: profile.php");
+            exit();
+        } else {
+            $error = "Invalid password!";
+        }
+    } else {
+        $error = "No account found with this phone number.";
+    }
+}
+
+mysqli_close($conn);
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,7 +63,6 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 shadow-lg rounded-2xl p-8 bg-white w-[90%] max-w-5xl">
 
-        <!-- SVG IMAGE -->
         <div class="flex justify-center items-center p-4">
             <svg xmlns="http://www.w3.org/2000/svg" width="500" height="400" viewBox="0 0 708 555.86743">
                 <path id="b10fb2cf-c586-4c5f-9fbf-e678f5ffa3db-58" data-name="Path 133"
@@ -74,7 +123,7 @@
                     d="M399.79528,560.55725V496.486l.44482-.04931a31.96115,31.96115,0,0,1,34.31543,23.68017l11.41138,30.17969Z"
                     transform="translate(-246 -172.06628)" fill="#2f2e41" />
                 <path
-                    d="M375.25992,463.88179l-35.27546-13.69192c-5.76827-2.23892-11.56878-4.40968-17.30651-6.72569a19.72637,19.72637,0,0,1-6.66153-3.92617,13.09008,13.09008,0,0,1-3.32111-6.42695c-1.22347-5.17132-1.00226-10.82516-.915-16.10249a122.69927,122.69927,0,0,1,1.42174-17.24065,83.28557,83.28557,0,0,1,10.65027-30.38043c9.89272-16.23155,26.93718-28.44363,46.5429-27.469,9.07668.4512,18.20557,3.70824,24.94937,9.914a15.75138,15.75138,0,0,0,2.35507,2.28248,3.26776,3.26776,0,0,0,1.87567.12592q1.23442-.07942,2.47088-.12124a51.04308,51.04308,0,0,1,8.56551.35928,27.12111,27.12111,0,0,1,14.13035,5.86736c3.37014,2.89908,6.11233,6.99171,6.39451,11.53986a13.65989,13.65989,0,0,1-4.6143,11.15057c-4.20852,3.54694-10.2131,2.30024-15.26138,2.03278l-18.49376-.97979-9.37018-.49642c-1.92935-.10222-1.92373,2.89808,0,3l24.90494,1.31945c4.00221.212,8.127.73168,12.13244.49169a13.57368,13.57368,0,0,0,8.33317-3.35238,16.62754,16.62754,0,0,0,5.03664-15.60115c-1.284-6.13755-5.85183-11.21468-11.20665-14.23511-7.28613-4.1098-15.988-4.50357-24.14076-3.896l1.06066.43934c-9.22224-9.89816-23.34855-14.07733-36.61026-12.61482-14.00229,1.54417-26.45612,9.35584-35.40409,20.03753-9.97644,11.90941-15.413,26.75957-17.52653,42.02983a139.839,139.839,0,0,0-1.082,24.87973,31.35039,31.35039,0,0,0,1.85228,10.75107,15.39035,15.39035,0,0,0,7.22512,7.74612,103.39756,103.39756,0,0,0,11.46784,4.71084L342.436,454.3438l25.52829,9.90863,6.49811,2.5222c1.80087.699,2.581-2.2006.79752-2.89284Z"
+                    d="M375.25992,463.88179l-35.27546-13.69192c-5.76827-2.23892-11.56878-4.40968-17.30651-6.72569a19.72637,19.72637,0,0,1-6.66153-3.92617,13.09008,13.09008,0,0,1-3.32111-6.42695c-1.22347-5.17132-1.00226-10.82516-.915-16.10249a122.69927,122.69927,0,0,1,1.42174-17.24065,83.28557,83.28557,0,0,1,10.65027-30.38043c9.89272-16.23155,26.93718-28.44363,46.5429-27.469,9.07668.4512,18.20557,3.70824,24.94937,9.914a15.75138,15.75138,0,0,0,2.35507,2.28248,3.26776,3.26776,0,0,0,1.87567.12592q1.23442-.07942,2.47088-.12124a51.04308,51.04308,0,0,1,8.56551.35928,27.12111,27.12111,0,0,1,14.13035,5.86736c3.37014,2.89908,6.11233,6.99171,6.39451,11.53986a13.65989,13.65989,0,0,1-4.6143,11.15057c-4.20852,3.54694-10.2131,2.30024-15.26138,2.03278l-18.49376-.97979-9.37018-.49642c-1.92935-.10222-1.92373,2.89808,0,3l24.90494,1.31945c4.00221.212,8.127.73168,12.13244.49169a13.57368,13.57368,0,0,0,8.33317-3.35238,16.62754,16.62754,0,0,0,5.03664-15.60115c-1.284-6.13755-5.85183-11.21468-11.20665-14.23511-7.28613-4.1098-15.988-4.50357-24.14076-3.896l1.06066.43934c-9.22224-9.89816-23.34855-14.07733-36.61026-12.61482-14.00229,1.54417-26.45612,9.35584-35.40409,20.03753-9.97644,11.90941-15.413,26.75957-17.52653,42.02983a139.839,139.839,0,0,0-1.082,24.87973,31.35039,31.35039,0,0,0,1.85228,10.75107,15.39035,15.39035,0,0,0,7.22512,7.74612a103.39756,103.39756,0,0,0,11.46784,4.71084L342.436,454.3438l25.52829,9.90863,6.49811,2.5222c1.80087.699,2.581-2.2006.79752-2.89284Z"
                     transform="translate(-246 -172.06628)" fill="#2f2e41" />
                 <path
                     d="M319.79528,361.93372a15.5,15.5,0,1,1,15.5-15.5A15.51744,15.51744,0,0,1,319.79528,361.93372Zm0-28a12.5,12.5,0,1,0,12.5,12.5A12.51408,12.51408,0,0,0,319.79528,333.93372Z"
@@ -99,34 +148,49 @@
         <div class="flex flex-col justify-center p-6">
             <h2 class="text-2xl font-semibold text-center mb-6">Log In</h2>
 
-            <form action="../Dashboard/Dashboard.php" method="POST" class="space-y-4">
-                <!-- Phone -->
+            <!-- Display error message if exists -->
+            <?php if (!empty($error)): ?>
+                <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative">
+                    <strong class="font-bold">Error!</strong>
+                    <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
+                </div>
+            <?php endif; ?>
+
+            <form action="login.php" method="POST" class="space-y-4">
                 <div>
-                    <label for="floatingInput" class="block mb-1 text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="text" id="floatingInput" name="mail" placeholder="+8801744177620"
+                    <label for="phone" class="block mb-1 text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="text" id="phone" name="phone" placeholder="+8801744177620" required
                         class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
                 </div>
 
-                <!-- Password -->
                 <div>
-                    <label for="floatingPassword" class="block mb-1 text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="floatingPassword" name="password" placeholder="Password"
+                    <label for="password" class="block mb-1 text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Password" required
                         class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
                 </div>
 
-                <!-- Button -->
                 <button type="submit"
-                    class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">Login</button>
+                    class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
+                    Login
+                </button>
 
-                <!-- Sign up link -->
                 <p class="text-center text-sm text-gray-600 mt-4">
                     Don't have an account?
                     <a href="signup.php" class="text-green-600 hover:underline">Create</a>
                 </p>
             </form>
         </div>
-
     </div>
+
+    <!-- Debug information (remove in production) -->
+    <script>
+        console.log("Login page loaded");
+
+        // Add form submission logging
+        document.querySelector('form').addEventListener('submit', function() {
+            console.log("Form submitted - redirecting to profile.php");
+        });
+    </script>
 
 </body>
 
