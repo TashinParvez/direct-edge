@@ -205,6 +205,13 @@ We welcome contributions! To contribute:
 
 Please ensure your code follows the project's coding standards and includes tests.
 
+## Contributors ✨
+
+A big thanks to all the people who contribute to this project!
+
+[![Contributors](https://contrib.rocks/image?repo=TashinParvez/direct-edge)](https://github.com/TashinParvez/direct-edge/graphs/contributors)
+
+
 ## Contact
 
 - **Email**: directedge@gmail.com
