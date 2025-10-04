@@ -60,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateWarehouse'])) {
     $location_full = $_POST['location_full'] ?? $warehouse['location'];
 
     // Assuming 'location' in DB is the full address, update with location_full
-    // If DB has separate fields, adjust accordingly
     $updateStmt = $conn->prepare("UPDATE warehouses SET name=?, location=?, type=?, status=?, capacity_total=?, capacity_used=? WHERE warehouse_id=?");
     $updateStmt->bind_param("ssssiii", $name, $location_full, $type, $status, $capacity_total, $capacity_used, $warehouseId);
 
@@ -224,7 +223,7 @@ while ($row = $result->fetch_assoc()) {
                         <tr class="hover:bg-gray-50">
                             <td class="p-3">
                                 <?php if ($row['img_url']): ?>
-                                    <img src="<?= '../../'. htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-16 w-16 object-cover rounded">
+                                    <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-16 w-16 object-cover rounded">
                                 <?php else: ?>
                                     <span class="text-gray-400 italic">No Image</span>
                                 <?php endif; ?>
@@ -257,8 +256,8 @@ while ($row = $result->fetch_assoc()) {
                         <div class="flex">
                             <!-- Left: Product Image -->
                             <div class="w-1/3 bg-gray-100 p-4 flex items-center justify-center">
-                                <?php if ($row['image_url']): ?>
-                                    <img src="<?= '../' . htmlspecialchars($row['image_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-32 w-32 object-cover rounded">
+                                <?php if ($row['img_url']): ?>
+                                    <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-32 w-32 object-cover rounded">
                                 <?php else: ?>
                                     <span class="text-gray-400 italic">No Image</span>
                                 <?php endif; ?>
@@ -350,9 +349,10 @@ while ($row = $result->fetch_assoc()) {
                     document.getElementById('warehouseCancelIcon').style.display = 'none';
                 }
 
+                // IMPORTANT: Do NOT disable fields on submit; ensure selects remain enabled so values are posted.
                 document.getElementById('warehouseForm').addEventListener('submit', function() {
-                    // After submission, revert to readonly and hide update button (simulate server side reload behavior)
-                    disableWarehouseEdit();
+                    this.querySelectorAll('select').forEach(s => s.disabled = false);
+                    // Do not call disableWarehouseEdit() here; the page will reload after POST.
                 });
             </script>
         </div>
