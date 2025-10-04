@@ -27,7 +27,7 @@ $sql = "SELECT
             p.name,
             sri.category,
             sri.required_space AS requiredSpace,
-            p.image_url AS image,
+            p.img_url AS image,
             sri.quantity,
             sr.requested_at AS requested_at,
             sr.updated_at AS updated_at,
@@ -290,7 +290,7 @@ while ($row = $result->fetch_assoc()) {
                 const card = document.createElement('div');
                 card.classList.add('product-row');
                 card.innerHTML = `
-                    <img src="${item.image}" alt="${item.name}">
+                    <img src="../../${item.image}" alt="${item.name}">
                     <div class="product-info">
                         <h3>${item.name}</h3>
                         <span>Category: ${item.category}</span>
