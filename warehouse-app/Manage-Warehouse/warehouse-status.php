@@ -1,5 +1,5 @@
 <?php
-include '../include/connect-db.php'; // database connection
+include '../../include/connect-db.php'; // database connection
 
 
 
@@ -25,7 +25,7 @@ $allwarehouses = mysqli_fetch_all($result, MYSQLI_ASSOC);
 <head>
     <meta charset="UTF-8">
     <title>Generate Receipt</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
+    <link rel="icon" type="image/x-icon" href="../../Logo/LogoBG.png">
     <link rel="stylesheet" href="..\include\sidebar.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
@@ -40,7 +40,7 @@ $allwarehouses = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 <body class="bg-gray-100">
     <?php
-    include '../include/Sidebar.php';
+    // include '../../include/Sidebar.php';
     ?>
 
 
@@ -92,7 +92,7 @@ $allwarehouses = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 
             <?php foreach ($allwarehouses as $warehouse): ?>
-                <div onclick="window.location.href='warehouse-info.php?id=<?= $warehouse['warehouse_id'] ?>'"
+                <div onclick="window.location.href='manage_warehouse.php?id=<?= $warehouse['warehouse_id'] ?>'"
                     class="card bg-white rounded-lg shadow-md p-5 transition hover:shadow-lg">
                     <h5 class="text-lg font-semibold text-gray-800"><?= $warehouse['name'] ?></h5>
                     <p class="text-gray-600"><strong>Location:</strong> <?= $warehouse['location'] ?></p>
