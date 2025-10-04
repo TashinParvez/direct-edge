@@ -1,93 +1,50 @@
 <?php
-// manage_warehouse.php
 include '../../include/connect-db.php'; // database connection
 
-// Get warehouse id from URL
-$warehouseId = $_GET['id'] ?? 15;
-
-if (!$warehouseId) {
-    die("Warehouse ID not provided.");
-}
-
-//======================== Update product info if submitted from modal
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateProduct'])) {
-    $wpId = $_POST['wp_id'] ?? null;
-    $productId = $_POST['product_id'] ?? null;
-    $productName = $_POST['product_name'] ?? null;
-    $quantity = $_POST['quantity'] ?? null;
-    $unitVolume = $_POST['unit_volume'] ?? null;
-    $expiryDate = $_POST['expiry_date'] ?? null;
-    $requestStatus = $_POST['request_status'] ?? 0;
-
-    if ($wpId && $productId) {
-        // Update products table (name)
-        $productUpdateStmt = $conn->prepare("UPDATE products SET name = ? WHERE product_id = ?");
-        $productUpdateStmt->bind_param("si", $productName, $productId);
-        $productUpdateStmt->execute();
-
-        // Update warehouse_products table
-        $wpUpdateStmt = $conn->prepare("UPDATE warehouse_products SET quantity = ?, unit_volume = ?, expiry_date = ?, request_status = ? WHERE id = ?");
-        $wpUpdateStmt->bind_param("idsii", $quantity, $unitVolume, $expiryDate, $requestStatus, $wpId);
-
-        if ($wpUpdateStmt->execute()) {
-            $success = "Product updated successfully!";
-        } else {
-            $error = "Error updating product.";
-        }
-    } else {
-        $error = "Invalid product data.";
+// Handle status update requests (minimal inline endpoint)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['request_id'])) {
+    $action = $_POST['action'];
+    $requestId = (int)$_POST['request_id'];
+    if (in_array($action, ['Accept', 'Reject'], true) && $requestId > 0) {
+        $newStatus = $action === 'Accept' ? 'Done' : 'Rejected';
+        // Align to schema: table stockrequests, column requestid, status enum Pending,Done,Rejected,Working
+        $stmt = $conn->prepare("UPDATE stock_requests SET status = ?, updated_at = NOW() WHERE request_id = ?");
+        $stmt->bind_param('si', $newStatus, $requestId);
+        $ok = $stmt->execute();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $ok]);
+        exit;
     }
-
-    // Redirect to refresh the page after update
-    header("Location: all-inventory-requests.php?id=" . $warehouseId);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false]);
     exit;
 }
 
-//======================== Fetch warehouse info
-$stmt = $conn->prepare("SELECT * FROM warehouses WHERE warehouse_id = ?");
-$stmt->bind_param("i", $warehouseId);
-$stmt->execute();
-$warehouse = $stmt->get_result()->fetch_assoc();
+// Fetch all stock requests with items (exclude 'Done' status)
+// Keep original aliases used by the frontend
+$sql = "SELECT 
+            sr.request_id AS id,
+            p.name,
+            sri.category,
+            sri.required_space AS requiredSpace,
+            p.img_url AS image,
+            sri.quantity,
+            sr.requested_at AS requested_at,
+            sr.updated_at AS updated_at,
+            sr.status,
+            sr.notes,
+            u.full_name AS requester_name
+        FROM stock_requests sr
+        JOIN stock_request_items sri ON sr.request_id = sri.request_id
+        JOIN products p ON sri.product_id = p.product_id
+        JOIN users u ON sr.requester_id = u.user_id
+        WHERE sr.status != 'Done'
+        ORDER BY sr.requested_at DESC";
 
-//======================== Update warehouse info if submitted
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateWarehouse'])) {
-    $name = $_POST['name'] ?? $warehouse['name'];
-    $location_city = $_POST['location_city'] ?? $warehouse['location'];
-    $type = $_POST['type'] ?? $warehouse['type'];
-    $status = $_POST['status'] ?? $warehouse['status'];
-    $capacity_total = $_POST['capacity_total'] ?? $warehouse['capacity_total'];
-    $capacity_used = $_POST['capacity_used'] ?? $warehouse['capacity_used'];
-    $location_full = $_POST['location_full'] ?? $warehouse['location'];
-
-    // Assuming 'location' in DB is the full address, update with location_full
-    $updateStmt = $conn->prepare("UPDATE warehouses SET name=?, location=?, type=?, status=?, capacity_total=?, capacity_used=? WHERE warehouse_id=?");
-    $updateStmt->bind_param("ssssiii", $name, $location_full, $type, $status, $capacity_total, $capacity_used, $warehouseId);
-
-    if ($updateStmt->execute()) {
-        $success = "Warehouse updated successfully!";
-        // refresh info
-        $stmt->execute();
-        $warehouse = $stmt->get_result()->fetch_assoc();
-    } else {
-        $error = "Error updating warehouse.";
-    }
-}
-
-//======================== Fetch products of this warehouse (added product_id)
-$productStmt = $conn->prepare("
-    SELECT wp.id as wp_id, wp.product_id, p.name AS product_name, wp.quantity, wp.expiry_date, wp.unit_volume, p.img_url, wp.request_status
-    FROM warehouse_products wp
-    JOIN products p ON wp.product_id = p.product_id
-    WHERE wp.warehouse_id = ?
-");
-$productStmt->bind_param("i", $warehouseId);
-$productStmt->execute();
-$result = $productStmt->get_result();
-
-// Store all products in an array
-$productsArray = [];
+$result = $conn->query($sql);
+$requests = [];
 while ($row = $result->fetch_assoc()) {
-    $productsArray[] = $row;
+    $requests[] = $row;
 }
 ?>
 
@@ -96,312 +53,333 @@ while ($row = $result->fetch_assoc()) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Manage Warehouse</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .edit-warehouse-btn {
-            transition: background 0.2s;
-        }
-
-        .edit-warehouse-btn:hover {
-            background: #e0e7ff;
-        }
-
-        .warehouse-edit-icon {
-            cursor: pointer;
-        }
-
-        .unit-after {
-            margin-left: 6px;
-            color: #4b5563;
-            font-size: 0.9rem;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Requests</title>
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="all-inventory-requests.css">
 </head>
 
-<body class="bg-gray-50 p-8">
+<body>
 
-    <div class="max-w-5xl mx-auto bg-white shadow rounded-lg p-6 relative">
-        <h1 class="text-3xl font-bold text-blue-700 mb-6">
-            Manage Warehouse: <?= htmlspecialchars($warehouse['name']) ?>
-        </h1>
+    <?php // include '../direct-edge/include/Sidebar.php'; 
+    ?>
+    <section>
+        <h1>Inventory Requests</h1>
 
-        <!-- Top right warehouse info edit icon -->
-        <span class="absolute top-8 right-8 warehouse-edit-icon" id="warehouseEditIcon" onclick="enableWarehouseEdit()" title="Edit Warehouse">
-            <img width="28" height="28" src="https://img.icons8.com/material-rounded/28/create-new.png" alt="Edit warehouse" />
-        </span>
-        <!-- Top right warehouse info cancel icon (initially hidden) -->
-        <span class="absolute top-8 right-8 warehouse-edit-icon" id="warehouseCancelIcon" onclick="disableWarehouseEdit()" title="Cancel Edit" style="display: none;">
-            <img width="28" height="28" src="https://img.icons8.com/material-rounded/28/cancel.png" alt="Cancel edit" />
-        </span>
-
-        <?php if (!empty($success)): ?>
-            <p class="mb-4 text-green-600 font-semibold"><?= $success ?></p>
-        <?php elseif (!empty($error)): ?>
-            <p class="mb-4 text-red-600 font-semibold"><?= $error ?></p>
-        <?php endif; ?>
-
-        <!-- ====================  Warehouse Info Update  ==================== -->
-        <form id="warehouseForm" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-
-            <!-- 1st Row -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Warehouse Name</label>
-                <input type="text" name="name" value="<?= htmlspecialchars($warehouse['name']) ?>"
-                    class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" readonly>
+        <!-- Search bar -->
+        <div class="search-bar">
+            <div class="search-container">
+                <input type="search" id="search-input" placeholder="Search products...">
+                <i class='bx bx-search search-icon'></i>
             </div>
+        </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Location (City)</label>
-                <input type="text" name="location_city" value="<?= htmlspecialchars($warehouse['location']) ?>"
-                    class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" readonly>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Type</label>
-                <select name="type" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" disabled>
-                    <option value="Normal" <?= ($warehouse['type'] == 'Normal') ? 'selected' : '' ?>>Normal</option>
-                    <option value="Cold Storage" <?= ($warehouse['type'] == 'Cold Storage') ? 'selected' : '' ?>>Cold Storage</option>
-                    <option value="Hazardous" <?= ($warehouse['type'] == 'Hazardous') ? 'selected' : '' ?>>Hazardous</option>
-                </select>
-            </div>
-
-            <!-- 2nd Row: 4-column grid -->
-            <div class="mb-4 col-span-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Status</label>
-                    <select name="status" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" disabled>
-                        <option value="Active" <?= ($warehouse['status'] == 'Active') ? 'selected' : '' ?>>Active</option>
-                        <option value="Inactive" <?= ($warehouse['status'] == 'Inactive') ? 'selected' : '' ?>>Inactive</option>
-                        <option value="Under Maintenance" <?= ($warehouse['status'] == 'Under Maintenance') ? 'selected' : '' ?>>Under Maintenance</option>
-                    </select>
+        <div class="main-container">
+            <!-- Filter column (removed End Date and Duration filters) -->
+            <div class="filter-column">
+                <!-- Volume -->
+                <div class="filter-group">
+                    <label><span>Volume more than:</span> <input type="number" id="min-volume" step="0.1"><span>m³</span></label>
+                    <label><span>Volume less than:</span> <input type="number" id="max-volume" step="0.1"><span>m³</span></label>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Total Capacity</label>
-                    <input type="number" name="capacity_total" value="<?= htmlspecialchars($warehouse['capacity_total']) ?>"
-                        class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" readonly>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Filled Capacity</label>
-                    <input type="number" name="capacity_used" value="<?= htmlspecialchars($warehouse['capacity_used']) ?>"
-                        class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" readonly>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Free Capacity</label>
-                    <input type="number" name="capacity_free" value="<?= htmlspecialchars($warehouse['capacity_total'] - $warehouse['capacity_used']) ?>"
-                        class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" readonly>
-                </div>
-            </div>
-
-            <!-- 3rd Row: Full Address -->
-            <div class="mb-4 col-span-full">
-                <label class="block text-sm font-medium text-gray-700">Location (Full Address)</label>
-                <textarea name="location_full" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" rows="2" readonly><?= htmlspecialchars($warehouse['location']) ?></textarea>
-            </div>
-
-            <!-- Submit Button (initially hidden) -->
-            <div class="col-span-full" id="updateWarehouseBtnDiv" style="display: none;">
-                <button type="submit" name="updateWarehouse"
-                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Update Warehouse</button>
-            </div>
-
-        </form>
-
-        <!-- =====================  Products Table  ====================== -->
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Products in this Warehouse</h2>
-        <div class="overflow-x-auto">
-            <table class="w-full border border-gray-200 rounded-lg overflow-hidden">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="p-3 text-left">Image</th>
-                        <th class="p-3 text-left">Product</th>
-                        <th class="p-3 text-left">Quantity</th>
-                        <th class="p-3 text-left">Volume (m³)</th>
-                        <th class="p-3 text-left">Expiry Date</th>
-                        <th class="p-3 text-left">Status</th>
-                        <th class="p-3 text-left">Edit</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <?php foreach ($productsArray as $row): ?>
-                        <?php
-                        $qty = (float)$row['quantity'];
-                        $unitVol = (float)$row['unit_volume'];
-                        $totalVol = $qty * $unitVol; // m³
-                        ?>
-                        <tr class="hover:bg-gray-50">
-                            <td class="p-3">
-                                <?php if ($row['img_url']): ?>
-                                    <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-16 w-16 object-cover rounded">
-                                <?php else: ?>
-                                    <span class="text-gray-400 italic">No Image</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="p-3 font-medium"><?= htmlspecialchars($row['product_name']) ?></td>
-                            <td class="p-3"><?= htmlspecialchars($row['quantity']) ?></td>
-                            <!-- Total Volume with m³ in parentheses -->
-                            <td class="p-3"><?= number_format($totalVol, 2) ?></td>
-                            <td class="p-3"><?= htmlspecialchars($row['expiry_date']) ?></td>
-                            <td class="p-3">
-                                <?php if ($row['request_status'] == 1): ?>
-                                    <span class="text-green-600 font-semibold">Approved</span>
-                                <?php else: ?>
-                                    <span class="text-yellow-600 font-semibold">Pending</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="p-3">
-                                <button onclick="openModal('modal-<?= $row['wp_id'] ?>')" class="text-blue-500 hover:text-blue-700">
-                                    <img width="24" height="24" src="https://img.icons8.com/material-rounded/24/create-new.png" alt="create-new" />
-                                </button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-
-            <!-- ============================ update modal ===================================== -->
-            <?php foreach ($productsArray as $row): ?>
-                <?php
-                $qty = (float)$row['quantity'];
-                $unitVol = (float)$row['unit_volume'];
-                $totalVol = $qty * $unitVol;
-                ?>
-                <div id="modal-<?= $row['wp_id'] ?>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-                    <div class="bg-white w-11/12 md:w-2/3 lg:w-1/2 rounded-lg shadow-lg overflow-hidden">
-                        <div class="flex">
-                            <!-- Left: Product Image -->
-                            <div class="w-1/3 bg-gray-100 p-4 flex items-center justify-center">
-                                <?php if ($row['img_url']): ?>
-                                    <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-32 w-32 object-cover rounded">
-                                <?php else: ?>
-                                    <span class="text-gray-400 italic">No Image</span>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- Right: Editable Form -->
-                            <div class="w-2/3 p-4">
-                                <h2 class="text-lg font-semibold mb-4">Edit Product</h2>
-                                <form method="POST" action="">
-                                    <input type="hidden" name="wp_id" value="<?= $row['wp_id'] ?>">
-                                    <input type="hidden" name="product_id" value="<?= $row['product_id'] ?>">
-
-                                    <div class="mb-2">
-                                        <label class="block text-sm font-medium text-gray-700">Product</label>
-                                        <input type="text" name="product_name" value="<?= htmlspecialchars($row['product_name']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                                    </div>
-
-                                    <div class="mb-2">
-                                        <label class="block text-sm font-medium text-gray-700">Quantity</label>
-                                        <input type="number" id="qty-<?= $row['wp_id'] ?>" name="quantity" value="<?= htmlspecialchars($row['quantity']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                                    </div>
-
-                                    <div class="mb-2">
-                                        <label class="block text-sm font-medium text-gray-700">Unit Volume</label>
-                                        <div class="flex items-center">
-                                            <input type="number" step="0.01" id="unit-<?= $row['wp_id'] ?>" name="unit_volume" value="<?= htmlspecialchars($row['unit_volume']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                                            <span class="unit-after">m³</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-2">
-                                        <label class="block text-sm font-medium text-gray-700">Total Volume</label>
-                                        <div class="flex items-center">
-                                            <input type="number" step="0.01" id="total-<?= $row['wp_id'] ?>" value="<?= number_format($totalVol, 2, '.', '') ?>" class="w-full border rounded p-2 mt-1 bg-gray-100" readonly>
-                                            <span class="unit-after">m³</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-2">
-                                        <label class="block text-sm font-medium text-gray-700">Expiry Date</label>
-                                        <input type="date" name="expiry_date" value="<?= htmlspecialchars($row['expiry_date']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700">Status</label>
-                                        <select name="request_status" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                                            <option value="1" <?= ($row['request_status'] == 1) ? 'selected' : '' ?>>Approved</option>
-                                            <option value="0" <?= ($row['request_status'] == 0) ? 'selected' : '' ?>>Pending</option>
-                                        </select>
-                                    </div>
-                                    <div class="flex justify-end space-x-2">
-                                        <button type="button" onclick="closeModal('modal-<?= $row['wp_id'] ?>')" class="px-4 py-2 rounded border">Cancel</button>
-                                        <button type="submit" name="updateProduct" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Update</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+                <!-- Start Date -->
+                <div class="filter-group">
+                    <h3>Start Date</h3>
+                    <input type="date" id="start-date">
+                    <div class="date-options">
+                        <label><input type="radio" name="start-date-option" value="before"> Before this date</label>
+                        <label><input type="radio" name="start-date-option" value="after"> After this date</label>
                     </div>
                 </div>
-            <?php endforeach; ?>
 
-            <script>
-                // Modal handlers for products
-                function openModal(id) {
-                    document.getElementById(id).classList.remove('hidden');
-                }
+                <!-- Categories -->
+                <div class="filter-group">
+                    <h3>Categories</h3>
+                    <label><input type="checkbox" class="category-checkbox" value="Fresh Produce"> Fresh Produce</label>
+                    <label><input type="checkbox" class="category-checkbox" value="Dairy & Eggs"> Dairy & Eggs</label>
+                    <label><input type="checkbox" class="category-checkbox" value="Meat & Poultry"> Meat & Poultry</label>
+                    <label><input type="checkbox" class="category-checkbox" value="Seafood"> Seafood</label>
+                    <label><input type="checkbox" class="category-checkbox" value="Bakery"> Bakery</label>
+                    <label><input type="checkbox" class="category-checkbox" value="Frozen Foods"> Frozen Foods</label>
+                    <label><input type="checkbox" class="category-checkbox" value="Canned Goods"> Canned Goods</label>
+                    <label><input type="checkbox" class="category-checkbox" value="Snacks & Sweets"> Snacks & Sweets</label>
+                    <label><input type="checkbox" class="category-checkbox" value="Beverages"> Beverages</label>
+                    <label><input type="checkbox" class="category-checkbox" value="Household Essentials"> Household Essentials</label>
+                </div>
+            </div>
 
-                function closeModal(id) {
-                    document.getElementById(id).classList.add('hidden');
-                }
+            <!-- Cards column -->
+            <div class="cards-column">
+                <!-- Header -->
+                <div class="all-products-header">
+                    <h2 id="requests-header">All Requests</h2>
+                    <div>
+                        <span class="label-text">Show:</span>
+                        <select class="dropdown" id="per-page">
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="all">Display All</option>
+                        </select>
+                        <span class="label-text">Order by:</span>
+                        <select class="dropdown" id="sort-by">
+                            <option value="request-order" selected>Request Order (First Come, First Serve)</option>
+                            <option value="volume-high-low">Volume (Highest to Lowest)</option>
+                            <option value="volume-low-high">Volume (Lowest to Highest)</option>
+                            <option value="a-z">A-Z</option>
+                        </select>
+                    </div>
+                </div>
 
-                // Recalculate total volume per modal when qty/unit changes
-                <?php foreach ($productsArray as $row): ?>
-                        (function() {
-                            const qtyEl = document.getElementById('qty-<?= $row['wp_id'] ?>');
-                            const unitEl = document.getElementById('unit-<?= $row['wp_id'] ?>');
-                            const totalEl = document.getElementById('total-<?= $row['wp_id'] ?>');
+                <!-- Cards container -->
+                <div class="products-container">
+                    <!-- Cards will be rendered here by JS -->
+                </div>
 
-                            function recalc() {
-                                const q = parseFloat(qtyEl.value) || 0;
-                                const u = parseFloat(unitEl.value) || 0;
-                                const t = q * u;
-                                totalEl.value = t.toFixed(2);
-                            }
-                            qtyEl.addEventListener('input', recalc);
-                            unitEl.addEventListener('input', recalc);
-                        })();
-                <?php endforeach; ?>
-
-                // Warehouse Info edit handlers
-                function enableWarehouseEdit() {
-                    let form = document.getElementById('warehouseForm');
-                    Array.from(form.elements).forEach(el => {
-                        if (el.name !== "") {
-                            if (el.type === 'select-one') el.disabled = false;
-                            else el.readOnly = false;
-                        }
-                    });
-                    // Show button
-                    document.getElementById('updateWarehouseBtnDiv').style.display = '';
-                    // Hide edit icon, show cancel icon
-                    document.getElementById('warehouseEditIcon').style.display = 'none';
-                    document.getElementById('warehouseCancelIcon').style.display = '';
-                }
-
-                function disableWarehouseEdit() {
-                    let form = document.getElementById('warehouseForm');
-                    Array.from(form.elements).forEach(el => {
-                        if (el.name !== "") {
-                            if (el.type === 'select-one') el.disabled = true;
-                            else el.readOnly = true;
-                        }
-                    });
-                    // Hide button
-                    document.getElementById('updateWarehouseBtnDiv').style.display = 'none';
-                    // Show edit icon, hide cancel icon
-                    document.getElementById('warehouseEditIcon').style.display = '';
-                    document.getElementById('warehouseCancelIcon').style.display = 'none';
-                }
-
-                // Ensure selects stay enabled on submit so values post
-                document.getElementById('warehouseForm').addEventListener('submit', function() {
-                    this.querySelectorAll('select').forEach(s => s.disabled = false);
-                });
-            </script>
+                <!-- Pagination -->
+                <div class="pagination">
+                    <button id="first-page">&lt;&lt;</button>
+                    <button id="prev-page">&lt;</button>
+                    <span id="page-info">1 / 1</span>
+                    <button id="next-page">&gt;</button>
+                    <button id="last-page">&gt;&gt;</button>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <!-- Modal -->
+        <div id="requestModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2 id="modalHeading"></h2>
+                <img id="modalImage" src="" alt="Product Thumbnail">
+                <div class="modal-details">
+                    <p><strong>Product Name:</strong> <span id="modalName"></span></p>
+                    <p><strong>Category:</strong> <span id="modalCategory"></span></p>
+                    <p><strong>Quantity:</strong> <span id="modalQuantity"></span></p>
+                    <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                    <p><strong>Requested At:</strong> <span id="modalRequestedAt"></span></p>
+                    <p><strong>Notes:</strong> <span id="modalNotes"></span></p>
+                    <p><strong>Updated At:</strong> <span id="modalUpdatedAt"></span></p>
+                </div>
+                <div class="modal-buttons">
+                    <a class="switch-branch" href="#">Switch to other branch</a>
+                    <button class="accept">Accept</button>
+                    <button class="reject">Reject</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Data from PHP
+        const items = <?php echo json_encode($requests); ?>;
+
+        // Event listeners for filters
+        const filterElements = [
+            document.getElementById('min-volume'),
+            document.getElementById('max-volume'),
+            document.getElementById('start-date'),
+            ...document.querySelectorAll('input[name="start-date-option"]'),
+            ...document.querySelectorAll('.category-checkbox'),
+            document.getElementById('per-page'),
+            document.getElementById('sort-by'),
+            document.getElementById('search-input')
+        ];
+
+        filterElements.forEach(el => {
+            const eventType = el.type === 'radio' || el.type === 'checkbox' ? 'change' : 'input';
+            el.addEventListener(eventType, renderCards);
+        });
+
+        // Pagination buttons
+        document.getElementById('first-page').addEventListener('click', () => {
+            currentPage = 0;
+            renderCards();
+        });
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+            if (currentPage > 0) currentPage--;
+            renderCards();
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+            if (currentPage < totalPages - 1) currentPage++;
+            renderCards();
+        });
+
+        document.getElementById('last-page').addEventListener('click', () => {
+            currentPage = totalPages - 1;
+            renderCards();
+        });
+
+        // Modal functionality
+        const modal = document.getElementById('requestModal');
+        const closeModalBtn = document.querySelector('.close-modal');
+
+        closeModalBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Track selected item id for actions
+        let selectedRequestId = null;
+
+        // Initial render
+        let currentPage = 0;
+        let totalPages = 1;
+        renderCards();
+
+        function renderCards() {
+            const minVolume = parseFloat(document.getElementById('min-volume').value) || 0;
+            const maxVolume = parseFloat(document.getElementById('max-volume').value) || Infinity;
+            const startDate = document.getElementById('start-date').value;
+            const startOption = document.querySelector('input[name="start-date-option"]:checked')?.value;
+            const selectedCategories = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            const sortValue = document.getElementById('sort-by').value;
+            const perPage = document.getElementById('per-page').value === 'all' ? items.length : parseInt(document.getElementById('per-page').value, 10);
+
+            let filtered = items.filter(item => {
+                if (item.requiredSpace < minVolume || item.requiredSpace > maxVolume) return false;
+                if (selectedCategories.length > 0 && !selectedCategories.includes(item.category)) return false;
+                if (searchQuery && !item.name.toLowerCase().includes(searchQuery)) return false;
+
+                if (startDate && startOption) {
+                    const itemStart = new Date(item.requested_at);
+                    const selected = new Date(startDate);
+                    if (startOption === 'before' && itemStart >= selected) return false;
+                    if (startOption === 'after' && itemStart <= selected) return false;
+                }
+
+                return true;
+            });
+
+            // Sort
+            if (sortValue === 'volume-high-low') {
+                filtered.sort((a, b) => b.requiredSpace - a.requiredSpace);
+            } else if (sortValue === 'volume-low-high') {
+                filtered.sort((a, b) => a.requiredSpace - b.requiredSpace);
+            } else if (sortValue === 'a-z') {
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortValue === 'request-order') {
+                filtered.sort((a, b) => a.id - b.id);
+            }
+
+            // Update header
+            const header = document.getElementById('requests-header');
+            header.innerText = filtered.length === items.length ? 'All Requests' : 'Filtered Requests';
+
+            // Pagination
+            totalPages = Math.ceil(filtered.length / perPage);
+            if (currentPage > totalPages - 1) currentPage = 0;
+            const start = currentPage * perPage;
+            const pageItems = filtered.slice(start, start + perPage);
+
+            // Render cards
+            const container = document.querySelector('.products-container');
+            container.innerHTML = '';
+            pageItems.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('product-row');
+                card.innerHTML = `
+                    <img src="../../${item.image}" alt="${item.name}">
+                    <div class="product-info">
+                        <h3>${item.name}</h3>
+                        <span>Category: ${item.category}</span>
+                        <span>Required Space: ${item.requiredSpace} m³</span>
+                        <span>Requested At: ${item.requested_at}</span>
+                        <a class="view-details-link" href="#" data-id="${item.id}">View Details</a>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Add event listeners for view details
+            document.querySelectorAll('.view-details-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const itemId = parseInt(link.getAttribute('data-id'));
+                    const item = items.find(i => i.id == itemId); // allow string/number id
+                    if (item) {
+                        selectedRequestId = item.id;
+                        document.getElementById('modalHeading').textContent = `Inventory Request for ${item.requiredSpace} m³`;
+                        document.getElementById('modalImage').src = item.image;
+                        document.getElementById('modalName').textContent = item.name;
+                        document.getElementById('modalCategory').textContent = item.category;
+                        document.getElementById('modalQuantity').textContent = item.quantity;
+                        document.getElementById('modalStatus').textContent = item.status;
+                        document.getElementById('modalRequestedAt').textContent = item.requested_at;
+                        document.getElementById('modalNotes').textContent = item.notes;
+                        document.getElementById('modalUpdatedAt').textContent = item.updated_at;
+                        modal.style.display = 'block';
+                    }
+                });
+            });
+
+            // Wire up Accept/Reject buttons once modal exists
+            const acceptBtn = document.querySelector('.accept');
+            const rejectBtn = document.querySelector('.reject');
+
+            if (acceptBtn && !acceptBtn._bound) {
+                acceptBtn._bound = true;
+                acceptBtn.addEventListener('click', async () => {
+                    if (!selectedRequestId) return;
+                    await updateRequestStatus('Accept', selectedRequestId);
+                });
+            }
+            if (rejectBtn && !rejectBtn._bound) {
+                rejectBtn._bound = true;
+                rejectBtn.addEventListener('click', async () => {
+                    if (!selectedRequestId) return;
+                    await updateRequestStatus('Reject', selectedRequestId);
+                });
+            }
+
+            // Update pagination info
+            document.getElementById('page-info').innerText = `${totalPages > 0 ? currentPage + 1 : 0} / ${totalPages || 1}`;
+            document.getElementById('first-page').disabled = currentPage === 0;
+            document.getElementById('prev-page').disabled = currentPage === 0;
+            document.getElementById('next-page').disabled = currentPage >= totalPages - 1;
+            document.getElementById('last-page').disabled = currentPage >= totalPages - 1;
+        }
+
+        async function updateRequestStatus(action, requestId) {
+            try {
+                const formData = new FormData();
+                formData.append('action', action);
+                formData.append('request_id', requestId);
+
+                const res = await fetch(location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data && data.success) {
+                    // Update local state to reflect the change (status field)
+                    const idx = items.findIndex(i => i.id == requestId);
+                    if (idx > -1) {
+                        items[idx].status = action === 'Accept' ? 'Done' : 'Rejected';
+                    }
+                    // Close modal and re-render to remove Done items from list
+                    document.getElementById('requestModal').style.display = 'none';
+                    renderCards();
+                } else {
+                    alert('Failed to update status.');
+                }
+            } catch (e) {
+                alert('Error updating status.');
+            }
+        }
+    </script>
+
 </body>
 
 </html>

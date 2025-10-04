@@ -110,6 +110,12 @@ while ($row = $result->fetch_assoc()) {
         .warehouse-edit-icon {
             cursor: pointer;
         }
+
+        .unit-after {
+            margin-left: 6px;
+            color: #4b5563;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 
@@ -212,7 +218,7 @@ while ($row = $result->fetch_assoc()) {
                         <th class="p-3 text-left">Image</th>
                         <th class="p-3 text-left">Product</th>
                         <th class="p-3 text-left">Quantity</th>
-                        <th class="p-3 text-left">Unit Volume</th>
+                        <th class="p-3 text-left">Volume (m³)</th>
                         <th class="p-3 text-left">Expiry Date</th>
                         <th class="p-3 text-left">Status</th>
                         <th class="p-3 text-left">Edit</th>
@@ -220,6 +226,11 @@ while ($row = $result->fetch_assoc()) {
                 </thead>
                 <tbody class="divide-y">
                     <?php foreach ($productsArray as $row): ?>
+                        <?php
+                        $qty = (float)$row['quantity'];
+                        $unitVol = (float)$row['unit_volume'];
+                        $totalVol = $qty * $unitVol; // m³
+                        ?>
                         <tr class="hover:bg-gray-50">
                             <td class="p-3">
                                 <?php if ($row['img_url']): ?>
@@ -230,7 +241,8 @@ while ($row = $result->fetch_assoc()) {
                             </td>
                             <td class="p-3 font-medium"><?= htmlspecialchars($row['product_name']) ?></td>
                             <td class="p-3"><?= htmlspecialchars($row['quantity']) ?></td>
-                            <td class="p-3"><?= htmlspecialchars($row['unit_volume']) ?></td>
+                            <!-- Total Volume with m³ in parentheses -->
+                            <td class="p-3"><?= number_format($totalVol, 2) ?></td>
                             <td class="p-3"><?= htmlspecialchars($row['expiry_date']) ?></td>
                             <td class="p-3">
                                 <?php if ($row['request_status'] == 1): ?>
@@ -251,6 +263,11 @@ while ($row = $result->fetch_assoc()) {
 
             <!-- ============================ update modal ===================================== -->
             <?php foreach ($productsArray as $row): ?>
+                <?php
+                $qty = (float)$row['quantity'];
+                $unitVol = (float)$row['unit_volume'];
+                $totalVol = $qty * $unitVol;
+                ?>
                 <div id="modal-<?= $row['wp_id'] ?>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
                     <div class="bg-white w-11/12 md:w-2/3 lg:w-1/2 rounded-lg shadow-lg overflow-hidden">
                         <div class="flex">
@@ -277,12 +294,23 @@ while ($row = $result->fetch_assoc()) {
 
                                     <div class="mb-2">
                                         <label class="block text-sm font-medium text-gray-700">Quantity</label>
-                                        <input type="number" name="quantity" value="<?= htmlspecialchars($row['quantity']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                                        <input type="number" id="qty-<?= $row['wp_id'] ?>" name="quantity" value="<?= htmlspecialchars($row['quantity']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
                                     </div>
 
                                     <div class="mb-2">
                                         <label class="block text-sm font-medium text-gray-700">Unit Volume</label>
-                                        <input type="text" name="unit_volume" value="<?= htmlspecialchars($row['unit_volume']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                                        <div class="flex items-center">
+                                            <input type="number" step="0.01" id="unit-<?= $row['wp_id'] ?>" name="unit_volume" value="<?= htmlspecialchars($row['unit_volume']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                                            <span class="unit-after">m³</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="block text-sm font-medium text-gray-700">Total Volume</label>
+                                        <div class="flex items-center">
+                                            <input type="number" step="0.01" id="total-<?= $row['wp_id'] ?>" value="<?= number_format($totalVol, 2, '.', '') ?>" class="w-full border rounded p-2 mt-1 bg-gray-100" readonly>
+                                            <span class="unit-after">m³</span>
+                                        </div>
                                     </div>
 
                                     <div class="mb-2">
@@ -318,6 +346,24 @@ while ($row = $result->fetch_assoc()) {
                     document.getElementById(id).classList.add('hidden');
                 }
 
+                // Recalculate total volume per modal when qty/unit changes
+                <?php foreach ($productsArray as $row): ?>
+                        (function() {
+                            const qtyEl = document.getElementById('qty-<?= $row['wp_id'] ?>');
+                            const unitEl = document.getElementById('unit-<?= $row['wp_id'] ?>');
+                            const totalEl = document.getElementById('total-<?= $row['wp_id'] ?>');
+
+                            function recalc() {
+                                const q = parseFloat(qtyEl.value) || 0;
+                                const u = parseFloat(unitEl.value) || 0;
+                                const t = q * u;
+                                totalEl.value = t.toFixed(2);
+                            }
+                            qtyEl.addEventListener('input', recalc);
+                            unitEl.addEventListener('input', recalc);
+                        })();
+                <?php endforeach; ?>
+
                 // Warehouse Info edit handlers
                 function enableWarehouseEdit() {
                     let form = document.getElementById('warehouseForm');
@@ -349,10 +395,9 @@ while ($row = $result->fetch_assoc()) {
                     document.getElementById('warehouseCancelIcon').style.display = 'none';
                 }
 
-                // IMPORTANT: Do NOT disable fields on submit; ensure selects remain enabled so values are posted.
+                // Ensure selects stay enabled on submit so values post
                 document.getElementById('warehouseForm').addEventListener('submit', function() {
                     this.querySelectorAll('select').forEach(s => s.disabled = false);
-                    // Do not call disableWarehouseEdit() here; the page will reload after POST.
                 });
             </script>
         </div>
