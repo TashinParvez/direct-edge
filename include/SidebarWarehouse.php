@@ -14,7 +14,7 @@
 </head>
 
 <body class="bg-custom">
-    <div class="sidebar pl-3 m-0">
+    <div class="sidebar pl-5 m-0">
         <div class="logo-details">
             <i class='bx bx-menu' id="btn"></i>
         </div>
@@ -30,6 +30,13 @@
                     <span class="links_name">Dashboard</span>
                 </a>
                 <span class="tooltip">Dashboard</span>
+            </li>
+            <li>
+                <a href="..\Investment Page\Investment.php">
+                    <i class='bx bx-store-alt'></i>
+                    <span class="links_name">Invest in Store</span>
+                </a>
+                <span class="tooltip">Invest in Store</span>
             </li>
             <li>
                 <a href="#">

@@ -1,0 +1,11 @@
+request_id
+requester_id
+status
+requested_at
+updated_at
+notes
+
+product_id
+quantity
+note 
+ 

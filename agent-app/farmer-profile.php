@@ -3,7 +3,7 @@
 include '../include/connect-db.php'; // Database connection
 
 // Get farmer ID from URL parameter
-$farmer_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$farmer_id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 
 if ($farmer_id <= 0) {
     die("Invalid farmer ID");

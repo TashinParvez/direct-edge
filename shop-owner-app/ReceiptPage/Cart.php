@@ -86,32 +86,32 @@
         </div>
     </section>
     <script>
-    document.querySelectorAll('.flex.mb-3').forEach(card => {
-        const counterElement = card.querySelector('.counter');
-        const counterPriceElement = card.querySelector('.counter-price');
-        const increaseBtn = card.querySelector('.increase-btn');
-        const decreaseBtn = card.querySelector('.decrease-btn');
-        const basePrice = parseInt(counterPriceElement.dataset.basePrice) || 15;
+        document.querySelectorAll('.flex.mb-3').forEach(card => {
+            const counterElement = card.querySelector('.counter');
+            const counterPriceElement = card.querySelector('.counter-price');
+            const increaseBtn = card.querySelector('.increase-btn');
+            const decreaseBtn = card.querySelector('.decrease-btn');
+            const basePrice = parseInt(counterPriceElement.dataset.basePrice) || 15;
 
-        let counter = parseInt(counterElement.textContent);
-        let counterPrice = parseInt(counterPriceElement.textContent);
+            let counter = parseInt(counterElement.textContent);
+            let counterPrice = parseInt(counterPriceElement.textContent);
 
-        increaseBtn.addEventListener('click', () => {
-            counter++;
-            counterPrice += basePrice;
-            counterElement.textContent = counter;
-            counterPriceElement.textContent = counterPrice;
-        });
-
-        decreaseBtn.addEventListener('click', () => {
-            if (counter > 0) {
-                counter--;
-                counterPrice -= basePrice;
+            increaseBtn.addEventListener('click', () => {
+                counter++;
+                counterPrice += basePrice;
                 counterElement.textContent = counter;
                 counterPriceElement.textContent = counterPrice;
-            }
+            });
+
+            decreaseBtn.addEventListener('click', () => {
+                if (counter > 0) {
+                    counter--;
+                    counterPrice -= basePrice;
+                    counterElement.textContent = counter;
+                    counterPriceElement.textContent = counterPrice;
+                }
+            });
         });
-    });
     </script>
 </body>
 
