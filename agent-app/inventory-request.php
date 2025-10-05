@@ -2,6 +2,7 @@
 include '../include/connect-db.php'; // database connection
 
 
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $productName = $_POST['product'];
@@ -11,11 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $expiry = $_POST['expiry'];
     $warehouseId = $_POST['warehouse']; // warehouse_id directly from dropdown
 
+
     // Handle product image upload
     $imagePath = null;
     if (isset($_FILES['productFile']) && $_FILES['productFile']['error'] == 0) {
         $uploadDir = '../assets/products-image/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+
 
         // Clean filename and add product name + date
         $ext = pathinfo($_FILES['productFile']['name'], PATHINFO_EXTENSION);
@@ -23,11 +26,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $filename = $safeProductName . '_' . date('YmdHis') . '.' . $ext;
         $targetFile = $uploadDir . $filename;
 
+
         if (move_uploaded_file($_FILES['productFile']['tmp_name'], $targetFile)) {
             // Save relative path or full URL
             $imagePath = 'assets/products-image/' . $filename; // relative path
         }
     }
+
 
     // Insert into warehouse_products table
     $stmt = $conn->prepare("
@@ -45,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     ");
     $stmt->bind_param("iisdss", $warehouseId, $productName, $quantity, $expiry, $unitVolume, $imagePath);
 
+
     if ($stmt->execute()) {
         $success = "Request submitted successfully!";
     } else {
@@ -53,11 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 
+
 //============================ all producs name =======================
 $sql = "SELECT name FROM `products` WHERE 1";
 
+
 $result = mysqli_query($conn, $sql);
 $all_producs = mysqli_fetch_all($result, MYSQLI_NUM);
+
 
 
 
@@ -65,8 +74,10 @@ $all_producs = mysqli_fetch_all($result, MYSQLI_NUM);
 $sql = "SELECT `warehouse_id`, `name`, `capacity_total` - `capacity_used` as free_capacity
         FROM `warehouses` WHERE 1";
 
+
 $result = mysqli_query($conn, $sql);
 $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
+
 
 
 
@@ -85,60 +96,167 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 <head>
     <meta charset="UTF-8">
+    <title>Agent Inventory Request - Stock Integrated</title>
+    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
+    <link rel="stylesheet" href="../Include/sidebar.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agent Inventory Request</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .request-form {
+            transition: all 0.3s ease;
+        }
+        .request-form:hover {
+            background-color: #f9fafb;
+        }
+        .form-field {
+            transition: all 0.3s ease;
+        }
+        .form-field:hover {
+            background-color: #f3f4f6;
+        }
+        .form-field:focus {
+            background-color: #ffffff;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        .product-list {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .product-item {
+            transition: all 0.2s ease;
+        }
+        .product-item:hover {
+            background-color: #f3f4f6;
+            padding-left: 1rem;
+        }
+        .warehouse-option {
+            transition: all 0.2s ease;
+        }
+        .preview-image {
+            transition: all 0.3s ease;
+        }
+        .preview-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        .space-display {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            animation: pulseGlow 2s infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); }
+        }
+        .success-message {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media print {
+            .no-print { display: none !important; }
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 flex">
+<body class="bg-gray-100">
+    <?php include '../Include/Sidebar.php'; ?>
+    
+    <section class="home-section p-0">
+        <div class="flex justify-between items-center p-4">
+            <h1 class="text-2xl font-bold">Agent Inventory Request</h1>
+            <button onclick="window.history.back()" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
+                <i class='bx bx-arrow-back'></i> Back
+            </button>
+        </div>
 
-    <!-- Sidebar -->
-    <?php
-    // include '../include/Sidebar.php';  
-    ?>
+        <?php if (isset($success)): ?>
+            <div class="mx-4 mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded success-message">
+                <div class="flex items-center">
+                    <i class='bx bx-check-circle mr-2'></i>
+                    <?php echo $success; ?>
+                </div>
+            </div>
+        <?php endif; ?>
 
-    <!-- Main Content -->
-    <div class="flex-1 p-6 ml-64 flex justify-center">
-        <div class="w-full max-w-3xl">
+        <?php if (isset($error)): ?>
+            <div class="mx-4 mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                <div class="flex items-center">
+                    <i class='bx bx-error-circle mr-2'></i>
+                    <?php echo $error; ?>
+                </div>
+            </div>
+        <?php endif; ?>
 
-            <h2 class="text-2xl font-bold mb-6 text-center">Inventory Request</h2>
-
-            <?php if (isset($success)): ?>
-                <div class="mb-4 p-3 bg-green-100 text-green-800 rounded"><?= $success ?></div>
-            <?php endif; ?>
-
-            <!-- Request Form -->
-            <form method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded shadow-md space-y-4">
-
-                <!-- Product Selection -->
-                <div>
-                    <label class="block mb-1 font-medium">Select Product</label>
-                    <input type="text" name="product" id="productSearch" placeholder="Search product..."
-                        class="w-full p-2 border border-gray-300 rounded">
-                    <ul id="productList" class="border border-gray-300 rounded mt-1 max-h-40 overflow-y-auto hidden bg-white"></ul>
+        <div class="container mx-auto px-4">
+            <div class="bg-white shadow-lg rounded-lg p-6 request-form">
+                
+                <!-- Form Header -->
+                <div class="mb-6 text-center">
+                    <h2 class="text-xl font-semibold text-gray-800 flex items-center justify-center">
+                        <i class='bx bx-package mr-2 text-green-600'></i>
+                        Submit Inventory Request
+                    </h2>
+                    <p class="text-sm text-gray-600 mt-2">Fill out the form below to request inventory items</p>
                 </div>
 
-                <!-- Quantity & Unit -->
-                <div class="grid grid-cols-3 gap-4">
+                <form method="POST" enctype="multipart/form-data" class="space-y-6">
+
+                    <!-- Product Selection -->
                     <div>
-                        <label class="block mb-1 font-medium">Quantity</label>
-                        <input type="number" name="quantity" id="quantity" min="1" value="1"
-                            class="w-full p-2 border border-gray-300 rounded">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class='bx bx-search-alt mr-1'></i>Select Product *
+                        </label>
+                        <div class="relative">
+                            <input type="text" name="product" id="productSearch" placeholder="Search and select product..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field" required>
+                            <ul id="productList" class="absolute z-10 w-full border border-gray-300 rounded-md mt-1 max-h-40 overflow-y-auto hidden bg-white product-list">
+                                <!-- Dynamic product list -->
+                            </ul>
+                        </div>
                     </div>
+
+                    <!-- Quantity, Unit, and Unit Volume -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-calculator mr-1'></i>Quantity *
+                            </label>
+                            <input type="number" name="quantity" id="quantity" min="1" value="1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-ruler mr-1'></i>Unit
+                            </label>
+                            <select name="unit" id="unit" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
+                                <option value="kg">Kg</option>
+                                <option value="litre">Litre</option>
+                                <option value="pcs">Pcs</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-cube mr-1'></i>Unit Volume (m³) *
+                            </label>
+                            <input type="number" step="0.01" name="unitVolume" id="unitVolume" value="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field" required>
+                        </div>
+                    </div>
+
+                    <!-- Expiry Date -->
                     <div>
-                        <label class="block mb-1 font-medium">Unit</label>
-                        <select name="unit" id="unit" class="w-full p-2 border border-gray-300 rounded">
-                            <option value="kg">Kg</option>
-                            <option value="litre">Litre</option>
-                            <option value="pcs">Pcs</option>
-                        </select>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class='bx bx-calendar mr-1'></i>Expiry Date
+                        </label>
+                        <input type="date" name="expiry" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
                     </div>
-                    <div>
-                        <label class="block mb-1 font-medium">Unit Volume (m³)</label>
-                        <input type="number" step="0.01" name="unitVolume" id="unitVolume" value="0.1"
-                            class="w-full p-2 border border-gray-300 rounded">
-                    </div>
-                </div>
+
 
                 <!-- Inbound Date -->
                 <div>
@@ -160,26 +278,37 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
                     <img id="productPreview" src="" class="mt-2 h-32 w-32 object-cover rounded hidden">
                 </div>
 
-                <!-- Required Space Calculation -->
-                <div>
-                    <p class="font-medium">Required Space (m³): <span id="requiredSpace">0</span></p>
-                </div>
 
-                <!-- Warehouse Selection -->
-                <div>
-                    <label class="block mb-1 font-medium">Select Warehouse</label>
-                    <select id="warehouse" name="warehouse" class="w-full p-2 border border-gray-300 rounded">
-                        <option value="">-- Choose Warehouse --</option>
-                        <option value="1">Warehouse A (Available: 50 m³)</option>
-                        <option value="2">Warehouse B (Available: 30 m³)</option>
-                        <option value="3">Warehouse C (Available: 70 m³)</option>
-                    </select>
-                </div>
+                    <!-- Required Space Display -->
+                    <div class="space-display p-4 rounded-md text-center">
+                        <p class="font-semibold flex items-center justify-center">
+                            <i class='bx bx-box mr-2'></i>
+                            Required Storage Space: <span id="requiredSpace" class="ml-2 text-xl">0.00</span> m³
+                        </p>
+                    </div>
 
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">Submit Request</button>
-            </form>
+                    <!-- Warehouse Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class='bx bx-building mr-1'></i>Select Warehouse *
+                        </label>
+                        <select id="warehouse" name="warehouse" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field" required>
+                            <option value="">-- Choose Available Warehouse --</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Only warehouses with sufficient space are shown</p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-center pt-4">
+                        <button type="submit" class="bg-green-500 text-white px-8 py-3 rounded hover:bg-green-600 transition-colors font-semibold">
+                            <i class='bx bx-send mr-2'></i>Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
+    </section>
 
     <script>
         const productSearch = document.getElementById('productSearch');
@@ -188,6 +317,8 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
         const unitVolumeInput = document.getElementById('unitVolume');
         const requiredSpace = document.getElementById('requiredSpace');
         const warehouseDropdown = document.getElementById('warehouse');
+        const productPreview = document.getElementById('productPreview');
+        const productFile = document.getElementById('productFile');
 
         // Products from PHP
         const products = <?php echo json_encode(array_column($all_producs, 0)); ?>;
@@ -203,8 +334,8 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
                 const filtered = products.filter(p => p.toLowerCase().includes(val));
                 filtered.forEach(p => {
                     const li = document.createElement('li');
-                    li.textContent = p;
-                    li.className = 'p-2 cursor-pointer hover:bg-gray-100';
+                    li.innerHTML = `<i class='bx bx-package mr-2 text-green-600'></i>${p}`;
+                    li.className = 'p-3 cursor-pointer hover:bg-gray-100 product-item flex items-center';
                     li.addEventListener('click', () => {
                         productSearch.value = p;
                         productList.classList.add('hidden');
@@ -214,6 +345,13 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
                 });
                 productList.classList.remove('hidden');
             } else {
+                productList.classList.add('hidden');
+            }
+        });
+
+        // Hide product list when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!productSearch.contains(e.target) && !productList.contains(e.target)) {
                 productList.classList.add('hidden');
             }
         });
@@ -233,20 +371,47 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
         //================ Update Warehouse Dropdown ===================
         function updateWarehouses(space = parseFloat(requiredSpace.textContent) || 0) {
-            warehouseDropdown.innerHTML = '<option value="">-- Choose Warehouse --</option>';
+            warehouseDropdown.innerHTML = '<option value="">-- Choose Available Warehouse --</option>';
+            let availableWarehouses = 0;
+            
             warehouses.forEach(wh => {
                 if (wh.free_capacity >= space) {
                     const option = document.createElement('option');
                     option.value = wh.warehouse_id;
-                    option.textContent = `${wh.name} (Free: ${wh.free_capacity} m³)`;
+                    option.textContent = `${wh.name} (Available: ${wh.free_capacity} m³)`;
+                    option.className = 'warehouse-option';
                     warehouseDropdown.appendChild(option);
+                    availableWarehouses++;
                 }
             });
+
+            if (availableWarehouses === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No warehouses have sufficient space';
+                option.disabled = true;
+                warehouseDropdown.appendChild(option);
+            }
         }
+
+        //================ Image Preview ===================
+        productFile.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    productPreview.src = e.target.result;
+                    productPreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                productPreview.classList.add('hidden');
+            }
+        });
+
+        // Initialize warehouses on page load
+        updateWarehouses();
     </script>
-
-
-
 </body>
 
 </html>
