@@ -55,7 +55,7 @@ $pending_stock_requests = $row['total_requests'];
 // have to write in the cart                tashin
 
 $sql = "SELECT COUNT(DISTINCT product_id) AS distinct_product_count
-        FROM stock_request_items;";
+        FROM stock_requests;";
 
 $result = mysqli_query($conn, $sql);
 $row = mysqli_fetch_assoc($result);
@@ -348,7 +348,7 @@ $activity_logs = [
 
                 <button
                     class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
-                    onclick="window.location.href='../warehouse-status.php'">
+                    onclick="window.location.href='../Manage-Warehouse/warehouse-status.php'">
                     Warehouse Status
                 </button>
 
