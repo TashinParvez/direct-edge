@@ -141,225 +141,432 @@ if (count($ordersArr) > 0) {
 
 <head>
     <meta charset="UTF-8">
+    <title>All Orders - Stock Integrated</title>
+    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
+    <link rel="stylesheet" href="../../Include/sidebar.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Orders</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .order-row {
+            transition: all 0.3s ease;
+        }
+        .order-row:hover {
+            background-color: #f9fafb;
+            transform: translateY(-1px);
+        }
+        .filter-container {
+            transition: all 0.3s ease;
+        }
+        .filter-container:hover {
+            background-color: #f9fafb;
+        }
+        .search-field {
+            transition: all 0.3s ease;
+        }
+        .search-field:hover {
+            background-color: #f3f4f6;
+        }
+        .search-field:focus {
+            background-color: #ffffff;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        .modal {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .status-pending { color: #d97706; }
+        .status-approved { color: #059669; }
+        .status-shipped { color: #2563eb; }
+        .status-delivered { color: #6b7280; }
+        .status-cancelled { color: #dc2626; }
+        @media print {
+            .no-print { display: none !important; }
+        }
+    </style>
 </head>
 
-<body class="bg-gray-50 p-8">
-
-    <div class="max-w-7xl mx-auto bg-white shadow rounded-lg p-6">
-        <h1 class="text-3xl font-bold text-blue-700 mb-6">All Orders</h1>
-
-        <!-- Search & Filters -->
-        <form method="GET" id="filterForm" class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search by product, warehouse or status..."
-                class="border p-2 rounded w-full md:w-full focus:ring focus:ring-blue-200">
-            <div class="flex gap-2">
-                <select name="status" class="border p-2 rounded w-full md:w-auto">
-                    <option value="">Filter by Status</option>
-                    <?php foreach ($statusOptions as $opt): ?>
-                        <option value="<?= $opt ?>" <?= ($filterStatus == $opt) ? 'selected' : '' ?>><?= $opt ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <select name="date" class="border p-2 rounded w-full md:w-auto">
-                    <option value="">Filter by Date</option>
-                    <option value="today" <?= ($filterDate == 'today') ? 'selected' : '' ?>>Today</option>
-                    <option value="this_week" <?= ($filterDate == 'this_week') ? 'selected' : '' ?>>This Week</option>
-                    <option value="this_month" <?= ($filterDate == 'this_month') ? 'selected' : '' ?>>This Month</option>
-                </select>
+<body class="bg-gray-100">
+    <?php include '../../include/Sidebar.php'; ?>
+    
+    <section class="home-section p-0">
+        <div class="flex justify-between items-center p-4">
+            <h1 class="text-2xl font-bold">All Orders</h1>
+            <div class="flex space-x-2 no-print">
+                <button onclick="window.print()" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
+                    <i class='bx bx-printer'></i> Print
+                </button>
+                <button class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                    <i class='bx bx-plus'></i> New Order
+                </button>
             </div>
-        </form>
-
-        <!-- Orders Table -->
-        <div class="overflow-x-auto">
-            <table class="w-full border border-gray-200 rounded-lg overflow-hidden">
-                <thead class="bg-gray-100 text-gray-700">
-                    <tr>
-                        <th class="p-3 text-left">Order ID</th>
-                        <th class="p-3 text-left">Placed At</th>
-                        <th class="p-3 text-left">Updated At</th>
-                        <th class="p-3 text-left">Products</th>
-                        <th class="p-3 text-left">Total Qty</th>
-                        <th class="p-3 text-left">Total Amount</th>
-                        <th class="p-3 text-left">Status</th>
-                        <th class="p-3 text-left">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <?php if (empty($ordersArr)): ?>
-                        <tr>
-                            <td colspan="8" class="p-3 text-center">No orders found.</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($ordersArr as $order): ?>
-                            <tr class="hover:bg-gray-50 align-top">
-                                <td class="p-3 font-medium"><?= $order['order_id'] ?></td>
-                                <td class="p-3"><?= date('d M, Y', strtotime($order['placed_at'])) ?></td>
-                                <td class="p-3"><?= date('d M, Y', strtotime($order['updated_at'])) ?></td>
-                                <td class="p-3 text-sm leading-relaxed">
-                                    <table>
-                                        <?php if (isset($orderProducts[$order['order_id']])) : ?>
-                                            <?php foreach ($orderProducts[$order['order_id']] as $item) : ?>
-                                                <tr>
-                                                    <td><?= htmlspecialchars($item['name']) ?></td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </table>
-                                </td>
-                                <td class="p-3 align-top">
-                                    <table>
-                                        <?php if (isset($orderProducts[$order['order_id']])) : ?>
-                                            <?php foreach ($orderProducts[$order['order_id']] as $item) : ?>
-                                                <tr>
-                                                    <td><?= $item['quantity'] ?></td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </table>
-                                </td>
-                                <td class="p-3">$<?= number_format($order['total_amount'], 2) ?></td>
-                                <td class="p-3">
-                                    <?php
-                                    $statusColor = match ($order['status']) {
-                                        'Pending' => 'text-yellow-600',
-                                        'Approved' => 'text-green-600',
-                                        'Shipped' => 'text-blue-600',
-                                        'Delivered' => 'text-gray-600',
-                                        'Cancelled' => 'text-red-600',
-                                        default => 'text-gray-600'
-                                    };
-                                    ?>
-                                    <span class="<?= $statusColor ?> font-semibold"><?= $order['status'] ?></span>
-                                </td>
-                                <td class="p-3">
-                                    <a href="javascript:void(0);" onclick="openOrderModal(<?= $order['order_id'] ?>)"
-                                        class="text-blue-600 font-semibold underline">See Details</a>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
         </div>
 
-        <!-- Pagination -->
-        <div class="mt-6 flex justify-center space-x-2">
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                <a href="?page=<?= $i ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($filterStatus) ?>&date=<?= urlencode($filterDate) ?>"
-                    class="px-3 py-1 border rounded hover:bg-gray-100 <?= ($page == $i) ? 'bg-blue-100' : '' ?>"><?= $i ?></a>
-            <?php endfor; ?>
-        </div>
+        <div class="container mx-auto px-4">
 
-        <!-- Modals: One per order -->
-        <?php foreach ($ordersArr as $order): ?>
-            <div id="order-modal-<?= $order['order_id'] ?>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-                <div class="bg-white w-full max-w-lg rounded-lg shadow-lg p-6 relative">
-                    <!-- Close -->
-                    <button class="absolute top-2 right-2 text-2xl" onclick="closeOrderModal(<?= $order['order_id'] ?>)">&times;</button>
-                    <h2 class="text-xl font-bold mb-4">Order #<?= $order['order_id'] ?> Details</h2>
-                    <div class="mb-2"><strong>Placed At:</strong> <?= date('d M, Y H:i', strtotime($order['placed_at'])) ?></div>
-                    <div class="mb-2"><strong>Updated At:</strong> <?= date('d M, Y H:i', strtotime($order['updated_at'])) ?></div>
-                    <div class="mb-2"><strong>Shop Owner:</strong> <?= htmlspecialchars($order['shopowner_name']) ?></div>
-                    <div class="mb-2"><strong>Status:</strong>
-                        <select id="status-select-<?= $order['order_id'] ?>" class="border rounded py-1 px-3">
+            <!-- Search & Filters -->
+            <div class="bg-white shadow-lg rounded-lg p-6 mb-6 filter-container">
+                <form method="GET" id="filterForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class='bx bx-search mr-1'></i>Search Orders
+                        </label>
+                        <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" 
+                            placeholder="Search by product name..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class='bx bx-flag mr-1'></i>Status Filter
+                        </label>
+                        <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
+                            <option value="">All Status</option>
                             <?php foreach ($statusOptions as $opt): ?>
-                                <option value="<?= $opt ?>" <?= ($order['status'] == $opt) ? 'selected' : '' ?>><?= $opt ?></option>
+                                <option value="<?= $opt ?>" <?= ($filterStatus == $opt) ? 'selected' : '' ?>><?= $opt ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <button onclick="updateStatus(<?= $order['order_id'] ?>)" class="ml-2 bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">Save</button>
                     </div>
-                    <div class="my-2">
-                        <strong>Products:</strong>
-                        <div>
-                            <table class="min-w-full text-sm border border-gray-200 mt-2">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-2 py-1 border">Product</th>
-                                        <th class="px-2 py-1 border">Qty</th>
-                                        <th class="px-2 py-1 border">Unit Price</th>
-                                        <th class="px-2 py-1 border">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $orderTotal = 0;
-                                    if (isset($orderProducts[$order['order_id']])):
-                                        foreach ($orderProducts[$order['order_id']] as $item):
-                                            $orderTotal += $item['total_price'];
-                                    ?>
-                                            <tr>
-                                                <td class="px-2 py-1 border"><?= htmlspecialchars($item['name']) ?></td>
-                                                <td class="px-2 py-1 border"><?= $item['quantity'] ?></td>
-                                                <td class="px-2 py-1 border">$<?= number_format($item['unit_price'], 2) ?></td>
-                                                <td class="px-2 py-1 border">$<?= number_format($item['total_price'], 2) ?></td>
-                                            </tr>
-                                    <?php endforeach;
-                                    endif; ?>
-                                </tbody>
-                                <tfoot>
-                                    <tr class="font-bold bg-gray-100">
-                                        <td class="px-2 py-1 border" colspan="3">Total</td>
-                                        <td class="px-2 py-1 border">$<?= number_format($order['total_amount'], 2) ?></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class='bx bx-calendar mr-1'></i>Date Filter
+                        </label>
+                        <select name="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
+                            <option value="">All Dates</option>
+                            <option value="today" <?= ($filterDate == 'today') ? 'selected' : '' ?>>Today</option>
+                            <option value="this_week" <?= ($filterDate == 'this_week') ? 'selected' : '' ?>>This Week</option>
+                            <option value="this_month" <?= ($filterDate == 'this_month') ? 'selected' : '' ?>>This Month</option>
+                        </select>
                     </div>
-                    <div class="flex justify-end mt-4">
-                        <button type="button" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700" onclick="closeOrderModal(<?= $order['order_id'] ?>)">Close</button>
+                </form>
+            </div>
+
+            <!-- Results Summary -->
+            <div class="bg-white shadow-md rounded-lg p-4 mb-6">
+                <div class="flex justify-between items-center">
+                    <div class="text-lg font-semibold text-gray-700">
+                        Showing page <?= $page ?> of <?= $totalPages ?> (<?= $totalOrders ?> total orders)
+                    </div>
+                    <div class="text-sm text-gray-500">
+                        <?= count($ordersArr) ?> orders on this page
                     </div>
                 </div>
             </div>
-        <?php endforeach; ?>
 
-        <script>
-            // Auto-submit filter on change
-            document.querySelectorAll('select[name="status"], select[name="date"]').forEach(function(el) {
-                el.addEventListener('change', function() {
-                    this.form.submit();
-                });
+            <!-- Orders Table -->
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i class='bx bx-hash mr-1'></i>Order ID
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i class='bx bx-calendar mr-1'></i>Placed
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i class='bx bx-time mr-1'></i>Updated
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i class='bx bx-package mr-1'></i>Products
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i class='bx bx-calculator mr-1'></i>Quantity
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i class='bx bx-dollar mr-1'></i>Total
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <i class='bx bx-flag mr-1'></i>Status
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider no-print">
+                                    <i class='bx bx-cog'></i>Action
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <?php if (empty($ordersArr)): ?>
+                                <tr>
+                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                                        <i class='bx bx-shopping-bag text-6xl mb-4 text-gray-300'></i>
+                                        <div class="text-lg">No orders found</div>
+                                        <div class="text-sm">Try adjusting your search criteria</div>
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($ordersArr as $order): ?>
+                                    <tr class="order-row">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">#<?= $order['order_id'] ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900"><?= date('d M, Y', strtotime($order['placed_at'])) ?></div>
+                                            <div class="text-xs text-gray-500"><?= date('H:i', strtotime($order['placed_at'])) ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm text-gray-900"><?= date('d M, Y', strtotime($order['updated_at'])) ?></div>
+                                            <div class="text-xs text-gray-500"><?= date('H:i', strtotime($order['updated_at'])) ?></div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm">
+                                                <?php if (isset($orderProducts[$order['order_id']])): ?>
+                                                    <?php 
+                                                    $items = $orderProducts[$order['order_id']];
+                                                    $displayCount = min(3, count($items));
+                                                    for ($i = 0; $i < $displayCount; $i++): ?>
+                                                        <div class="mb-1"><?= htmlspecialchars($items[$i]['name']) ?></div>
+                                                    <?php endfor; ?>
+                                                    <?php if (count($items) > 3): ?>
+                                                        <div class="text-xs text-blue-600 cursor-pointer" onclick="openOrderModal(<?= $order['order_id'] ?>)">
+                                                            +<?= count($items) - 3 ?> more items
+                                                        </div>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm">
+                                                <?php if (isset($orderProducts[$order['order_id']])): ?>
+                                                    <?php 
+                                                    $items = $orderProducts[$order['order_id']];
+                                                    $displayCount = min(3, count($items));
+                                                    for ($i = 0; $i < $displayCount; $i++): ?>
+                                                        <div class="mb-1 text-center"><?= $items[$i]['quantity'] ?></div>
+                                                    <?php endfor; ?>
+                                                    <?php if (count($items) > 3): ?>
+                                                        <div class="text-xs text-gray-400">...</div>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">$<?= number_format($order['total_amount'], 2) ?></div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <?php
+                                            $statusClasses = [
+                                                'Pending' => 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                                                'Approved' => 'bg-green-100 text-green-800 border border-green-200',
+                                                'Shipped' => 'bg-blue-100 text-blue-800 border border-blue-200',
+                                                'Delivered' => 'bg-gray-100 text-gray-800 border border-gray-200',
+                                                'Cancelled' => 'bg-red-100 text-red-800 border border-red-200'
+                                            ];
+                                            $statusIcons = [
+                                                'Pending' => 'bx-time-five',
+                                                'Approved' => 'bx-check-circle',
+                                                'Shipped' => 'bx-package',
+                                                'Delivered' => 'bx-check-double',
+                                                'Cancelled' => 'bx-x-circle'
+                                            ];
+                                            ?>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold <?= $statusClasses[$order['status']] ?>">
+                                                <i class='<?= $statusIcons[$order['status']] ?> mr-1'></i><?= $order['status'] ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center no-print">
+                                            <button onclick="openOrderModal(<?= $order['order_id'] ?>)"
+                                                class="text-blue-600 hover:text-blue-900 font-medium">
+                                                <i class='bx bx-show mr-1'></i>Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="bg-white shadow-md rounded-lg p-4 mt-6 flex justify-center items-center space-x-2">
+                <?php if ($page > 1): ?>
+                    <a href="?page=1&search=<?= urlencode($search) ?>&status=<?= urlencode($filterStatus) ?>&date=<?= urlencode($filterDate) ?>"
+                        class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                        <i class='bx bx-chevrons-left'></i>
+                    </a>
+                    <a href="?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($filterStatus) ?>&date=<?= urlencode($filterDate) ?>"
+                        class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                        <i class='bx bx-chevron-left'></i>
+                    </a>
+                <?php endif; ?>
+                
+                <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
+                    <a href="?page=<?= $i ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($filterStatus) ?>&date=<?= urlencode($filterDate) ?>"
+                        class="px-4 py-2 rounded-lg transition-colors <?= ($page == $i) ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300' ?>"><?= $i ?></a>
+                <?php endfor; ?>
+                
+                <?php if ($page < $totalPages): ?>
+                    <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($filterStatus) ?>&date=<?= urlencode($filterDate) ?>"
+                        class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                        <i class='bx bx-chevron-right'></i>
+                    </a>
+                    <a href="?page=<?= $totalPages ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($filterStatus) ?>&date=<?= urlencode($filterDate) ?>"
+                        class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                        <i class='bx bx-chevrons-right'></i>
+                    </a>
+                <?php endif; ?>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Order Detail Modals -->
+    <?php foreach ($ordersArr as $order): ?>
+        <div id="order-modal-<?= $order['order_id'] ?>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
+            <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg m-4 modal-content">
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h2 class="text-xl font-bold">Order #<?= $order['order_id'] ?> Details</h2>
+                    <button class="text-gray-400 hover:text-gray-600 text-2xl" onclick="closeOrderModal(<?= $order['order_id'] ?>)">
+                        <i class='bx bx-x'></i>
+                    </button>
+                </div>
+                
+                <div class="p-6">
+                    <!-- Order Information -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <div class="space-y-3">
+                                <div class="flex items-center">
+                                    <i class='bx bx-calendar mr-2 text-gray-400'></i>
+                                    <strong>Placed At:</strong>
+                                    <span class="ml-2"><?= date('d M, Y H:i', strtotime($order['placed_at'])) ?></span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class='bx bx-time mr-2 text-gray-400'></i>
+                                    <strong>Updated At:</strong>
+                                    <span class="ml-2"><?= date('d M, Y H:i', strtotime($order['updated_at'])) ?></span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class='bx bx-user mr-2 text-gray-400'></i>
+                                    <strong>Shop Owner:</strong>
+                                    <span class="ml-2"><?= htmlspecialchars($order['shopowner_name']) ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex items-center space-x-3">
+                                <i class='bx bx-flag mr-2 text-gray-400'></i>
+                                <strong>Status:</strong>
+                                <select id="status-select-<?= $order['order_id'] ?>" class="border border-gray-300 rounded-md py-1 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <?php foreach ($statusOptions as $opt): ?>
+                                        <option value="<?= $opt ?>" <?= ($order['status'] == $opt) ? 'selected' : '' ?>><?= $opt ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button onclick="updateStatus(<?= $order['order_id'] ?>)" 
+                                    class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors">
+                                    <i class='bx bx-save mr-1'></i>Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full border border-gray-200 rounded-lg overflow-hidden">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <?php
+                                $orderTotal = 0;
+                                if (isset($orderProducts[$order['order_id']])):
+                                    foreach ($orderProducts[$order['order_id']] as $item):
+                                        $orderTotal += $item['total_price'];
+                                ?>
+                                        <tr>
+                                            <td class="px-4 py-3">
+                                                <div class="font-medium text-gray-900"><?= htmlspecialchars($item['name']) ?></div>
+                                            </td>
+                                            <td class="px-4 py-3 text-center"><?= $item['quantity'] ?></td>
+                                            <td class="px-4 py-3 text-right">$<?= number_format($item['unit_price'], 2) ?></td>
+                                            <td class="px-4 py-3 text-right font-medium">$<?= number_format($item['total_price'], 2) ?></td>
+                                        </tr>
+                                <?php endforeach;
+                                endif; ?>
+                            </tbody>
+                            <tfoot class="bg-gray-50">
+                                <tr>
+                                    <td class="px-4 py-3 font-bold text-gray-900" colspan="3">Total Amount</td>
+                                    <td class="px-4 py-3 text-right font-bold text-lg text-gray-900">$<?= number_format($order['total_amount'], 2) ?></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end p-6 border-t space-x-3">
+                    <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors" 
+                        onclick="closeOrderModal(<?= $order['order_id'] ?>)">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    <?php endforeach; ?>
+
+    <script>
+        // Auto-submit filter on change
+        document.querySelectorAll('select[name="status"], select[name="date"]').forEach(function(el) {
+            el.addEventListener('change', function() {
+                this.form.submit();
             });
-            document.querySelector('input[name="search"]').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    this.form.submit();
-                }
-            });
-
-            function openOrderModal(orderId) {
-                document.getElementById('order-modal-' + orderId).classList.remove('hidden');
+        });
+        document.querySelector('input[name="search"]').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.form.submit();
             }
+        });
 
-            function closeOrderModal(orderId) {
-                document.getElementById('order-modal-' + orderId).classList.add('hidden');
-            }
+        function openOrderModal(orderId) {
+            document.getElementById('order-modal-' + orderId).classList.remove('hidden');
+        }
 
-            function updateStatus(orderId) {
-                const select = document.getElementById('status-select-' + orderId);
-                const newStatus = select.value;
+        function closeOrderModal(orderId) {
+            document.getElementById('order-modal-' + orderId).classList.add('hidden');
+        }
 
-                fetch('orders.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: `updateOrderStatus=1&order_id=${orderId}&order_status=${newStatus}&ajax=1`
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert('Status updated to ' + data.new_status);
-                            location.reload();
-                        } else {
-                            alert('Failed to update status');
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-            }
-        </script>
+        function updateStatus(orderId) {
+            const select = document.getElementById('status-select-' + orderId);
+            const newStatus = select.value;
 
-    </div>
+            fetch('orders.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `updateOrderStatus=1&order_id=${orderId}&order_status=${newStatus}&ajax=1`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Status updated to ' + data.new_status);
+                        location.reload();
+                    } else {
+                        alert('Failed to update status');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
 </body>
 
 </html>
