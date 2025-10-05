@@ -149,7 +149,7 @@ $agents_filtered = array_filter($agents, function ($a) use ($search, $area_filte
 
             <?php foreach ($agents_filtered as $agent): ?>
                 <a href="one-agent-info.php?id=<?= $agent['id'] ?>" class="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition duration-200">
-                    <img src="<?= $agent['image'] ?>" alt="<?= htmlspecialchars($agent['name']) ?>" class="w-full h-40 object-cover">
+                    <img src="../../<?= $agent['image'] ?>" alt="<?= htmlspecialchars($agent['name']) ?>" class="w-full h-40 object-cover">
                     <div class="p-4">
                         <h2 class="font-bold text-lg"><?= htmlspecialchars($agent['name']) ?></h2>
                         <p class="text-sm text-gray-500"><?= htmlspecialchars($agent['email']) ?></p>

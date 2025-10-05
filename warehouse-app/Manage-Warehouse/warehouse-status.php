@@ -94,9 +94,9 @@ $locations = mysqli_fetch_all($locRes, MYSQLI_ASSOC);
                 <label for="filterCapacity" class="filter-label">Capacity</label>
                 <select id="filterCapacity" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
                     <option value="All" selected>All</option>
-                    <option>0 - 1000 sq ft</option>
-                    <option>1001 - 5000 sq ft</option>
-                    <option>5001+ sq ft</option>
+                    <option>0 - 1000 ft<sup>2</sup></option>
+                    <option>1001 - 5000 ft<sup>2</sup></option>
+                    <option>5001+ ft<sup>2</sup></option>
                 </select>
             </div>
 
@@ -130,9 +130,9 @@ $locations = mysqli_fetch_all($locRes, MYSQLI_ASSOC);
                         <div>
                             <h5 class="text-lg font-semibold text-gray-800"><?= $warehouse['name'] ?></h5>
                             <p class="text-gray-600"><strong>Location:</strong> <?= $warehouse['location'] ?></p>
-                            <p class="text-gray-600"><strong>Total Capacity:</strong> <?= $warehouse['capacity_total'] ?> sq ft</p>
-                            <p class="text-gray-600"><strong>Used:</strong> <?= $warehouse['capacity_used'] ?> sq ft</p>
-                            <p class="text-gray-600"><strong>Available:</strong> <?= $available ?> sq ft</p>
+                            <p class="text-gray-600"><strong>Total Capacity:</strong> <?= $warehouse['capacity_total'] ?> ft<sup>2</sup></p>
+                            <p class="text-gray-600"><strong>Used:</strong> <?= $warehouse['capacity_used'] ?> ft<sup>2</sup></p>
+                            <p class="text-gray-600"><strong>Available:</strong> <?= $available ?> ft<sup>2</sup></p>
                             <p class="text-gray-600"><strong>Type:</strong> <?= $warehouse['type'] ?></p>
                         </div>
                         <div>
@@ -180,9 +180,9 @@ $locations = mysqli_fetch_all($locRes, MYSQLI_ASSOC);
 
         function isInCapacityRange(card, capacity) {
             const total = parseInt(card.dataset.capacityTotal, 10) || 0;
-            if (capacity === '0 - 1000 sq ft') return total >= 0 && total <= 1000;
-            if (capacity === '1001 - 5000 sq ft') return total >= 1001 && total <= 5000;
-            if (capacity === '5001+ sq ft') return total >= 5001;
+            if (capacity === '0 - 1000 ft\u00B2') return total >= 0 && total <= 1000;
+            if (capacity === '1001 - 5000 ft\u00B2') return total >= 1001 && total <= 5000;
+            if (capacity === '5001+ ft\u00B2') return total >= 5001;
             return true; // 'All'
         }
 
