@@ -4,20 +4,6 @@
   padding: 20px;
 }
 
-/* Page container to prevent full-bleed header/search */
-.page-container {
-  max-width: clamp(1200px, 95vw, 1680px);
-  margin: 0 auto;
-  padding: 0 12px;
-}
-
-.page-container h1 {
-  margin: 8px 0 16px;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
 /* Search bar */
 .search-container {
   position: relative;
@@ -33,13 +19,12 @@
   padding: 10px 40px 10px 10px;
   font-size: 16px;
   border: 1px solid #ccc;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: 4px;
 }
 
 .search-icon {
   position: absolute;
-  right: 12px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 20px;
@@ -55,25 +40,23 @@
 /* Main container */
 .main-container {
   display: flex;
-  gap: 20px;
 }
 
 .filter-column {
   width: 20%;
-  padding-right: 0;
+  padding-right: 20px;
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 15px;
 }
 
 .cards-column {
   width: 80%;
-  padding-left: 0;
+  padding-left: 20px;
 }
 
-/* Filters */
 .filter-group {
   margin-bottom: 20px;
 }
@@ -90,12 +73,11 @@
 }
 
 .filter-group input[type="number"] {
-  width: 100px;
+  width: 80px;
   padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 6px;
-  margin: 0 5px;
-  background: #fff;
+  border-radius: 4px;
+  margin-right: 5px;
 }
 
 input[type="number"]::-webkit-outer-spin-button,
@@ -117,90 +99,74 @@ input[type="number"] {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 20px;
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-  padding: 12px 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 15px;
 }
 
 .all-products-header h2 {
   margin: 0;
-  font-size: 18px;
 }
 
 .dropdown {
   padding: 8px;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 4px;
   margin-left: 10px;
-  background: #fff;
 }
 
 .label-text {
   margin-right: 5px;
 }
 
-/* Products container: ALWAYS two cards per row */
+/* Products container */
 .products-container {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-/* Card layout (balanced with Tailwind-like look but in CSS) */
-.product-card .card-inner {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-}
-
-.product-card .card-inner:hover {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-}
-
-.product-card .card-left img {
-  width: 64px;
-  height: 64px;
-  border-radius: 10px;
-  object-fit: cover;
-  border: 1px solid #e5e7eb;
-}
-
-.product-card .card-inner {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
+  flex-direction: column;
 }
 
-.product-card .card-right {
-  flex: 1;
-}
-
-.product-card .card-title-row {
+.product-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  height: auto;
+}
+
+.product-row img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 15px;
+}
+
+.product-info {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
 }
 
-.product-card h3 {
-  margin: 0;
+.product-info h3 {
   font-size: 16px;
-  color: #111827;
+  margin: 0;
+  flex: 0 0 100%;
 }
 
-.product-card .card-meta {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 3px;
-  margin-top: 6px;
+.product-info span {
   font-size: 14px;
-  color: #374151;
 }
 
 .view-details-link {
@@ -209,7 +175,7 @@ input[type="number"] {
   color: forestgreen;
   text-decoration: underline;
   cursor: pointer;
-  margin-top: 10px;
+  margin-left: auto;
   background: none;
   padding: 0;
   border: none;
@@ -232,7 +198,7 @@ input[type="number"] {
   background: #007bff;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
@@ -260,30 +226,29 @@ input[type="number"] {
 
 .modal-content {
   background-color: white;
-  margin: 10% auto;
+  margin: 15% auto;
   padding: 20px;
   border: 1px solid #ddd;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 85%;
-  max-width: 600px;
+  max-width: 550px;
   position: relative;
 }
 
 .modal-content h2 {
   margin-top: 0;
-  margin-bottom: 8px;
+  margin-bottom: 15px;
   font-size: 18px;
 }
 
 .modal-content img {
   width: 100px;
   height: 100px;
-  border-radius: 10px;
+  border-radius: 50%;
   object-fit: cover;
   margin-right: 15px;
   float: left;
-  border: 1px solid #e5e7eb;
 }
 
 .modal-details {
@@ -291,7 +256,7 @@ input[type="number"] {
 }
 
 .modal-details p {
-  margin: 6px 0;
+  margin: 5px 0;
   font-size: 16px;
 }
 
@@ -304,7 +269,7 @@ input[type="number"] {
   padding: 8px 15px;
   margin-left: 10px;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
@@ -318,6 +283,17 @@ input[type="number"] {
   color: white;
 }
 
+.modal-buttons .switch-branch {
+  color: forestgreen;
+  text-decoration: underline;
+  background: none;
+  padding: 0;
+  margin-left: 20px;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+}
+
 .close-modal {
   position: absolute;
   top: 10px;
@@ -329,7 +305,7 @@ input[type="number"] {
   background: none;
 }
 
-/* Status badge styles */
+/* Status badge styles (added) */
 .status-badge {
   padding: 2px 8px;
   border-radius: 9999px;
@@ -340,40 +316,20 @@ input[type="number"] {
 .status-badge.pending {
   background: #f59e0b;
 }
+
 .status-badge.done {
   background: #10b981;
 }
+
 .status-badge.rejected {
   background: #ef4444;
 }
+
 .status-badge.working {
   background: #3b82f6;
 }
 
-/* Status chip for cards */
-.status-chip {
-  padding: 2px 8px;
-  border-radius: 9999px;
-  font-size: 12px;
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  line-height: 1.1;
-}
-.status-chip.pending {
-  background: #f59e0b;
-}
-.status-chip.done {
-  background: #10b981;
-}
-.status-chip.rejected {
-  background: #ef4444;
-}
-.status-chip.working {
-  background: #3b82f6;
-}
-
-/* Modal header layout helpers */
+/* Modal header badge/space */
 .modal-title-row {
   display: flex;
   align-items: center;
