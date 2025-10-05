@@ -218,7 +218,7 @@ while ($row = $result->fetch_assoc()) {
                         <th class="p-3 text-left">Image</th>
                         <th class="p-3 text-left">Product</th>
                         <th class="p-3 text-left">Quantity</th>
-                        <th class="p-3 text-left">Volume (m³)</th>
+                        <th class="p-3 text-left">Volume (ft<sup>2</sup>)</th>
                         <th class="p-3 text-left">Expiry Date</th>
                         <th class="p-3 text-left">Status</th>
                         <th class="p-3 text-left">Edit</th>
@@ -229,7 +229,7 @@ while ($row = $result->fetch_assoc()) {
                         <?php
                         $qty = (float)$row['quantity'];
                         $unitVol = (float)$row['unit_volume'];
-                        $totalVol = $qty * $unitVol; // m³
+                        $totalVol = $qty * $unitVol; // ft²
                         ?>
                         <tr class="hover:bg-gray-50">
                             <td class="p-3">
@@ -241,7 +241,7 @@ while ($row = $result->fetch_assoc()) {
                             </td>
                             <td class="p-3 font-medium"><?= htmlspecialchars($row['product_name']) ?></td>
                             <td class="p-3"><?= htmlspecialchars($row['quantity']) ?></td>
-                            <!-- Total Volume with m³ in parentheses -->
+                            <!-- Total Volume with ft² in parentheses -->
                             <td class="p-3"><?= number_format($totalVol, 2) ?></td>
                             <td class="p-3"><?= htmlspecialchars($row['expiry_date']) ?></td>
                             <td class="p-3">
@@ -301,7 +301,7 @@ while ($row = $result->fetch_assoc()) {
                                         <label class="block text-sm font-medium text-gray-700">Unit Volume</label>
                                         <div class="flex items-center">
                                             <input type="number" step="0.01" id="unit-<?= $row['wp_id'] ?>" name="unit_volume" value="<?= htmlspecialchars($row['unit_volume']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                                            <span class="unit-after">m³</span>
+                                            <span class="unit-after">ft<sup>2</sup></span>
                                         </div>
                                     </div>
 
@@ -309,7 +309,7 @@ while ($row = $result->fetch_assoc()) {
                                         <label class="block text-sm font-medium text-gray-700">Total Volume</label>
                                         <div class="flex items-center">
                                             <input type="number" step="0.01" id="total-<?= $row['wp_id'] ?>" value="<?= number_format($totalVol, 2, '.', '') ?>" class="w-full border rounded p-2 mt-1 bg-gray-100" readonly>
-                                            <span class="unit-after">m³</span>
+                                            <span class="unit-after">ft<sup>2</sup></span>
                                         </div>
                                     </div>
 

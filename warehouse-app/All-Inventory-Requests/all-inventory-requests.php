@@ -1,17 +1,24 @@
 <?php
 include '../../include/connect-db.php'; // database connection
 
-// Handle status update (Accept/Reject)
+// Handle status update (Accept/Reject/Toggle Working-Pending)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['request_id'])) {
     $action = $_POST['action'];
     $requestId = (int)$_POST['request_id'];
-    if (in_array($action, ['Accept', 'Reject'], true) && $requestId > 0) {
-        $newStatus = $action === 'Accept' ? 'Done' : 'Rejected';
+
+    $allowed = ['Accept', 'Reject', 'SetWorking', 'SetPending'];
+    if (in_array($action, $allowed, true) && $requestId > 0) {
+        if ($action === 'Accept')      $newStatus = 'Done';
+        elseif ($action === 'Reject')  $newStatus = 'Rejected';
+        elseif ($action === 'SetWorking') $newStatus = 'Working';
+        else /* SetPending */             $newStatus = 'Pending';
+
         $stmt = $conn->prepare("UPDATE stock_requests SET status = ?, updated_at = NOW() WHERE request_id = ?");
         $stmt->bind_param('si', $newStatus, $requestId);
         $ok = $stmt->execute();
+
         header('Content-Type: application/json');
-        echo json_encode(['success' => $ok]);
+        echo json_encode(['success' => $ok, 'status' => $newStatus]);
         exit;
     }
     header('Content-Type: application/json');
@@ -21,20 +28,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['req
 
 /*
  Compute requiredSpace from products.unit_space * sr.quantity.
- Make sure the column products.unit_space exists (DECIMAL) as per your previous ALTER.
- If products uses imgurl instead of img_url, switch the column name below.
+ If products uses imgurl instead of img_url, switch below.
 */
 $sql = "SELECT 
     sr.request_id AS id,
     p.name,
     p.category,
-    ROUND(p.unit_space * sr.quantity, 3) AS requiredSpace,   -- computed required space (m³)
-    p.img_url AS image,                                      -- change to p.imgurl if schema uses that
+    ROUND(p.unit_space * sr.quantity, 3) AS requiredSpace,
+    p.img_url AS image,
     sr.quantity,
     sr.requested_at AS requested_at,
     sr.updated_at AS updated_at,
     sr.status,
-    sr.note AS notes,                                        -- note (singular)
+    sr.note AS notes,
     u.full_name AS requester_name
 FROM stock_requests sr
 JOIN products p ON sr.product_id = p.product_id
@@ -58,6 +64,17 @@ while ($row = $result->fetch_assoc()) {
     <title>Inventory Requests</title>
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="all-inventory-requests.css">
+    <style>
+        /* small helper for the bottom-left control */
+        .modal-left {
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
 </head>
 
 <body>
@@ -78,8 +95,8 @@ while ($row = $result->fetch_assoc()) {
                 <div class="filter-column">
                     <!-- Volume -->
                     <div class="filter-group">
-                        <label><span>Volume more than:</span> <input type="number" id="min-volume" step="0.001"><span>m³</span></label>
-                        <label><span>Volume less than:</span> <input type="number" id="max-volume" step="0.001"><span>m³</span></label>
+                        <label><span>Volume more than:</span> <input type="number" id="min-volume" step="0.001"><span>ft<sup>2</sup></span></label>
+                        <label><span>Volume less than:</span> <input type="number" id="max-volume" step="0.001"><span>ft<sup>2</sup></span></label>
                     </div>
 
                     <!-- Start Date -->
@@ -170,6 +187,13 @@ while ($row = $result->fetch_assoc()) {
                         <p><strong>Notes:</strong> <span id="modalNotes"></span></p>
                         <p><strong>Updated At:</strong> <span id="modalUpdatedAt"></span></p>
                     </div>
+
+                    <!-- Bottom-left: In Progress toggle -->
+                    <label class="modal-left">
+                        <input type="checkbox" id="inProgressToggle">
+                        <span>In Progress</span>
+                    </label>
+
                     <div class="modal-buttons">
                         <button class="accept">Accept</button>
                         <button class="reject">Reject</button>
@@ -273,7 +297,7 @@ while ($row = $result->fetch_assoc()) {
             } else if (sortValue === 'a-z') {
                 filtered.sort((a, b) => a.name.localeCompare(b.name));
             } else if (sortValue === 'request-order') {
-                // First Come, First Serve = oldest requested_at first (ascending)
+                // First placed first: ascending by requested_at
                 filtered.sort((a, b) => new Date(a.requested_at) - new Date(b.requested_at));
             }
 
@@ -290,7 +314,7 @@ while ($row = $result->fetch_assoc()) {
             pageItems.forEach(item => {
                 const statusKey = String(item.status || '').toLowerCase();
                 const reqSpaceText = (typeof item.requiredSpace === 'number') ?
-                    item.requiredSpace.toFixed(3) + ' m³' :
+                    item.requiredSpace.toFixed(3) + ' ft\u00B2' :
                     '-';
 
                 const card = document.createElement('div');
@@ -325,8 +349,10 @@ while ($row = $result->fetch_assoc()) {
                     const item = items.find(i => i.id == itemId);
                     if (item) {
                         selectedRequestId = item.id;
+
+                        // Populate modal
                         const reqSpaceText = (typeof item.requiredSpace === 'number') ?
-                            item.requiredSpace.toFixed(3) + ' m³' :
+                            item.requiredSpace.toFixed(3) + ' ft\u00B2' :
                             '-';
                         document.getElementById('modalHeading').textContent = `Inventory Request for ${reqSpaceText}`;
                         document.getElementById('modalSub').textContent = `Request #${item.id}`;
@@ -345,7 +371,33 @@ while ($row = $result->fetch_assoc()) {
                         document.getElementById('modalNotes').textContent = item.notes ?? '-';
                         document.getElementById('modalUpdatedAt').textContent = item.updated_at ?? '-';
 
+                        // Set the "In Progress" checkbox based on current status
+                        const inProgress = document.getElementById('inProgressToggle');
+                        inProgress.checked = (String(item.status).toLowerCase() === 'working');
+
                         modal.style.display = 'block';
+
+                        // Bind once: toggle Working/Pending when checkbox changes
+                        if (!inProgress._bound) {
+                            inProgress._bound = true;
+                            inProgress.addEventListener('change', async () => {
+                                if (!selectedRequestId) return;
+                                const make = inProgress.checked ? 'SetWorking' : 'SetPending';
+                                const updated = await updateRequestStatus(make, selectedRequestId, false);
+                                if (updated) {
+                                    // reflect local state + badge
+                                    const idx = items.findIndex(i => i.id == selectedRequestId);
+                                    if (idx > -1) items[idx].status = inProgress.checked ? 'Working' : 'Pending';
+                                    const cls = inProgress.checked ? 'working' : 'pending';
+                                    badge.className = `status-badge ${cls}`;
+                                    badge.textContent = items.find(i => i.id == selectedRequestId).status;
+                                } else {
+                                    // revert checkbox on failure
+                                    inProgress.checked = !inProgress.checked;
+                                    alert('Failed to update status.');
+                                }
+                            });
+                        }
                     }
                 });
             });
@@ -362,19 +414,21 @@ while ($row = $result->fetch_assoc()) {
                 acceptBtn._bound = true;
                 acceptBtn.addEventListener('click', async () => {
                     if (!selectedRequestId) return;
-                    await updateRequestStatus('Accept', selectedRequestId);
+                    await updateRequestStatus('Accept', selectedRequestId, true);
                 });
             }
             if (rejectBtn && !rejectBtn._bound) {
                 rejectBtn._bound = true;
                 rejectBtn.addEventListener('click', async () => {
                     if (!selectedRequestId) return;
-                    await updateRequestStatus('Reject', selectedRequestId);
+                    await updateRequestStatus('Reject', selectedRequestId, true);
                 });
             }
         }
 
-        async function updateRequestStatus(action, requestId) {
+        // action: 'Accept' | 'Reject' | 'SetWorking' | 'SetPending'
+        // closeModal: whether to close modal after update
+        async function updateRequestStatus(action, requestId, closeModal = false) {
             try {
                 const formData = new FormData();
                 formData.append('action', action);
@@ -387,15 +441,15 @@ while ($row = $result->fetch_assoc()) {
                 const data = await res.json();
                 if (data && data.success) {
                     const idx = items.findIndex(i => i.id == requestId);
-                    if (idx > -1) items[idx].status = action === 'Accept' ? 'Done' : 'Rejected';
-                    document.getElementById('requestModal').style.display = 'none';
+                    if (idx > -1) items[idx].status = data.status ?? (action === 'Accept' ? 'Done' : action === 'Reject' ? 'Rejected' : (action === 'SetWorking' ? 'Working' : 'Pending'));
+                    if (closeModal) document.getElementById('requestModal').style.display = 'none';
                     renderCards();
-                } else {
-                    alert('Failed to update status.');
+                    return true;
                 }
-            } catch {
-                alert('Error updating status.');
+            } catch (e) {
+                /* no-op */
             }
+            return false;
         }
     </script>
 
