@@ -257,16 +257,27 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
                     </div>
 
-                    <!-- Product Image Upload -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class='bx bx-image mr-1'></i>Upload Product Image
-                        </label>
-                        <input type="file" name="productFile" id="productFile" accept="image/*"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
-                        <p class="text-xs text-gray-500 mt-1">Maximum file size: 5MB (JPG, PNG, GIF)</p>
-                        <img id="productPreview" src="" class="mt-3 h-32 w-32 object-cover rounded-md border-2 border-green-200 preview-image hidden">
-                    </div>
+
+                <!-- Inbound Date -->
+                <div>
+                    <label class="block mb-1 font-medium">Inbound Date</label>
+                    <input type="date" name="inbound" class="w-full p-2 border border-gray-300 rounded">
+                </div>
+
+                <!-- Expiry Date -->
+                <div>
+                    <label class="block mb-1 font-medium">Expiry Date</label>
+                    <input type="date" name="expiry" class="w-full p-2 border border-gray-300 rounded">
+                </div>
+
+                <!-- Product Image Upload -->
+                <div>
+                    <label class="block mb-1 font-medium">Upload Product Image</label>
+                    <input type="file" name="productFile" id="productFile" accept="image/*"
+                        class="w-full p-2 border border-gray-300 rounded">
+                    <img id="productPreview" src="" class="mt-2 h-32 w-32 object-cover rounded hidden">
+                </div>
+
 
                     <!-- Required Space Display -->
                     <div class="space-display p-4 rounded-md text-center">
