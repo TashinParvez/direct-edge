@@ -21,6 +21,12 @@ class SslCommerzNotification extends AbstractSslCommerz
     private $error;
 
     /**
+     * Holds validation response data from SSLCOMMERZ to avoid dynamic property creation.
+     * @var mixed|null
+     */
+    protected $sslc_data = null;
+
+    /**
      * SslCommerzNotification constructor.
      */
     public function __construct()

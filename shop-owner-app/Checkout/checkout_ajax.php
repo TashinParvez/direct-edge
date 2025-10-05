@@ -10,10 +10,49 @@ use SslCommerz\SslCommerzNotification;
 
 $requestData = (array) json_decode($_POST['cart_json']);
 
-// $post_data['total_amount'] = $requestData['amount'];
-$post_data['total_amount'] = 9500;
+// Insert into orders and billing_info tables
+include '../../include/connect-db.php';
+session_start();
+$user_id = $_SESSION['user_id'] ?? 2; // Default to 2 if not set
+
+$grand_total = $requestData['amount'];
+$full_name = $requestData['shopName'];
+$billing_address = $requestData['address'];
+$shipping_address = $requestData['shippingAddress'];
+$notes = $requestData['notes'];
+$tax_id = $requestData['taxId'];
+$state = $requestData['state'];
+$country = $requestData['country'];
+$zip = $requestData['zip'];
+
+$billing_address_full = $billing_address . ', ' . $state . ', ' . $country . ' ' . $zip;
+$shipping_address_full = $shipping_address . ', ' . $state . ', ' . $country . ' ' . $zip;
+
+// Insert into orders first
+$order_insert = mysqli_prepare($conn, "INSERT INTO orders (shopowner_id, total_amount, status, payment_status) VALUES (?, ?, 'Pending', 'Pending')");
+mysqli_stmt_bind_param($order_insert, "id", $user_id, $grand_total);
+if (!mysqli_stmt_execute($order_insert)) {
+    die('Error inserting into orders: ' . mysqli_error($conn));
+}
+$order_id = mysqli_insert_id($conn);
+
+// Now insert into billing_info
+$stmt = mysqli_prepare($conn, "INSERT INTO billing_info (user_id, order_id, shop_owener_name, billing_address, shipping_address, special_nstructions, tax_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+mysqli_stmt_bind_param($stmt, "iisssss", $user_id, $order_id, $full_name, $billing_address_full, $shipping_address_full, $notes, $tax_id);
+if (!mysqli_stmt_execute($stmt)) {
+    die("Error inserting billing info: " . mysqli_error($conn));
+}
+
+// SSLCommerz payment processing
+$post_data['total_amount'] = $grand_total;
 $post_data['currency'] = "BDT";
 $post_data['tran_id'] = "SSLCZ_TEST_" . uniqid();
+
+// Update the order with the transaction ID
+$update_tran_id_sql = "UPDATE orders SET tran_id = ? WHERE order_id = ?";
+$update_stmt = mysqli_prepare($conn, $update_tran_id_sql);
+mysqli_stmt_bind_param($update_stmt, "si", $post_data['tran_id'], $order_id);
+mysqli_stmt_execute($update_stmt);
 
 //# CUSTOMER INFORMATION
 $post_data['cus_name'] = isset($requestData['cus_name']) ? $requestData['cus_name'] : "John Doe";
@@ -140,8 +179,8 @@ $post_data["num_of_item"] = "1";
 // if ($conn_integration->query($sql) === TRUE) {
 
 //     # Call the Payment Gateway Library
-    $sslcz = new SslCommerzNotification();
-    $sslcz->makePayment($post_data, 'checkout', 'plain');
+$sslcz = new SslCommerzNotification();
+$sslcz->makePayment($post_data, 'checkout', 'plain');
 // } else {
 //     echo "Error: " . $sql . "<br>" . $conn_integration->error;
 // }

@@ -1,4 +1,15 @@
 <?php
+session_start();
+include '../../include/connect-db.php';
+
+// Assuming user_id is in session, else hardcoded for now
+$user_id = $_SESSION['user_id'] ?? 2;
+
+// Fetch user data for Shop-Owner
+$query = "SELECT full_name, phone, email FROM users WHERE role = 'Shop-Owner' LIMIT 1";
+$result = mysqli_query($conn, $query);
+$user_data = mysqli_fetch_assoc($result) ?? ['full_name' => '', 'phone' => '', 'email' => ''];
+
 // Hardcoded cart data (simulating session data)
 $cart = [
   [
@@ -36,6 +47,42 @@ $discount = 500;
 $tax = 0;
 $shipping = 200;
 $grand_total = $total - $discount + $tax + $shipping;
+
+// Handle POST request for billing info
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['shopName'])) {
+  $full_name = $_POST['shopName'] ?? $user_data['full_name'];
+  $owner_name = $_POST['ownerName'] ?? '';
+  $phone = $_POST['phone'] ?? $user_data['phone'];
+  $email = $_POST['email'] ?? $user_data['email'];
+  $billing_address = $_POST['address'] ?? '';
+  $shipping_address = $_POST['shippingAddress'] ?? '';
+  $notes = $_POST['notes'] ?? '';
+  $tax_id = $_POST['taxId'] ?? '';
+  $country = $_POST['country'] ?? '';
+  $state = $_POST['state'] ?? '';
+  $zip = $_POST['zip'] ?? '';
+
+  $billing_address_full = $billing_address . ', ' . $state . ', ' . $country . ' ' . $zip;
+  $shipping_address_full = $shipping_address . ', ' . $state . ', ' . $country . ' ' . $zip;
+
+  // Insert into orders first
+  $order_insert = mysqli_prepare($conn, "INSERT INTO orders (shopowner_id, total_amount, status, payment_status) VALUES (?, ?, 'Pending', 'Pending')");
+  mysqli_stmt_bind_param($order_insert, "id", $user_id, $grand_total);
+  if (!mysqli_stmt_execute($order_insert)) {
+    die('Error inserting into orders: ' . mysqli_error($conn));
+  }
+  $order_id = mysqli_insert_id($conn);
+
+  // Now insert into billing_info
+  $stmt = mysqli_prepare($conn, "INSERT INTO billing_info (user_id, order_id, shop_owener_name, billing_address, shipping_address, special_nstructions, tax_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+  mysqli_stmt_bind_param($stmt, "iisssss", $user_id, $order_id, $user_data['full_name'], $billing_address_full, $shipping_address_full, $notes, $tax_id);
+  if (!mysqli_stmt_execute($stmt)) {
+    die("Error inserting billing info: " . mysqli_error($conn));
+  }
+
+  // Redirect or success message
+  echo "<script>alert('Order placed successfully!');</script>";
+}
 ?>
 
 <!doctype html>
@@ -101,13 +148,6 @@ $grand_total = $total - $discount + $tax + $shipping;
                     </div>
                   </li>
                 <?php endforeach; ?>
-                <li class="list-group-item d-flex justify-content-between bg-light">
-                  <div class="text-success">
-                    <h6 class="my-0">Promo code</h6>
-                    <small>EXAMPLECODE</small>
-                  </div>
-                  <span class="text-success">−Tk<?php echo number_format($discount, 2); ?></span>
-                </li>
                 <li class="list-group-item d-flex justify-content-between">
                   <span class="fw-medium">Subtotal</span>
                   <strong class="text-danger" id="subtotal">Tk<?php echo number_format($total, 2); ?></strong>
@@ -131,13 +171,6 @@ $grand_total = $total - $discount + $tax + $shipping;
               <button type="button" class="btn btn-outline-secondary w-100" onclick="alert('Cart saved for later!');">Save Cart for Later</button>
             </form>
 
-            <form class="card p-2 mt-3">
-              <div class="input-group">
-                <input type="text" class="form-control" placeholder="Promo code">
-                <button type="submit" class="btn btn-secondary">Redeem</button>
-              </div>
-            </form>
-
             <button class="btn btn-outline-info w-100 mt-3" onclick="alert('Receipt Preview: Total Tk<?php echo number_format($grand_total, 2); ?>');">Preview Receipt</button>
             <a href="request-product.php" class="btn btn-outline-secondary w-100 mt-3">Request Out-of-Stock Product</a>
           </div>
@@ -149,45 +182,41 @@ $grand_total = $total - $discount + $tax + $shipping;
                 <div class="row g-3">
                   <div class="col-12">
                     <label for="shopName" class="form-label text-dark">Shop Name</label>
-                    <input type="text" class="form-control" id="shopName" placeholder="Enter shop name" value="" required>
+                    <input type="text" class="form-control" id="shopName" name="shopName" placeholder="Enter shop name" value="<?php echo htmlspecialchars($user_data['full_name']); ?>" required>
                     <div class="invalid-feedback">Shop name is required.</div>
                   </div>
 
                   <div class="col-12">
                     <label for="ownerName" class="form-label text-dark">Shop Owner Name</label>
-                    <input type="text" class="form-control" id="ownerName" placeholder="Enter owner name" value="" required>
+                    <input type="text" class="form-control" id="ownerName" name="ownerName" placeholder="Enter owner name" value="" required>
                     <div class="invalid-feedback">Owner name is required.</div>
                   </div>
                   <div class="col-12">
                     <label for="phone" class="form-label text-dark">Phone Number</label>
                     <div class="input-group has-validation">
                       <span class="input-group-text bg-light">📞</span>
-                      <input type="tel" class="form-control" id="phone" placeholder="Phone Number" required>
+                      <input type="tel" class="form-control" id="phone" name="phone" placeholder="Phone Number" value="<?php echo htmlspecialchars($user_data['phone']); ?>" required>
                       <div class="invalid-feedback">Your phone number is required.</div>
                     </div>
                   </div>
                   <div class="col-12">
                     <label for="email" class="form-label text-dark">Email</label>
-                    <input type="email" class="form-control" id="email" placeholder="you@example.com" required>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="you@example.com" value="<?php echo htmlspecialchars($user_data['email']); ?>" required>
                     <div class="invalid-feedback">Please enter a valid email address for shipping updates.</div>
                   </div>
                   <div class="col-12">
                     <label for="address" class="form-label text-dark">Billing Address</label>
-                    <input type="text" class="form-control" id="address" placeholder="1234 Main St" required>
+                    <input type="text" class="form-control" id="address" name="address" placeholder="1234 Main St" required>
                     <div class="invalid-feedback">Please enter your billing address.</div>
                   </div>
                   <div class="col-12">
                     <label for="shippingAddress" class="form-label text-dark">Shipping Address</label>
-                    <input type="text" class="form-control" id="shippingAddress" placeholder="1234 Main St" required>
+                    <input type="text" class="form-control" id="shippingAddress" name="shippingAddress" placeholder="1234 Main St" required>
                     <div class="invalid-feedback">Please enter your shipping address.</div>
-                  </div>
-                  <div class="col-12">
-                    <label for="address2" class="form-label text-dark">Address 2 <span class="text-muted">(Optional)</span></label>
-                    <input type="text" class="form-control" id="address2" placeholder="Apartment or suite">
                   </div>
                   <div class="col-md-5">
                     <label for="country" class="form-label text-dark">Country</label>
-                    <select class="form-select" id="country" required>
+                    <select class="form-select" id="country" name="country" required>
                       <option value="">Choose...</option>
                       <option>Bangladesh</option>
                     </select>
@@ -195,7 +224,7 @@ $grand_total = $total - $discount + $tax + $shipping;
                   </div>
                   <div class="col-md-4">
                     <label for="state" class="form-label text-dark">State</label>
-                    <select class="form-select" id="state" required>
+                    <select class="form-select" id="state" name="state" required>
                       <option value="">Choose...</option>
                       <option>Dhaka</option>
                     </select>
@@ -203,16 +232,16 @@ $grand_total = $total - $discount + $tax + $shipping;
                   </div>
                   <div class="col-md-3">
                     <label for="zip" class="form-label text-dark">Zip</label>
-                    <input type="text" class="form-control" id="zip" placeholder="" required>
+                    <input type="text" class="form-control" id="zip" name="zip" placeholder="" required>
                     <div class="invalid-feedback">Zip code required.</div>
                   </div>
                   <div class="col-12">
                     <label for="notes" class="form-label text-dark">Special Instructions/Notes</label>
-                    <textarea class="form-control" id="notes" rows="3" placeholder="e.g., Deliver after 5 PM"></textarea>
+                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="e.g., Deliver after 5 PM"></textarea>
                   </div>
                   <div class="col-12">
                     <label for="taxId" class="form-label text-dark">Tax ID/VAT Number <span class="text-muted">(Optional)</span></label>
-                    <input type="text" class="form-control" id="taxId" placeholder="Your Tax ID">
+                    <input type="text" class="form-control" id="taxId" name="taxId" placeholder="Your Tax ID">
                   </div>
                 </div>
 
@@ -316,14 +345,34 @@ $grand_total = $total - $discount + $tax + $shipping;
 
       // Payment button postdata
       $('#sslczPayBtn').on('click', function(e) {
+        e.preventDefault(); // Prevent default form submission
+        // Form validation
+        var form = document.getElementById('paymentForm');
+        if (form.checkValidity() === false) {
+          e.stopPropagation();
+          form.classList.add('was-validated');
+          return;
+        }
+
         var obj = {
-          cus_name: $('#firstName').val() + ' ' + $('#lastName').val(),
-          cus_phone: $('#phone').val(),
-          cus_email: $('#email').val(),
-          cus_addr1: $('#address').val(),
+          shopName: $('#shopName').val(),
+          ownerName: $('#ownerName').val(),
+          phone: $('#phone').val(),
+          email: $('#email').val(),
+          address: $('#address').val(),
+          shippingAddress: $('#shippingAddress').val(),
+          country: $('#country').val(),
+          state: $('#state').val(),
+          zip: $('#zip').val(),
+          notes: $('#notes').val(),
+          taxId: $('#taxId').val(),
           amount: parseFloat($('#grand-total').text().replace('Tk', ''))
         };
-        $(this).prop('postdata', JSON.stringify(obj));
+
+        // Set postdata and trigger SSLCommerz
+        $(this).prop('postdata', obj);
+
+        // The SSLCommerz script will automatically pick up the click and postdata
       });
     });
 

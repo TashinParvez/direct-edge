@@ -1,7 +1,7 @@
 <?php
 
 if (!defined('PROJECT_PATH')) {
-    define('PROJECT_PATH', 'http://localhost:3000/Checkout'); // replace this value with your project path
+    define('PROJECT_PATH', 'http://localhost:3000/shop-owner-app/Checkout'); // replace this value with your project path
 }
 
 if (!defined('IS_SANDBOX')) {

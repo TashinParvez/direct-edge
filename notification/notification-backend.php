@@ -1,6 +1,6 @@
 <?php
-// Include database connection
-include 'connect-db.php';
+include __DIR__ . '/../include/connect-db.php'; // Database connection
+
 
 // Start session to get user_id (assuming user is logged in)
 session_start();
