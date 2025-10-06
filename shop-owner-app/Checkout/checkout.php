@@ -2,87 +2,156 @@
 session_start();
 include '../../include/connect-db.php';
 
-// Assuming user_id is in session, else hardcoded for now
+// Current user (defaults to 2 like other shop-owner pages)
 $user_id = $_SESSION['user_id'] ?? 2;
 
-// Fetch user data for Shop-Owner
-$query = "SELECT full_name, phone, email FROM users WHERE role = 'Shop-Owner' LIMIT 1";
-$result = mysqli_query($conn, $query);
-$user_data = mysqli_fetch_assoc($result) ?? ['full_name' => '', 'phone' => '', 'email' => ''];
+// Helper: get or create the active cart_id for this user
+function get_active_cart_id(mysqli $conn, int $user_id): int
+{
+  $sql = "SELECT cart_id FROM shop_owner_cart_list WHERE user_id = ? AND status = 'active' ORDER BY updated_at DESC LIMIT 1";
+  $st = mysqli_prepare($conn, $sql);
+  mysqli_stmt_bind_param($st, 'i', $user_id);
+  mysqli_stmt_execute($st);
+  $rs = mysqli_stmt_get_result($st);
+  $row = mysqli_fetch_assoc($rs);
+  mysqli_stmt_close($st);
+  if ($row && isset($row['cart_id'])) {
+    return (int)$row['cart_id'];
+  }
+  // Create a new active cart if none exists
+  $ins = mysqli_prepare($conn, "INSERT INTO shop_owner_cart_list (user_id, status) VALUES (?, 'active')");
+  mysqli_stmt_bind_param($ins, 'i', $user_id);
+  mysqli_stmt_execute($ins);
+  $new_id = (int) mysqli_insert_id($conn);
+  mysqli_stmt_close($ins);
+  return $new_id;
+}
 
-// Hardcoded cart data (simulating session data)
-$cart = [
-  [
-    'id' => 1,
-    'name' => 'Rice',
-    'description' => 'Miniket',
-    'price' => 5000,
-    'quantity' => 1,
-    'image' => '../Images/products/rice.jpg'
-  ],
-  [
-    'id' => 2,
-    'name' => 'Potato',
-    'description' => 'Fresh potatoes',
-    'price' => 2000,
-    'quantity' => 1,
-    'image' => '../Images/products/potato.jpg'
-  ],
-  [
-    'id' => 3,
-    'name' => 'Sugar',
-    'description' => 'Refined sugar',
-    'price' => 3000,
-    'quantity' => 1,
-    'image' => '../Images/products/sugar.jpg'
-  ]
-];
+$cart_id = get_active_cart_id($conn, (int)$user_id);
 
-// Handle initial totals (will be updated via JS)
+// Fetch user data for Shop-Owner (current logged-in user preferred)
+$query = "SELECT full_name, phone, email FROM users WHERE user_id = ? LIMIT 1";
+$stmtUser = mysqli_prepare($conn, $query);
+mysqli_stmt_bind_param($stmtUser, 'i', $user_id);
+mysqli_stmt_execute($stmtUser);
+$resUser = mysqli_stmt_get_result($stmtUser);
+$user_data = mysqli_fetch_assoc($resUser) ?? ['full_name' => '', 'phone' => '', 'email' => ''];
+mysqli_stmt_close($stmtUser);
+
+// Handle cart actions (update, delete, clear)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // Clear entire cart
+  if (isset($_POST['clear_cart'])) {
+    $sql = "DELETE FROM shop_owner_cart_items WHERE cart_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, 'i', $cart_id);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_close($stmt);
+  }
+
+  // Update single item quantity
+  if (isset($_POST['update_item']) && isset($_POST['cart_item_id'])) {
+    $cart_item_id = (int)($_POST['cart_item_id'] ?? 0);
+    $quantity = max(0, (int)($_POST['quantity'] ?? 0));
+
+    // Get product_id for the cart item (and ensure ownership via cart_id)
+    $q = "SELECT product_id FROM shop_owner_cart_items WHERE cart_item_id = ? AND cart_id = ?";
+    $st = mysqli_prepare($conn, $q);
+    mysqli_stmt_bind_param($st, 'ii', $cart_item_id, $cart_id);
+    mysqli_stmt_execute($st);
+    $r = mysqli_stmt_get_result($st);
+    $row = mysqli_fetch_assoc($r);
+    mysqli_stmt_close($st);
+
+    if ($row) {
+      $product_id = (int)$row['product_id'];
+
+      if ($quantity === 0) {
+        // Delete the item row from cart
+        $del = mysqli_prepare($conn, "DELETE FROM shop_owner_cart_items WHERE cart_item_id=? AND cart_id=?");
+        mysqli_stmt_bind_param($del, 'ii', $cart_item_id, $cart_id);
+        mysqli_stmt_execute($del);
+        mysqli_stmt_close($del);
+      } else {
+        // Optional: check available stock
+        $stockSql = "SELECT COALESCE(SUM(wp.quantity),0) AS available FROM warehouse_products wp WHERE wp.product_id = ?";
+        $st2 = mysqli_prepare($conn, $stockSql);
+        mysqli_stmt_bind_param($st2, 'i', $product_id);
+        mysqli_stmt_execute($st2);
+        $rs2 = mysqli_stmt_get_result($st2);
+        $available = (int) (mysqli_fetch_assoc($rs2)['available'] ?? 0);
+        mysqli_stmt_close($st2);
+
+        if ($quantity > $available) {
+          $quantity = $available; // clamp to available
+        }
+
+        $up = mysqli_prepare($conn, "UPDATE shop_owner_cart_items SET quantity=?, updated_at=CURRENT_TIMESTAMP WHERE cart_item_id=? AND cart_id=?");
+        mysqli_stmt_bind_param($up, 'iii', $quantity, $cart_item_id, $cart_id);
+        mysqli_stmt_execute($up);
+        mysqli_stmt_close($up);
+      }
+    }
+  }
+
+  // Delete single item
+  if (isset($_POST['delete_item']) && isset($_POST['cart_item_id'])) {
+    $cart_item_id = (int)$_POST['cart_item_id'];
+    $del = mysqli_prepare($conn, "DELETE FROM shop_owner_cart_items WHERE cart_item_id=? AND cart_id=?");
+    mysqli_stmt_bind_param($del, 'ii', $cart_item_id, $cart_id);
+    mysqli_stmt_execute($del);
+    mysqli_stmt_close($del);
+  }
+}
+
+// Fetch active cart items for this user
+$cart = [];
+$sql = "SELECT 
+          ci.cart_item_id,
+          ci.product_id,
+          ci.quantity,
+          COALESCE(ci.price_at_time, p.price) AS unit_price,
+          p.name AS product_name,
+          p.img_url,
+          p.unit,
+          p.category
+   FROM shop_owner_cart_items ci
+   LEFT JOIN products p ON p.product_id = ci.product_id
+        WHERE ci.cart_id = ?
+        ORDER BY ci.cart_item_id DESC";
+$stmt = mysqli_prepare($conn, $sql);
+mysqli_stmt_bind_param($stmt, 'i', $cart_id);
+mysqli_stmt_execute($stmt);
+$res = mysqli_stmt_get_result($stmt);
+while ($row = mysqli_fetch_assoc($res)) {
+  $img = $row['img_url'] ?: '';
+  $isAbsolute = (strpos($img, 'http://') === 0) || (strpos($img, 'https://') === 0) || (strpos($img, '/') === 0);
+  $imgPath = $isAbsolute ? $img : ('../../' . ltrim($img, '/'));
+  $productMissing = empty($row['product_name']);
+  $displayName = $productMissing ? ('Unknown product #' . $row['product_id']) : ($row['product_name'] ?? 'Product');
+  $displayDesc = $productMissing ? 'Product not found in catalog' : ($row['unit'] ? ('Unit: ' . $row['unit']) : ($row['category'] ?? ''));
+  $displayImg = $productMissing ? '../../assets/products-image/placeholder.jpg' : ($imgPath ?: '../../assets/products-image/placeholder.jpg');
+  $cart[] = [
+    'cart_item_id' => (int)$row['cart_item_id'],
+    'id' => (int)$row['product_id'],
+    'name' => $displayName,
+    'description' => $displayDesc,
+    'price' => (float)$row['unit_price'],
+    'quantity' => (int)$row['quantity'],
+    'image' => $displayImg
+  ];
+}
+mysqli_stmt_close($stmt);
+
+// Totals (will also be updated via JS on the client)
 $total = 0;
 foreach ($cart as $item) {
-  $total += $item['price'] * $item['quantity'];
+  $total += ($item['price'] * $item['quantity']);
 }
-$discount = 500;
+$discount = 0;
 $tax = 0;
 $shipping = 200;
-$grand_total = $total - $discount + $tax + $shipping;
-
-// Handle POST request for billing info
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['shopName'])) {
-  $full_name = $_POST['shopName'] ?? $user_data['full_name'];
-  $owner_name = $_POST['ownerName'] ?? '';
-  $phone = $_POST['phone'] ?? $user_data['phone'];
-  $email = $_POST['email'] ?? $user_data['email'];
-  $billing_address = $_POST['address'] ?? '';
-  $shipping_address = $_POST['shippingAddress'] ?? '';
-  $notes = $_POST['notes'] ?? '';
-  $tax_id = $_POST['taxId'] ?? '';
-  $country = $_POST['country'] ?? '';
-  $state = $_POST['state'] ?? '';
-  $zip = $_POST['zip'] ?? '';
-
-  $billing_address_full = $billing_address . ', ' . $state . ', ' . $country . ' ' . $zip;
-  $shipping_address_full = $shipping_address . ', ' . $state . ', ' . $country . ' ' . $zip;
-
-  // Insert into orders first
-  $order_insert = mysqli_prepare($conn, "INSERT INTO orders (shopowner_id, total_amount, status, payment_status) VALUES (?, ?, 'Pending', 'Pending')");
-  mysqli_stmt_bind_param($order_insert, "id", $user_id, $grand_total);
-  if (!mysqli_stmt_execute($order_insert)) {
-    die('Error inserting into orders: ' . mysqli_error($conn));
-  }
-  $order_id = mysqli_insert_id($conn);
-
-  // Now insert into billing_info
-  $stmt = mysqli_prepare($conn, "INSERT INTO billing_info (user_id, order_id, shop_owener_name, billing_address, shipping_address, special_nstructions, tax_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
-  mysqli_stmt_bind_param($stmt, "iisssss", $user_id, $order_id, $user_data['full_name'], $billing_address_full, $shipping_address_full, $notes, $tax_id);
-  if (!mysqli_stmt_execute($stmt)) {
-    die("Error inserting billing info: " . mysqli_error($conn));
-  }
-
-  // Redirect or success message
-  echo "<script>alert('Order placed successfully!');</script>";
-}
+$grand_total = max(0, $total - $discount + $tax + $shipping);
 ?>
 
 <!doctype html>
@@ -111,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['shopName'])) {
       <div class="py-5 text-center">
         <img class="d-block mx-auto mb-4" src="checkout_logo.png" alt="" width="72" height="67">
         <h2 class="text-primary fw-bold">Your Cart & Checkout</h2>
-        <a href="buy-products.php" class="btn btn-outline-secondary mb-3">Back to Products</a>
+        <a href="../buy-products-from-warehouse.php" class="btn btn-outline-secondary mb-3">Back to Products</a>
       </div>
 
       <?php if (empty($cart)): ?>
@@ -128,21 +197,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['shopName'])) {
             <div class="cart-summary">
               <ul class="list-group" id="cart-items">
                 <?php foreach ($cart as $index => $item): ?>
-                  <li class="cart-item" data-item-id="<?php echo $item['id']; ?>">
-                    <img src="<?php echo $item['image']; ?>" alt="<?php echo $item['name']; ?>" class="cart-item-img">
+                  <li class="cart-item" data-item-id="<?php echo (int)$item['cart_item_id']; ?>">
+                    <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="cart-item-img">
                     <div class="cart-item-details">
-                      <h6 class="text-dark"><?php echo $item['name']; ?></h6>
-                      <small class="text-muted"><?php echo $item['description']; ?></small>
-                      <?php if ($item['quantity'] < 5): ?>
-                        <small class="text-warning">Only <?php echo $item['quantity']; ?> left - Add quickly!</small>
+                      <h6 class="text-dark"><?php echo htmlspecialchars($item['name']); ?></h6>
+                      <?php if (!empty($item['description'])): ?>
+                        <small class="text-muted"><?php echo htmlspecialchars($item['description']); ?></small>
                       <?php endif; ?>
                     </div>
                     <div class="cart-item-actions">
-                      <form class="d-flex align-items-center flex-grow-1" data-index="<?php echo $index; ?>">
-                        <input type="hidden" name="item-id" value="<?php echo $item['id']; ?>">
-                        <input type="number" class="form-control quantity-input me-2" value="<?php echo $item['quantity']; ?>" min="0" data-price="<?php echo $item['price']; ?>">
-                        <button type="button" class="btn btn-outline-primary update-btn me-2" data-index="<?php echo $index; ?>">Update</button>
-                        <button type="button" class="btn btn-outline-danger delete-btn" data-index="<?php echo $index; ?>">Delete</button>
+                      <form method="POST" class="d-flex align-items-center flex-grow-1" data-index="<?php echo $index; ?>">
+                        <input type="hidden" name="cart_item_id" value="<?php echo (int)$item['cart_item_id']; ?>">
+                        <input type="number" name="quantity" class="form-control quantity-input me-2" value="<?php echo (int)$item['quantity']; ?>" min="0" data-price="<?php echo (float)$item['price']; ?>">
+                        <button type="submit" name="update_item" class="btn btn-outline-primary update-btn me-2" data-index="<?php echo $index; ?>">Update</button>
+                        <button type="submit" name="delete_item" class="btn btn-outline-danger delete-btn" data-index="<?php echo $index; ?>">Delete</button>
                       </form>
                       <span class="price-tag ms-3 text-muted">Tk<?php echo number_format($item['price'] * $item['quantity'], 2); ?></span>
                     </div>
