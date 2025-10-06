@@ -185,7 +185,8 @@ $grand_total = max(0, $total - $discount + $tax + $shipping);
 
       <?php if (empty($cart)): ?>
         <div class="alert alert-info text-center">
-          Your cart is empty. <a href="buy-products.php" class="alert-link">Browse available products</a> to add items.
+          <!-- Your cart is empty. <a href="shop-owner-app\buy-products-from-warehouse.php" class="alert-link">Browse available products</a> to add items. -->
+          Your cart is empty. <a href="../buy-products-from-warehouse.php" class="alert-link">Browse available products</a> to add items.
         </div>
       <?php else: ?>
 
