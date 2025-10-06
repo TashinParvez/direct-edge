@@ -142,7 +142,8 @@ h1 {
     outline: none;
 }
 
-#addProductBtn, #createOfferBtn {
+#addProductBtn,
+#createOfferBtn {
     padding: 10px 20px;
     background: linear-gradient(90deg, #007bff, #0056b3);
     color: white;
@@ -153,7 +154,8 @@ h1 {
     transition: transform 0.2s, background 0.3s;
 }
 
-#addProductBtn:hover, #createOfferBtn:hover {
+#addProductBtn:hover,
+#createOfferBtn:hover {
     transform: scale(1.05);
     background: linear-gradient(90deg, #0056b3, #003d80);
 }
@@ -165,7 +167,8 @@ table {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-th, td {
+th,
+td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #ddd;
@@ -184,23 +187,80 @@ td:nth-child(8) {
     background-color: #f9f9f9;
 }
 
-th:nth-child(9), td:nth-child(9), th:nth-child(3), td:nth-child(3), th:nth-child(2), td:nth-child(2), th:nth-child(1), td:nth-child(1) {
+th:nth-child(9),
+td:nth-child(9),
+th:nth-child(3),
+td:nth-child(3),
+th:nth-child(2),
+td:nth-child(2),
+th:nth-child(1),
+td:nth-child(1) {
     max-width: 200px;
     white-space: normal;
     overflow: visible;
 }
 
 /* Increase column widths */
-th:nth-child(1), td:nth-child(1) { width: 5%; } /* Product Code */
-th:nth-child(2), td:nth-child(2) { width: 10%; } /* Name */
-th:nth-child(3), td:nth-child(3) { width: 15%; } /* Special Instructions */
-th:nth-child(4), td:nth-child(4) { width: 10%; } /* Date */
-th:nth-child(5), td:nth-child(5) { width: 10%; } /* Quantity */
-th:nth-child(6), td:nth-child(6) { width: 8%; } /* Unit */
-th:nth-child(7), td:nth-child(7) { width: 10%; } /* Status */
-th:nth-child(8), td:nth-child(8) { width: 10%; } /* Warehouse */
-th:nth-child(9), td:nth-child(9) { width: 10%; } /* Offer Suggestion */
-th:nth-child(10), td:nth-child(10) { width: 10%; } /* Actions */
+th:nth-child(1),
+td:nth-child(1) {
+    width: 5%;
+}
+
+/* Product Code */
+th:nth-child(2),
+td:nth-child(2) {
+    width: 10%;
+}
+
+/* Name */
+th:nth-child(3),
+td:nth-child(3) {
+    width: 15%;
+}
+
+/* Special Instructions */
+th:nth-child(4),
+td:nth-child(4) {
+    width: 10%;
+}
+
+/* Date */
+th:nth-child(5),
+td:nth-child(5) {
+    width: 10%;
+}
+
+/* Quantity */
+th:nth-child(6),
+td:nth-child(6) {
+    width: 8%;
+}
+
+/* Unit */
+th:nth-child(7),
+td:nth-child(7) {
+    width: 10%;
+}
+
+/* Status */
+th:nth-child(8),
+td:nth-child(8) {
+    width: 10%;
+}
+
+/* Warehouse */
+th:nth-child(9),
+td:nth-child(9) {
+    width: 10%;
+}
+
+/* Offer Suggestion */
+th:nth-child(10),
+td:nth-child(10) {
+    width: 10%;
+}
+
+/* Actions */
 
 .low-stock {
     color: #dc3545;
@@ -322,13 +382,23 @@ th:nth-child(10), td:nth-child(10) { width: 10%; } /* Actions */
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
 
 .popup {
@@ -355,8 +425,15 @@ th:nth-child(10), td:nth-child(10) { width: 10%; } /* Actions */
 }
 
 @keyframes slideDown {
-    from { transform: translateY(-50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .close-btn {
@@ -374,7 +451,9 @@ th:nth-child(10), td:nth-child(10) { width: 10%; } /* Actions */
     transform: rotate(90deg);
 }
 
-#addProductForm, #editProductForm, #offerForm {
+#addProductForm,
+#editProductForm,
+#offerForm {
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -384,18 +463,27 @@ th:nth-child(10), td:nth-child(10) { width: 10%; } /* Actions */
     padding-right: 10px;
 }
 
-#addProductForm label, #editProductForm label, #offerForm label {
+#addProductForm label,
+#editProductForm label,
+#offerForm label {
     font-weight: bold;
     color: #333;
     padding-left: 5px;
     transition: color 0.3s;
 }
 
-#addProductForm label:hover, #editProductForm label:hover, #offerForm label:hover {
+#addProductForm label:hover,
+#editProductForm label:hover,
+#offerForm label:hover {
     color: #0056b3;
 }
 
-#addProductForm input, #addProductForm select, #editProductForm input, #editProductForm select, #offerForm input, #offerForm select {
+#addProductForm input,
+#addProductForm select,
+#editProductForm input,
+#editProductForm select,
+#offerForm input,
+#offerForm select {
     padding: 10px;
     border: 2px solid #ddd;
     border-radius: 6px;
@@ -404,13 +492,20 @@ th:nth-child(10), td:nth-child(10) { width: 10%; } /* Actions */
     width: 100%;
 }
 
-#addProductForm input:focus, #addProductForm select:focus, #editProductForm input:focus, #editProductForm select:focus, #offerForm input:focus, #offerForm select:focus {
+#addProductForm input:focus,
+#addProductForm select:focus,
+#editProductForm input:focus,
+#editProductForm select:focus,
+#offerForm input:focus,
+#offerForm select:focus {
     border-color: #007bff;
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
     outline: none;
 }
 
-#addProductForm button[type="submit"], #editProductForm button[type="submit"], #offerForm button[type="submit"] {
+#addProductForm button[type="submit"],
+#editProductForm button[type="submit"],
+#offerForm button[type="submit"] {
     padding: 12px;
     background: linear-gradient(90deg, #28a745, #218838);
     color: white;
@@ -422,26 +517,36 @@ th:nth-child(10), td:nth-child(10) { width: 10%; } /* Actions */
     width: 100%;
 }
 
-#addProductForm button[type="submit"]:hover, #editProductForm button[type="submit"]:hover, #offerForm button[type="submit"]:hover {
+#addProductForm button[type="submit"]:hover,
+#editProductForm button[type="submit"]:hover,
+#offerForm button[type="submit"]:hover {
     transform: scale(1.05);
     background: linear-gradient(90deg, #218838, #1e7e34);
 }
 
-#addProductForm::-webkit-scrollbar, #editProductForm::-webkit-scrollbar, #offerForm::-webkit-scrollbar {
+#addProductForm::-webkit-scrollbar,
+#editProductForm::-webkit-scrollbar,
+#offerForm::-webkit-scrollbar {
     width: 8px;
 }
 
-#addProductForm::-webkit-scrollbar-track, #editProductForm::-webkit-scrollbar-track, #offerForm::-webkit-scrollbar-track {
+#addProductForm::-webkit-scrollbar-track,
+#editProductForm::-webkit-scrollbar-track,
+#offerForm::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
 }
 
-#addProductForm::-webkit-scrollbar-thumb, #editProductForm::-webkit-scrollbar-thumb, #offerForm::-webkit-scrollbar-thumb {
+#addProductForm::-webkit-scrollbar-thumb,
+#editProductForm::-webkit-scrollbar-thumb,
+#offerForm::-webkit-scrollbar-thumb {
     background: #007bff;
     border-radius: 4px;
 }
 
-#addProductForm::-webkit-scrollbar-thumb:hover, #editProductForm::-webkit-scrollbar-thumb:hover, #offerForm::-webkit-scrollbar-thumb:hover {
+#addProductForm::-webkit-scrollbar-thumb:hover,
+#editProductForm::-webkit-scrollbar-thumb:hover,
+#offerForm::-webkit-scrollbar-thumb:hover {
     background: #0056b3;
 }
 

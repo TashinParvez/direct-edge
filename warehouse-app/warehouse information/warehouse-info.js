@@ -2,15 +2,41 @@ function toggleView(view) {
     const table = document.getElementById('productTable');
     if (view === 'list') {
         table.style.display = 'table';
+        // Switch to server-side pagination
         updatePagination();
     }
 }
 
 // Global variables
 let searchTerm = '';
-let filters = ['all']; // Combined array for all filter types
-let inventory = []; // In-memory inventory array
-let offers = []; // In-memory offers array
+let filters = ['all']; // legacy; server-side filters are collected from UI groups
+let inventory = []; // In-memory inventory array (seeded from DOM, kept in sync with DB)
+let offers = []; // In-memory offers array (for quick lookup if needed)
+const API_URL = '../warehouse information/warehouse-info-api.php';
+
+async function api(action, payload) {
+    const res = await fetch(`${API_URL}?action=${encodeURIComponent(action)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload ? JSON.stringify(payload) : undefined
+    });
+    const data = await res.json().catch(() => ({ ok: false, error: 'Invalid JSON' }));
+    if (!data.ok) throw new Error(data.error || 'Request failed');
+    return data;
+}
+
+async function refreshMetrics() {
+    try {
+        const { metrics } = await api('metrics');
+        if (metrics) {
+            if (totalCapacityElement) totalCapacityElement.textContent = `${metrics.totalCapacity} units`;
+            if (freeCapacityElement) freeCapacityElement.textContent = `${metrics.freeCapacity} units`;
+            if (itemCountElement) itemCountElement.textContent = metrics.itemCount;
+        }
+    } catch (e) {
+        console.error('Failed to refresh metrics:', e.message);
+    }
+}
 
 // Filter and Search Elements
 const searchInput = document.getElementById('searchInput');
@@ -18,6 +44,9 @@ const addProductBtn = document.getElementById('addProductBtn');
 const popup = document.getElementById('addProductPopup');
 const closeBtn = document.querySelector('.close-btn');
 const addProductForm = document.getElementById('addProductForm');
+const addProductCodeSelect = document.getElementById('productCodeSelect');
+const addProductNameSelect = document.getElementById('productNameSelect');
+const addSpecialInstructions = document.getElementById('specialInstructions');
 const editProductPopup = document.getElementById('editProductPopup');
 const editCloseBtn = document.querySelector('#editProductPopup .close-btn');
 const editProductForm = document.getElementById('editProductForm');
@@ -44,6 +73,13 @@ function showSuccessMessage(message) {
     console.log('Showing success message:', message);
     successText.textContent = message;
     successMessage.classList.add('show');
+    // start Also show a blocking alert as explicitly requested
+    try {
+        alert(message);
+    } catch (e) {
+        console.warn('Alert failed:', e);
+    }
+    //end
     setTimeout(() => {
         console.log('Hiding success message');
         successMessage.classList.remove('show');
@@ -79,20 +115,16 @@ function toggleDropdown() {
 function selectAll() {
     const checkboxes = document.querySelectorAll('.filter-option');
     checkboxes.forEach(cb => cb.checked = true);
-    filters = ['all'];
-    filterTable();
-    updatePagination();
+    // When all are selected, treat as no filter and reload from server
+    currentPage = 1;
+    loadList(1);
+    document.getElementById('dropdownMenu')?.classList.remove('show');
 }
 
 function applyFilters() {
-    filters = Array.from(document.querySelectorAll('.filter-option:checked'))
-        .map(cb => cb.value);
-    if (filters.length === 0) {
-        filters = ['all']; // Fallback to 'all' if no filters are selected
-    }
-    filterTable();
+    // Server-side: collect filters per group and reload
     currentPage = 1;
-    updatePagination();
+    loadList(1);
     document.getElementById('dropdownMenu')?.classList.remove('show');
 }
 
@@ -109,10 +141,9 @@ let searchTimeout;
 function applyFiltersDebounced() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-        searchTerm = searchInput.value.toLowerCase();
-        filterTable();
+        searchTerm = searchInput.value;
         currentPage = 1;
-        updatePagination();
+        loadList(1);
     }, 300);
 }
 
@@ -123,128 +154,171 @@ if (searchInput) {
     console.error('Search input not found');
 }
 
-// Function to apply all filters
-function filterTable() {
-    const tableRows = document.querySelectorAll('#productTableBody tr');
-    tableRows.forEach(row => {
-        const product = row.cells[1].textContent.toLowerCase();
-        const productCode = row.cells[0].textContent.toLowerCase();
-        const status = row.cells[6].textContent;
-        const quantity = parseInt(row.cells[4].textContent);
-        const warehouse = row.cells[7].textContent;
-        const unit = row.cells[5].textContent;
+// Client-side filtering replaced by server-side list API
+function filterTable() { /* no-op (server-side) */ }
 
-        const searchMatch = !searchTerm || (product.includes(searchTerm) || productCode.includes(searchTerm));
-
-        let filterMatch = filters.includes('all');
-        if (!filterMatch) {
-            filterMatch = filters.some(filter => {
-                if (filter === 'In progress' || filter === 'Completed') {
-                    return status === filter;
-                } else if (filter === 'low') {
-                    return quantity < 10;
-                } else if (filter === 'medium') {
-                    return quantity >= 10 && quantity <= 50;
-                } else if (filter === 'high') {
-                    return quantity > 50;
-                } else if (filter === 'Warehouse A' || filter === 'Warehouse B' || filter === 'Warehouse C') {
-                    return warehouse === filter;
-                } else if (filter === 'kg' || filter === 'units') {
-                    return unit === filter;
-                }
-                return false;
-            });
+// Helpers to collect filters by group title
+function getGroupCheckedValues(groupTitle) {
+    const groups = document.querySelectorAll('#dropdownMenu .group');
+    for (const g of groups) {
+        const title = g.querySelector('.group-title')?.textContent?.trim().toLowerCase();
+        if (title === groupTitle.toLowerCase()) {
+            const checked = Array.from(g.querySelectorAll('input.filter-option:checked'))
+                .map(cb => cb.value)
+                .filter(v => v.toLowerCase() !== 'all');
+            // If all options (excluding 'all') are selected, treat as no filter
+            const totalOptions = Array.from(g.querySelectorAll('input.filter-option'))
+                .map(cb => cb.value)
+                .filter(v => v.toLowerCase() !== 'all');
+            if (checked.length === 0 || checked.length === totalOptions.length) return [];
+            return checked;
         }
-
-        if (searchMatch && filterMatch) {
-            row.classList.remove('filtered-out');
-        } else {
-            row.classList.add('filtered-out');
-        }
-    });
-    updateTotals();
+    }
+    return [];
 }
 
-// Pagination Logic
+function collectFiltersFromUI() {
+    return {
+        statuses: getGroupCheckedValues('Status'),
+        capacities: getGroupCheckedValues('Capacity'),
+        warehouses: getGroupCheckedValues('Warehouse'),
+        units: getGroupCheckedValues('Unit')
+    };
+}
+
 let currentPage = 1;
 let rowsPerPage = 5;
+let lastPagination = { page: 1, pageSize: rowsPerPage, total: 0, totalPages: 1 };
+let lastTotals = { totalItems: 0, totalQuantity: 0 };
 
-function updatePagination() {
-    const table = document.getElementById('productTable');
+function buildRowHtml(row) {
+    const lowCls = row.quantity < 10 ? 'low-stock' : '';
+    const statusCls = row.status.toLowerCase() === 'completed' ? 'completed' : 'in-progress';
+    return `
+        <tr data-id="${row.id}" data-warehouse-id="${row.warehouse_id}" data-product-id="${row.product_id}" data-unit="${row.product_unit || ''}" data-offer="${row.offer_text || 'No Offer'}">
+            <td>${row.product_code}</td>
+            <td>${row.product_name}</td>
+            <td>${row.special_instructions || '—'}</td>
+            <td class="${lowCls}">${row.quantity}</td>
+            <td>${row.unit_volume ?? ''}</td>
+            <td class="${statusCls}">${row.status}</td>
+            <td>${row.warehouse_name}</td>
+            <td>${row.agent_id || '—'}</td>
+            <td>${row.offer_text || 'No Offer'}</td>
+            <td>${row.inbound_stock_date || '—'}</td>
+            <td>${row.expiry_date || '—'}</td>
+            <td>${row.last_updated || ''}</td>
+            <td>
+                <button class="action-btn edit-btn" onclick="editProduct(${row.id})">✎</button>
+                <button class="action-btn delete-btn" onclick="deleteProduct(${row.id})">🗑</button>
+                <button class="action-btn offer-btn" onclick="manageOffer(${row.id})">🏷️</button>
+            </td>
+        </tr>`;
+}
+
+function updateTotalsFromApi(totals) {
+    if (!totalRow || !totalItemsElement || !totalQuantityElement) return;
+    totalItemsElement.textContent = totals.totalItems ?? 0;
+    totalQuantityElement.textContent = totals.totalQuantity ?? 0;
+    totalRow.style.display = (totals.totalItems ?? 0) > 0 ? 'table-row' : 'none';
+}
+
+function updatePaginationControls(pagination) {
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     const pageNumbers = document.getElementById('pageNumbers');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-
-    const visibleRows = rows.filter(row => !row.classList.contains('filtered-out'));
-    const totalPages = Math.max(1, Math.ceil(visibleRows.length / rowsPerPage));
-
-    if (currentPage > totalPages) currentPage = totalPages;
-
     pageNumbers.innerHTML = '';
+    const totalPages = Math.max(1, pagination.totalPages || 1);
+    const page = Math.min(Math.max(1, pagination.page || 1), totalPages);
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
         btn.textContent = i;
-        if (i === currentPage) btn.classList.add('active');
+        if (i === page) btn.classList.add('active');
         btn.addEventListener('click', () => {
             currentPage = i;
-            updatePagination();
+            loadList(currentPage);
         });
         pageNumbers.appendChild(btn);
     }
+    if (prevBtn) prevBtn.disabled = page <= 1;
+    if (nextBtn) nextBtn.disabled = page >= totalPages;
+}
 
-    prevBtn.disabled = currentPage === 1;
-    nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+async function loadList(page = 1) {
+    try {
+        // keep rowsPerPage in sync with selector
+        const rppSelect = document.getElementById('rowsPerPage');
+        if (rppSelect) rowsPerPage = parseInt(rppSelect.value) || rowsPerPage;
+        const { statuses, capacities, warehouses, units } = collectFiltersFromUI();
+        const payload = {
+            search: searchTerm || (searchInput ? searchInput.value : ''),
+            statuses,
+            capacities,
+            warehouses,
+            units,
+            page,
+            pageSize: rowsPerPage
+        };
+        const { rows, pagination, totals } = await api('list', payload);
+        // Render rows
+        tbody.innerHTML = '';
+        (rows || []).forEach(row => {
+            tbody.insertAdjacentHTML('beforeend', buildRowHtml(row));
+        });
+        // Update inventory cache
+        inventory = (rows || []).map(row => ({
+            id: row.id,
+            product_code: row.product_code,
+            product: row.product_name,
+            special_instructions: row.special_instructions || null,
+            date_added: row.inbound_stock_date || '',
+            quantity: row.quantity,
+            unit: row.product_unit || '',
+            status: row.status,
+            warehouse: row.warehouse_name,
+            warehouse_id: row.warehouse_id,
+            agent_id: row.agent_id || null,
+            expiry_date: row.expiry_date || null,
+            last_updated: row.last_updated || ''
+        }));
+        // Totals & pagination
+        lastPagination = pagination || lastPagination;
+        lastTotals = totals || lastTotals;
+        updateTotalsFromApi(lastTotals);
+        updatePaginationControls(lastPagination);
+        // Low stock alert
+        const hasLow = !!document.querySelector('#productTableBody .low-stock');
+        const alertEl = document.getElementById('lowStockAlert');
+        if (alertEl) alertEl.style.display = hasLow ? 'block' : 'none';
+    } catch (e) {
+        console.error('Failed to load list:', e.message);
+    }
+}
 
-    const startIdx = (currentPage - 1) * rowsPerPage;
-    const endIdx = startIdx + rowsPerPage;
-
-    rows.forEach(row => {
-        if (row.classList.contains('filtered-out')) {
-            row.style.display = 'none';
-        } else {
-            const index = visibleRows.indexOf(row);
-            row.style.display = index >= startIdx && index < endIdx ? '' : 'none';
-        }
-    });
-
-    table.style.display = visibleRows.length > 0 ? 'table' : 'none';
-    updateTotals();
+function updatePagination() {
+    // Server-side pagination: just reload current page
+    loadList(currentPage);
 }
 
 function changePage(delta) {
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    const visibleRows = rows.filter(row => !row.classList.contains('filtered-out'));
-    const totalPages = Math.max(1, Math.ceil(visibleRows.length / rowsPerPage));
-
-    currentPage += delta;
-    if (currentPage < 1) currentPage = 1;
-    if (currentPage > totalPages) currentPage = totalPages;
-
-    updatePagination();
+    const totalPages = lastPagination.totalPages || 1;
+    let target = currentPage + delta;
+    if (target < 1) target = 1;
+    if (target > totalPages) target = totalPages;
+    if (target !== currentPage) {
+        currentPage = target;
+        loadList(currentPage);
+    }
 }
 
 function changeRowsPerPage() {
     rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
     currentPage = 1;
-    updatePagination();
+    loadList(1);
 }
 
-// Function to update totals based on filtered rows
-function updateTotals() {
-    if (!totalRow || !totalItemsElement || !totalQuantityElement) {
-        console.error('Total row elements not found:', { totalRow, totalItemsElement, totalQuantityElement });
-        return;
-    }
-
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    const visibleRows = rows.filter(row => !row.classList.contains('filtered-out'));
-
-    totalItemsElement.textContent = visibleRows.length;
-    totalQuantityElement.textContent = visibleRows.reduce((sum, row) => sum + parseInt(row.cells[4].textContent), 0);
-
-    totalRow.style.display = visibleRows.length > 0 ? 'table-row' : 'none';
-}
+// Totals are provided by the API now
+function updateTotals() { /* replaced by updateTotalsFromApi */ }
 
 // Popup and Form Handling
 if (addProductBtn) {
@@ -264,79 +338,91 @@ if (closeBtn) {
     closeBtn.addEventListener('click', () => closePopup('add'));
 }
 
+// Sync product code/name selects and display special instructions
+function syncProductSelects(fromSelect, toSelect) {
+    const val = fromSelect.value;
+    if (val) toSelect.value = val;
+    const opt = fromSelect.options[fromSelect.selectedIndex];
+    if (opt) {
+        const instr = opt.getAttribute('data-instructions') || '';
+        addSpecialInstructions.value = instr;
+    }
+}
+
+if (addProductCodeSelect && addProductNameSelect && addSpecialInstructions) {
+    addProductCodeSelect.addEventListener('change', () => syncProductSelects(addProductCodeSelect, addProductNameSelect));
+    addProductNameSelect.addEventListener('change', () => syncProductSelects(addProductNameSelect, addProductCodeSelect));
+}
+
 if (addProductForm) {
-    addProductForm.addEventListener('submit', (e) => {
+    addProductForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const productCode = document.getElementById('productCode')?.value.trim();
-        const productName = document.getElementById('productName')?.value.trim();
-        const dateAdded = document.getElementById('dateAdded')?.value;
+        const productId = parseInt(addProductCodeSelect?.value || addProductNameSelect?.value || '');
+        const productCode = productId ? `PRD-${String(productId).padStart(3,'0')}` : '';
+        const productName = addProductNameSelect?.options[addProductNameSelect.selectedIndex]?.text || '';
+        const dateAdded = document.getElementById('dateAdded')?.value; // inbound stock date
         const quantity = parseInt(document.getElementById('quantity')?.value);
-        const unit = document.getElementById('unit')?.value;
+        const unitVolume = parseFloat(document.getElementById('unitVolume')?.value);
         const warehouse = document.getElementById('warehouse')?.value;
+        const agentId = document.getElementById('agentId')?.value || null;
+        const expiryDate = document.getElementById('expiryDate')?.value || null;
 
-        if (!productCode || !productName || !dateAdded || isNaN(quantity) || quantity <= 0 || !unit || !warehouse) {
-            alert('Please fill all required fields correctly. Quantity must be greater than 0.');
+        if (!productId || !dateAdded || isNaN(quantity) || quantity <= 0 || isNaN(unitVolume) || unitVolume < 0 || !warehouse) {
+            alert('Please fill all required fields. Quantity > 0 and Unit Volume >= 0.');
             return;
         }
 
-        const newProduct = {
-            id: Date.now(),
-            product_code: productCode,
-            product: productName,
-            special_instructions: document.getElementById('specialInstructions')?.value || null,
-            date_added: dateAdded,
-            quantity: quantity,
-            unit: unit,
-            status: document.getElementById('status')?.value,
-            warehouse: warehouse
-        };
+        try {
+            const payload = {
+                productId,
+                dateAdded,
+                quantity,
+                unitVolume,
+                status: document.getElementById('status')?.value,
+                warehouseId: parseInt(warehouse),
+                agentId: agentId ? parseInt(agentId) : null,
+                expiryDate,
+                specialInstructions: addSpecialInstructions?.value || ''
+            };
+            const { row, metrics } = await api('add', payload);
+            // Update DOM with returned row
+            tbody.insertAdjacentHTML('afterbegin', buildRowHtml(row));
 
-        const existingIds = inventory.map(item => item.id);
-        if (existingIds.includes(newProduct.id)) {
-            alert('A product with this ID already exists. Please try again.');
-            return;
-        }
+            // Update local inventory for edit/delete UX
+            inventory.push({
+                id: row.id,
+                product_code: row.product_code,
+                product: row.product_name,
+                special_instructions: row.special_instructions || null,
+                date_added: row.inbound_stock_date || '',
+                quantity: row.quantity,
+                unit: row.product_unit || '',
+                status: row.status,
+                warehouse: row.warehouse_name,
+                agent_id: row.agent_id || null,
+                expiry_date: row.expiry_date || null,
+                last_updated: row.last_updated || ''
+            });
 
-        inventory.push(newProduct);
-        const currentDate = new Date('2025-09-23');
-        const itemDate = new Date(newProduct.date_added);
-        const monthsDiff = Math.floor((currentDate - itemDate) / (1000 * 60 * 60 * 24 * 30));
-        const offerSuggestion = (newProduct.quantity < 50 || monthsDiff >= 6) ? '10% Discount' : 'No Offer';
-        const newRow = document.createElement('tr');
-        newRow.setAttribute('data-id', newProduct.id);
-        newRow.setAttribute('data-offer', offerSuggestion);
-        newRow.innerHTML = `
-            <td>${newProduct.product_code}</td>
-            <td>${newProduct.product}</td>
-            <td>${newProduct.special_instructions || '—'}</td>
-            <td>${newProduct.date_added}</td>
-            <td class="${newProduct.quantity < 10 ? 'low-stock' : ''}">${newProduct.quantity}</td>
-            <td>${newProduct.unit}</td>
-            <td class="${newProduct.status.toLowerCase() === 'completed' ? 'completed' : 'in-progress'}">${newProduct.status}</td>
-            <td>${newProduct.warehouse}</td>
-            <td>${offerSuggestion}</td>
-            <td>
-                <button class="action-btn edit-btn" onclick="editProduct(${newProduct.id})">✎</button>
-                <button class="action-btn delete-btn" onclick="deleteProduct(${newProduct.id})">🗑</button>
-                <button class="action-btn offer-btn" onclick="manageOffer(${newProduct.id})">🏷️</button>
-            </td>
-        `;
-        tbody.appendChild(newRow);
+            if (metrics) {
+                totalCapacityElement.textContent = `${metrics.totalCapacity} units`;
+                freeCapacityElement.textContent = `${metrics.freeCapacity} units`;
+                itemCountElement.textContent = metrics.itemCount;
+            } else {
+                await refreshMetrics();
+            }
 
-        const totalCapacity = 100000;
-        const currentItemCount = inventory.length;
-        const currentFreeCapacity = parseInt(freeCapacityElement.textContent.split(' ')[0]) - newProduct.quantity;
-        itemCountElement.textContent = currentItemCount;
-        freeCapacityElement.textContent = `${currentFreeCapacity} units`;
-
-        showSuccessMessage('Product added successfully!');
-        closePopup('add');
-        filterTable();
-        updatePagination();
-        const quantities = document.querySelectorAll('#productTableBody .low-stock');
-        if (quantities.length > 0 && document.getElementById('lowStockAlert').style.display === 'none') {
-            document.getElementById('lowStockAlert').style.display = 'block';
+            showSuccessMessage('Product added successfully!');
+            closePopup('add');
+            // Reload current page to reflect server-side list and totals
+            loadList(currentPage);
+            const quantities = document.querySelectorAll('#productTableBody .low-stock');
+            if (quantities.length > 0 && document.getElementById('lowStockAlert').style.display === 'none') {
+                document.getElementById('lowStockAlert').style.display = 'block';
+            }
+        } catch (err) {
+            alert('Failed to add product: ' + err.message);
         }
     });
 }
@@ -354,9 +440,17 @@ function editProduct(id) {
     document.getElementById('editSpecialInstructions').value = product.special_instructions || '';
     document.getElementById('editDateAdded').value = product.date_added;
     document.getElementById('editQuantity').value = product.quantity;
-    document.getElementById('editUnit').value = product.unit;
+    document.getElementById('editUnitVolume').value = (function(){
+        const rowEl = document.querySelector(`#productTableBody tr[data-id="${id}"]`);
+        return rowEl ? rowEl.cells[4].textContent : '';
+    })();
     document.getElementById('editStatus').value = product.status;
-    document.getElementById('editWarehouse').value = product.warehouse;
+    // If row has data-warehouse-id, prefer it; else keep as is
+    const row = document.querySelector(`#productTableBody tr[data-id="${id}"]`);
+    const whId = row ? row.getAttribute('data-warehouse-id') : null;
+    document.getElementById('editWarehouse').value = whId || document.getElementById('editWarehouse').value;
+    document.getElementById('editAgentId').value = product.agent_id || '';
+    document.getElementById('editExpiryDate').value = product.expiry_date || '';
 
     if (editProductPopup) {
         editProductPopup.style.display = 'block';
@@ -373,110 +467,130 @@ if (editCloseBtn) {
 }
 
 if (editProductForm) {
-    editProductForm.addEventListener('submit', (e) => {
+    editProductForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const productCode = document.getElementById('editProductCode')?.value.trim();
         const productName = document.getElementById('editProductName')?.value.trim();
         const dateAdded = document.getElementById('editDateAdded')?.value;
         const quantity = parseInt(document.getElementById('editQuantity')?.value);
-        const unit = document.getElementById('editUnit')?.value;
+        const unitVolume = parseFloat(document.getElementById('editUnitVolume')?.value);
         const warehouse = document.getElementById('editWarehouse')?.value;
+        const agentId = document.getElementById('editAgentId')?.value || null;
+        const expiryDate = document.getElementById('editExpiryDate')?.value || null;
 
-        if (!productCode || !productName || !dateAdded || isNaN(quantity) || quantity <= 0 || !unit || !warehouse) {
-            alert('Please fill all required fields correctly. Quantity must be greater than 0.');
+        if (!productCode || !productName || !dateAdded || isNaN(quantity) || quantity <= 0 || isNaN(unitVolume) || unitVolume < 0 || !warehouse) {
+            alert('Please fill all required fields. Quantity > 0 and Unit Volume >= 0.');
             return;
         }
 
-        const id = parseInt(document.getElementById('editProductId')?.value);
-        const productIndex = inventory.findIndex(item => item.id === id);
-        if (productIndex === -1) {
-            console.error('Product not found for ID:', id);
-            return;
-        }
+        try {
+            const id = parseInt(document.getElementById('editProductId')?.value);
+            // productId stays the same; retrieve from row data attribute
+            const rowEl = document.querySelector(`#productTableBody tr[data-id="${id}"]`);
+            const productId = rowEl ? parseInt(rowEl.getAttribute('data-product-id')) : null;
+            const payload = {
+                id,
+                productId,
+                dateAdded,
+                quantity,
+                unitVolume,
+                status: document.getElementById('editStatus')?.value,
+                warehouseId: parseInt(warehouse),
+                agentId: agentId ? parseInt(agentId) : null,
+                expiryDate,
+                specialInstructions: document.getElementById('editSpecialInstructions')?.value || ''
+            };
+            const { row, metrics } = await api('edit', payload);
 
-        const oldQuantity = inventory[productIndex].quantity;
-        inventory[productIndex] = {
-            id: id,
-            product_code: productCode,
-            product: productName,
-            special_instructions: document.getElementById('editSpecialInstructions')?.value || null,
-            date_added: dateAdded,
-            quantity: quantity,
-            unit: unit,
-            status: document.getElementById('editStatus')?.value,
-            warehouse: warehouse
-        };
+            const idx = inventory.findIndex(i => i.id === id);
+            if (idx !== -1) {
+                inventory[idx] = {
+                    id,
+                    product_code: row.product_code,
+                    product: row.product_name,
+                    special_instructions: row.special_instructions || null,
+                    date_added: row.inbound_stock_date || '',
+                    quantity: row.quantity,
+                    unit: row.product_unit || '',
+                    status: row.status,
+                    warehouse: row.warehouse_name,
+                    agent_id: row.agent_id || null,
+                    expiry_date: row.expiry_date || null,
+                    last_updated: row.last_updated || ''
+                };
+            }
 
-        const currentDate = new Date('2025-09-23');
-        const itemDate = new Date(dateAdded);
-        const monthsDiff = Math.floor((currentDate - itemDate) / (1000 * 60 * 60 * 24 * 30));
-        const offerSuggestion = (quantity < 50 || monthsDiff >= 6) ? '10% Discount' : 'No Offer';
+            const trEl = document.querySelector(`#productTableBody tr[data-id="${id}"]`);
+            if (trEl) {
+                trEl.setAttribute('data-warehouse-id', row.warehouse_id);
+                trEl.setAttribute('data-product-id', row.product_id);
+                trEl.setAttribute('data-unit', row.product_unit || '');
+                trEl.cells[0].textContent = row.product_code;
+                trEl.cells[1].textContent = row.product_name;
+                trEl.cells[2].textContent = row.special_instructions || '—';
+                trEl.cells[3].textContent = row.quantity;
+                trEl.cells[3].className = row.quantity < 10 ? 'low-stock' : '';
+                trEl.cells[4].textContent = row.unit_volume ?? '';
+                trEl.cells[5].textContent = row.status;
+                trEl.cells[5].className = row.status.toLowerCase() === 'completed' ? 'completed' : 'in-progress';
+                trEl.cells[6].textContent = row.warehouse_name;
+                trEl.cells[7].textContent = row.agent_id || '—';
+                trEl.cells[8].textContent = row.offer_text || 'No Offer';
+                trEl.setAttribute('data-offer', row.offer_text || 'No Offer');
+                trEl.cells[9].textContent = row.inbound_stock_date || '—';
+                trEl.cells[10].textContent = row.expiry_date || '—';
+                trEl.cells[11].textContent = row.last_updated || '';
+            }
 
-        const row = document.querySelector(`#productTableBody tr[data-id="${id}"]`);
-        if (row) {
-            row.cells[0].textContent = productCode;
-            row.cells[1].textContent = productName;
-            row.cells[2].textContent = document.getElementById('editSpecialInstructions')?.value || '—';
-            row.cells[3].textContent = dateAdded;
-            row.cells[4].textContent = quantity;
-            row.cells[4].className = quantity < 10 ? 'low-stock' : '';
-            row.cells[5].textContent = unit;
-            row.cells[6].textContent = document.getElementById('editStatus')?.value;
-            row.cells[6].className = document.getElementById('editStatus')?.value.toLowerCase() === 'completed' ? 'completed' : 'in-progress';
-            row.cells[7].textContent = warehouse;
-            row.cells[8].textContent = offerSuggestion;
-            row.setAttribute('data-offer', offerSuggestion);
-        } else {
-            console.error('Row not found for ID:', id);
-        }
+            if (metrics) {
+                totalCapacityElement.textContent = `${metrics.totalCapacity} units`;
+                freeCapacityElement.textContent = `${metrics.freeCapacity} units`;
+                itemCountElement.textContent = metrics.itemCount;
+            } else {
+                await refreshMetrics();
+            }
 
-        const currentFreeCapacity = parseInt(freeCapacityElement.textContent.split(' ')[0]) + (oldQuantity - quantity);
-        freeCapacityElement.textContent = `${currentFreeCapacity} units`;
-
-        showSuccessMessage('Product updated successfully!');
-        closePopup('edit');
-        filterTable();
-        updatePagination();
-        const quantities = document.querySelectorAll('#productTableBody .low-stock');
-        if (quantities.length > 0 && document.getElementById('lowStockAlert').style.display === 'none') {
-            document.getElementById('lowStockAlert').style.display = 'block';
-        } else if (quantities.length === 0) {
-            document.getElementById('lowStockAlert').style.display = 'none';
+            showSuccessMessage('Product updated successfully!');
+            closePopup('edit');
+            // Reload current list and totals
+            loadList(currentPage);
+            const quantities = document.querySelectorAll('#productTableBody .low-stock');
+            if (quantities.length > 0 && document.getElementById('lowStockAlert').style.display === 'none') {
+                document.getElementById('lowStockAlert').style.display = 'block';
+            } else if (quantities.length === 0) {
+                document.getElementById('lowStockAlert').style.display = 'none';
+            }
+        } catch (err) {
+            alert('Failed to update product: ' + err.message);
         }
     });
 }
 
-function deleteProduct(id) {
+async function deleteProduct(id) {
     if (confirm('Are you sure you want to delete this product?')) {
-        const productIndex = inventory.findIndex(item => item.id === id);
-        if (productIndex === -1) {
-            console.error('Product not found for ID:', id);
-            return;
-        }
+        try {
+            const productIndex = inventory.findIndex(item => item.id === id);
+            if (productIndex === -1) {
+                console.error('Product not found for ID:', id);
+            }
+            await api('delete', { id });
+            if (productIndex !== -1) inventory.splice(productIndex, 1);
+            const row = document.querySelector(`#productTableBody tr[data-id="${id}"]`);
+            if (row) row.remove();
 
-        const quantity = inventory[productIndex].quantity;
-        inventory.splice(productIndex, 1);
-        const row = document.querySelector(`#productTableBody tr[data-id="${id}"]`);
-        if (row) {
-            row.remove();
-        } else {
-            console.error('Row not found for ID:', id);
-        }
+            await refreshMetrics();
 
-        const currentItemCount = inventory.length;
-        const currentFreeCapacity = parseInt(freeCapacityElement.textContent.split(' ')[0]) + quantity;
-        itemCountElement.textContent = currentItemCount;
-        freeCapacityElement.textContent = `${currentFreeCapacity} units`;
-
-        showSuccessMessage('Product deleted successfully!');
-        filterTable();
-        updatePagination();
-        const quantities = document.querySelectorAll('#productTableBody .low-stock');
-        if (quantities.length > 0 && document.getElementById('lowStockAlert').style.display === 'none') {
-            document.getElementById('lowStockAlert').style.display = 'block';
-        } else if (quantities.length === 0) {
-            document.getElementById('lowStockAlert').style.display = 'none';
+            showSuccessMessage('Product deleted successfully!');
+            loadList(currentPage);
+            const quantities = document.querySelectorAll('#productTableBody .low-stock');
+            if (quantities.length > 0 && document.getElementById('lowStockAlert').style.display === 'none') {
+                document.getElementById('lowStockAlert').style.display = 'block';
+            } else if (quantities.length === 0) {
+                document.getElementById('lowStockAlert').style.display = 'none';
+            }
+        } catch (err) {
+            alert('Failed to delete product: ' + err.message);
         }
     }
 }
@@ -518,7 +632,7 @@ if (offerCloseBtn) {
 }
 
 if (offerForm) {
-    offerForm.addEventListener('submit', (e) => {
+    offerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const productId = document.getElementById('offerProductId')?.value;
@@ -531,22 +645,17 @@ if (offerForm) {
             return;
         }
 
-        const offerIndex = offers.findIndex(o => o.productId === parseInt(productId));
-        if (offerIndex !== -1) {
-            offers[offerIndex] = { productId: parseInt(productId), discount, startDate, endDate };
-        } else {
-            offers.push({ productId: parseInt(productId), discount, startDate, endDate });
-        }
-
-        showSuccessMessage('Offer saved successfully!');
-        closePopup('offer');
-        const product = inventory.find(item => item.id === parseInt(productId));
-        if (product) {
-            const row = document.querySelector(`#productTableBody tr[data-id="${productId}"]`);
-            if (row) {
-                row.cells[8].textContent = `${discount}% (${startDate} to ${endDate})`;
-                row.setAttribute('data-offer', `${discount}% (${startDate} to ${endDate})`);
+        try {
+            const { row } = await api('offer', { id: parseInt(productId), discount, startDate, endDate });
+            const tr = document.querySelector(`#productTableBody tr[data-id="${productId}"]`);
+            if (tr) {
+                tr.cells[8].textContent = row.offer_text || 'No Offer';
+                tr.setAttribute('data-offer', row.offer_text || 'No Offer');
             }
+            showSuccessMessage('Offer saved successfully!');
+            closePopup('offer');
+        } catch (err) {
+            alert('Failed to save offer: ' + err.message);
         }
     });
 }
@@ -630,28 +739,8 @@ function manageOffer(id) {
 // Initialize inventory from DOM on load
 document.addEventListener('DOMContentLoaded', () => {
     if (searchInput) searchInput.value = ''; // Clear search input
-    const rows = document.querySelectorAll('#productTableBody tr');
-    inventory = Array.from(rows).map(row => {
-        const cells = row.cells;
-        return {
-            id: parseInt(row.getAttribute('data-id')),
-            product_code: cells[0].textContent,
-            product: cells[1].textContent,
-            special_instructions: cells[2].textContent === '—' ? null : cells[2].textContent,
-            date_added: cells[3].textContent,
-            quantity: parseInt(cells[4].textContent),
-            unit: cells[5].textContent,
-            status: cells[6].textContent,
-            warehouse: cells[7].textContent
-        };
-    });
-
-    filterTable();
-    updatePagination();
-    const quantities = document.querySelectorAll('#productTableBody .low-stock');
-    if (quantities.length > 0) {
-        document.getElementById('lowStockAlert').style.display = 'block';
-    }
+    // Load first page from server to ensure filters/pagination are consistent
+    loadList(1);
 
     if (!successMessage || !successText) {
         console.error('Success message elements not found on load:', { successMessage, successText });
