@@ -7,6 +7,27 @@ include '../include/connect-db.php'; // Database connection
 
 $user_id = $_SESSION['user_id'] ?? 2;
 
+// Helper: get or create active cart for this user
+function bow_get_active_cart_id(mysqli $conn, int $user_id): int
+{
+    $sql = "SELECT cart_id FROM shop_owner_cart_list WHERE user_id = ? AND status = 'active' ORDER BY updated_at DESC LIMIT 1";
+    $st = $conn->prepare($sql);
+    $st->bind_param('i', $user_id);
+    $st->execute();
+    $rs = $st->get_result();
+    $row = $rs->fetch_assoc();
+    $st->close();
+    if ($row && isset($row['cart_id'])) {
+        return (int)$row['cart_id'];
+    }
+    $ins = $conn->prepare("INSERT INTO shop_owner_cart_list (user_id, status) VALUES (?, 'active')");
+    $ins->bind_param('i', $user_id);
+    $ins->execute();
+    $new_id = (int)$conn->insert_id;
+    $ins->close();
+    return $new_id;
+}
+
 // Handle AJAX request for adding to cart
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
@@ -58,14 +79,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
         }
 
-        // 3. Check if product exists in cart
-        $sql = "SELECT cart_item_id, quantity FROM shop_owner_cart_items WHERE user_id = ? AND product_id = ? AND status = 'active'";
+        // 3. Ensure we have an active cart_id
+        $cart_id = bow_get_active_cart_id($conn, (int)$user_id);
+
+        // 4. Check if product exists in cart (by cart_id)
+        $sql = "SELECT cart_item_id, quantity FROM shop_owner_cart_items WHERE cart_id = ? AND product_id = ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             echo json_encode(['status' => 'error', 'message' => 'Cart query preparation failed: ' . $conn->error]);
             exit;
         }
-        $stmt->bind_param("ii", $user_id, $product_id);
+        $stmt->bind_param("ii", $cart_id, $product_id);
         if (!$stmt->execute()) {
             echo json_encode(['status' => 'error', 'message' => 'Cart query execution failed: ' . $stmt->error]);
             $stmt->close();
@@ -73,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
         $result = $stmt->get_result();
         if ($row = $result->fetch_assoc()) {
-            // 4a. Update existing item
+            // 5a. Update existing item
             $new_qty = $row['quantity'] + $quantity;
             if ($new_qty > $available_quantity) {
                 echo json_encode(['status' => 'error', 'message' => 'Total quantity (' . $new_qty . ') exceeds available stock (' . $available_quantity . ')']);
@@ -93,14 +117,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 exit;
             }
         } else {
-            // 4b. Insert new item
-            $sql = "INSERT INTO shop_owner_cart_items (user_id, product_id, quantity, price_at_time, status) VALUES (?, ?, ?, ?, 'active')";
+            // 5b. Insert new item for this cart
+            $sql = "INSERT INTO shop_owner_cart_items (cart_id, product_id, quantity, price_at_time) VALUES (?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
                 echo json_encode(['status' => 'error', 'message' => 'Insert query preparation failed: ' . $conn->error]);
                 exit;
             }
-            $stmt->bind_param("iiid", $user_id, $product_id, $quantity, $price);
+            $stmt->bind_param("iiid", $cart_id, $product_id, $quantity, $price);
             if (!$stmt->execute()) {
                 echo json_encode(['status' => 'error', 'message' => 'Insert failed: ' . $stmt->error]);
                 $stmt->close();
@@ -295,7 +319,8 @@ mysqli_free_result($result);
 
         <!-- Floating Buttons -->
         <div class="fixed bottom-6 right-6 flex flex-col gap-3">
-            <button onclick="window.location.href='cart.php'" class="bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700">🛒 Cart</button>
+            <!-- <button onclick="window.location.href='cart.php'" class="bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700">🛒 Cart</button> -->
+            <button onclick="window.location.href='Checkout/checkout.php'" class="bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700">🛒 Cart</button>
             <button onclick="window.location.href='requests.php'" class="bg-red-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-red-700">📦 Requests</button>
         </div>
 
