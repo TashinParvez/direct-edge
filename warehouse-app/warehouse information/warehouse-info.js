@@ -63,6 +63,11 @@ const createOfferBtn = document.getElementById('createOfferBtn');
 const offerPopup = document.getElementById('offerPopup');
 const offerForm = document.getElementById('offerForm');
 const offerCloseBtn = document.querySelector('#offerPopup .close-btn');
+// Offer suggestion modal elements
+const offerSuggestionPopup = document.getElementById('offerSuggestionPopup');
+const offerSuggestionDetails = document.getElementById('offerSuggestionDetails');
+const offerSuggestionApplyBtn = document.getElementById('offerSuggestionApplyBtn');
+const offerSuggestionEditBtn = document.getElementById('offerSuggestionEditBtn');
 
 // Reusable function to show success message with error handling
 function showSuccessMessage(message) {
@@ -88,13 +93,13 @@ function showSuccessMessage(message) {
 
 // Function to close popups with animation
 function closePopup(popupType = 'add') {
-    const popupElement = popupType === 'edit' ? editProductPopup : popupType === 'offer' ? offerPopup : popup;
+    const popupElement = popupType === 'edit' ? editProductPopup : popupType === 'offer' ? offerPopup : popupType === 'offer-suggestion' ? offerSuggestionPopup : popup;
     const formElement = popupType === 'edit' ? editProductForm : popupType === 'offer' ? offerForm : addProductForm;
     if (popupElement) {
         popupElement.style.animation = 'fadeOut 0.3s ease-out';
         setTimeout(() => {
             popupElement.style.display = 'none';
-            formElement.reset();
+            if (formElement && popupType !== 'offer-suggestion') formElement.reset();
             popupElement.style.animation = '';
         }, 300);
     } else {
@@ -204,7 +209,7 @@ function buildRowHtml(row) {
             <td class="${statusCls}">${row.status}</td>
             <td>${row.warehouse_name}</td>
             <td>${row.agent_id || '—'}</td>
-            <td>${row.offer_text || 'No Offer'}</td>
+            <td><button class="offer-suggestion-link" title="View offer suggestion">${row.offer_text || 'No Offer'}</button></td>
             <td>${row.inbound_stock_date || '—'}</td>
             <td>${row.expiry_date || '—'}</td>
             <td>${row.last_updated || ''}</td>
@@ -536,7 +541,12 @@ if (editProductForm) {
                 trEl.cells[5].className = row.status.toLowerCase() === 'completed' ? 'completed' : 'in-progress';
                 trEl.cells[6].textContent = row.warehouse_name;
                 trEl.cells[7].textContent = row.agent_id || '—';
-                trEl.cells[8].textContent = row.offer_text || 'No Offer';
+                const offerBtn = trEl.cells[8].querySelector('button.offer-suggestion-link');
+                if (offerBtn) {
+                    offerBtn.textContent = row.offer_text || 'No Offer';
+                } else {
+                    trEl.cells[8].innerHTML = `<button class="offer-suggestion-link" title="View offer suggestion">${row.offer_text || 'No Offer'}</button>`;
+                }
                 trEl.setAttribute('data-offer', row.offer_text || 'No Offer');
                 trEl.cells[9].textContent = row.inbound_stock_date || '—';
                 trEl.cells[10].textContent = row.expiry_date || '—';
@@ -649,8 +659,14 @@ if (offerForm) {
             const { row } = await api('offer', { id: parseInt(productId), discount, startDate, endDate });
             const tr = document.querySelector(`#productTableBody tr[data-id="${productId}"]`);
             if (tr) {
-                tr.cells[8].textContent = row.offer_text || 'No Offer';
-                tr.setAttribute('data-offer', row.offer_text || 'No Offer');
+                const offerBtn = tr.cells[8].querySelector('button.offer-suggestion-link');
+                const newText = row.offer_text || 'No Offer';
+                if (offerBtn) {
+                    offerBtn.textContent = newText;
+                } else {
+                    tr.cells[8].innerHTML = `<button class="offer-suggestion-link" title="View offer suggestion">${newText}</button>`;
+                }
+                tr.setAttribute('data-offer', newText);
             }
             showSuccessMessage('Offer saved successfully!');
             closePopup('offer');
@@ -663,47 +679,107 @@ if (offerForm) {
 function suggestOffer(id) {
     const product = inventory.find(item => item.id === id);
     if (!product) return null;
+    // Helper to format date as YYYY-MM-DD
+    const fmt = (d) => {
+        try { return d.toLocaleDateString('en-CA'); } catch (e) { return new Date(d).toISOString().slice(0,10); }
+    };
 
     const today = new Date();
-    const productDate = new Date(product.date_added);
-    const daysOld = Math.floor((today - productDate) / (1000 * 60 * 60 * 24));
+    const productDate = product.date_added ? new Date(product.date_added) : null;
+    const daysOld = (productDate && !isNaN(productDate.getTime())) ? Math.floor((today - productDate) / (1000 * 60 * 60 * 24)) : 0;
     const startDate = new Date(today);
     startDate.setDate(startDate.getDate() + 1);
-    const endDate = new Date(startDate);
 
+    // expiry handling (highest priority) - urgent clearance if expiry within 14 days
+    if (product.expiry_date) {
+        const expiry = new Date(product.expiry_date);
+        if (!isNaN(expiry.getTime())) {
+            const daysToExpiry = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+            if (daysToExpiry <= 14 && daysToExpiry >= 0) {
+                // Offer until expiry (urgent)
+                return {
+                    discount: 40,
+                    startDate: fmt(startDate),
+                    endDate: fmt(expiry)
+                };
+            }
+        }
+    }
+
+    // Very old stock (long ageing) - deeper discount (higher priority than the 90-day rule)
+    if (daysOld > 180) {
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 45);
+        return {
+            discount: 35,
+            startDate: fmt(startDate),
+            endDate: fmt(endDate)
+        };
+    }
+
+    // Extremely high stock - bulk clearance
+    if (product.quantity >= 1000) {
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 30);
+        return {
+            discount: 30,
+            startDate: fmt(startDate),
+            endDate: fmt(endDate)
+        };
+    }
+
+    // Small stock: promote quick sale
     if (product.quantity < 100) {
+        const endDate = new Date(startDate);
         endDate.setDate(startDate.getDate() + 15);
         return {
             discount: 15,
-            startDate: startDate.toLocaleDateString('en-CA'),
-            endDate: endDate.toLocaleDateString('en-CA')
+            startDate: fmt(startDate),
+            endDate: fmt(endDate)
         };
     }
 
-    if (daysOld > 90) {
-        endDate.setDate(startDate.getDate() + 30);
+    // Mid-high stock tiers
+    if (product.quantity >= 301 && product.quantity <= 999) {
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 20);
         return {
-            discount: 25,
-            startDate: startDate.toLocaleDateString('en-CA'),
-            endDate: endDate.toLocaleDateString('en-CA')
+            discount: 8,
+            startDate: fmt(startDate),
+            endDate: fmt(endDate)
         };
     }
 
+    // Original medium-stock rule
     if (product.quantity >= 100 && product.quantity <= 300) {
+        const endDate = new Date(startDate);
         endDate.setDate(startDate.getDate() + 30);
         return {
             discount: 5,
-            startDate: startDate.toLocaleDateString('en-CA'),
-            endDate: endDate.toLocaleDateString('en-CA')
+            startDate: fmt(startDate),
+            endDate: fmt(endDate)
         };
     }
 
+    // In-progress items with high quantity (prefer a modest discount to move stock)
+    if (product.status === 'In progress' && product.quantity > 500) {
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 20);
+        return {
+            discount: 12,
+            startDate: fmt(startDate),
+            endDate: fmt(endDate)
+        };
+    }
+
+    // Completed status fallback
     if (product.status === 'Completed') {
+        const endDate = new Date(startDate);
         endDate.setDate(startDate.getDate() + 20);
         return {
             discount: 10,
-            startDate: startDate.toLocaleDateString('en-CA'),
-            endDate: endDate.toLocaleDateString('en-CA')
+            startDate: fmt(startDate),
+            endDate: fmt(endDate)
         };
     }
 
@@ -717,8 +793,27 @@ function manageOffer(id) {
         return;
     }
 
-    const existingOffer = offers.find(o => o.productId === id);
+    // Try to locate an existing offer from in-memory offers array
+    let existingOffer = offers.find(o => o.productId === id);
     const suggestedOffer = suggestOffer(id);
+
+    // If not present in memory, attempt to parse the current offer text from the DOM row
+    if (!existingOffer) {
+        const tr = document.querySelector(`#productTableBody tr[data-id="${id}"]`);
+        if (tr) {
+            // data-offer attribute contains the display text like "15% (2025-10-07 to 2025-10-22)" or "No Offer"
+            const offerText = tr.getAttribute('data-offer') || (tr.cells[8] ? tr.cells[8].textContent.trim() : '');
+            const m = offerText.match(/(\d+(?:\.\d+)?)%(?: \((\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})\))?/);
+            if (m) {
+                existingOffer = {
+                    productId: id,
+                    discount: parseFloat(m[1]),
+                    startDate: m[2] || '',
+                    endDate: m[3] || ''
+                };
+            }
+        }
+    }
 
     if (offerPopup) {
         populateProductsSelect();
@@ -735,6 +830,81 @@ function manageOffer(id) {
         console.error('Offer popup not found');
     }
 }
+
+// Offer Suggestion Modal Handlers
+let lastSuggestedForId = null;
+function showOfferSuggestion(id) {
+    const product = inventory.find(item => item.id === id);
+    if (!product) {
+        console.error('Product not found for ID:', id);
+        return;
+    }
+    lastSuggestedForId = id;
+    const suggested = suggestOffer(id);
+    const currentOfferText = (document.querySelector(`#productTableBody tr[data-id="${id}"]`)?.getAttribute('data-offer')) || 'No Offer';
+    const html = `
+        <div class="suggestion-body">
+            <p><strong>Product:</strong> ${product.product} (${product.product_code})</p>
+            <p><strong>Current Offer:</strong> ${currentOfferText}</p>
+            ${suggested ? `
+                <p><strong>Suggested Discount:</strong> ${suggested.discount}%</p>
+                <p><strong>Suggested Start:</strong> ${suggested.startDate}</p>
+                <p><strong>Suggested End:</strong> ${suggested.endDate}</p>
+            ` : '<p>No suggestion available for this product.</p>'}
+        </div>
+    `;
+    if (offerSuggestionDetails) offerSuggestionDetails.innerHTML = html;
+    if (offerSuggestionPopup) {
+        offerSuggestionPopup.style.display = 'block';
+        offerSuggestionPopup.style.animation = 'fadeIn 0.3s ease-in';
+    }
+    // Wire buttons
+    if (offerSuggestionApplyBtn) {
+        offerSuggestionApplyBtn.disabled = !suggested;
+        offerSuggestionApplyBtn.onclick = async () => {
+            if (!suggested) return;
+            try {
+                const { row } = await api('offer', { id, discount: suggested.discount, startDate: suggested.startDate, endDate: suggested.endDate });
+                const tr = document.querySelector(`#productTableBody tr[data-id="${id}"]`);
+                if (tr) {
+                    tr.cells[8].textContent = row.offer_text || 'No Offer';
+                    tr.setAttribute('data-offer', row.offer_text || 'No Offer');
+                }
+                showSuccessMessage('Offer suggestion applied!');
+                closePopup('offer-suggestion');
+            } catch (err) {
+                alert('Failed to apply suggestion: ' + err.message);
+            }
+        };
+    }
+    if (offerSuggestionEditBtn) {
+        offerSuggestionEditBtn.onclick = () => {
+            // open the regular offer form pre-filled
+            const suggestedOffer = suggestOffer(id);
+            if (offerPopup) {
+                populateProductsSelect();
+                document.getElementById('offerProductId').value = id;
+                document.getElementById('offerProductId').disabled = true;
+                document.getElementById('offerDiscount').value = suggestedOffer ? suggestedOffer.discount : '';
+                document.getElementById('offerStartDate').value = suggestedOffer ? suggestedOffer.startDate : '';
+                document.getElementById('offerEndDate').value = suggestedOffer ? suggestedOffer.endDate : '';
+                offerPopup.style.display = 'block';
+                offerPopup.style.animation = 'fadeIn 0.3s ease-in';
+            }
+            closePopup('offer-suggestion');
+        };
+    }
+}
+
+// Make offer suggestion cell clickable even if buttons are re-rendered by server
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button.offer-suggestion-link');
+    if (btn) {
+        const tr = btn.closest('tr');
+        const id = tr ? parseInt(tr.getAttribute('data-id')) : null;
+        if (id) showOfferSuggestion(id);
+    }
+});
 
 // Initialize inventory from DOM on load
 document.addEventListener('DOMContentLoaded', () => {
