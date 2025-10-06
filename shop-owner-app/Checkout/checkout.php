@@ -40,6 +40,32 @@ mysqli_stmt_close($stmtUser);
 
 // Handle cart actions (update, delete, clear)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // helper to compute totals after a change
+  $computeTotals = function (mysqli $conn, int $cart_id) {
+    $sqlT = "SELECT COALESCE(SUM(ci.quantity * COALESCE(ci.price_at_time, p.price)),0) AS subtotal, COUNT(*) AS item_count
+             FROM shop_owner_cart_items ci
+             LEFT JOIN products p ON p.product_id = ci.product_id
+             WHERE ci.cart_id = ?";
+    $stT = mysqli_prepare($conn, $sqlT);
+    mysqli_stmt_bind_param($stT, 'i', $cart_id);
+    mysqli_stmt_execute($stT);
+    $rsT = mysqli_stmt_get_result($stT);
+    $rowT = mysqli_fetch_assoc($rsT) ?: ['subtotal' => 0, 'item_count' => 0];
+    mysqli_stmt_close($stT);
+    $subtotal = (float)$rowT['subtotal'];
+    $discountX = 0; // keep aligned with view
+    $taxX = 0;
+    $shippingX = 200;
+    $grand = max(0, $subtotal - $discountX + $taxX + $shippingX);
+    return [
+      'subtotal' => $subtotal,
+      'tax' => $taxX,
+      'shipping' => $shippingX,
+      'discount' => $discountX,
+      'grand_total' => $grand,
+      'cart_count' => (int)$rowT['item_count']
+    ];
+  };
   // Clear entire cart
   if (isset($_POST['clear_cart'])) {
     $sql = "DELETE FROM shop_owner_cart_items WHERE cart_id = ?";
@@ -47,6 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     mysqli_stmt_bind_param($stmt, 'i', $cart_id);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
+
+    if (isset($_POST['ajax'])) {
+      header('Content-Type: application/json');
+      $tot = $computeTotals($conn, $cart_id);
+      echo json_encode(['success' => true, 'cleared' => true] + $tot);
+      exit;
+    }
   }
 
   // Update single item quantity
@@ -72,6 +105,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_bind_param($del, 'ii', $cart_item_id, $cart_id);
         mysqli_stmt_execute($del);
         mysqli_stmt_close($del);
+        if (isset($_POST['ajax'])) {
+          header('Content-Type: application/json');
+          $tot = $computeTotals($conn, $cart_id);
+          echo json_encode(['success' => true, 'removed' => true, 'cart_item_id' => $cart_item_id] + $tot);
+          exit;
+        }
       } else {
         // Optional: check available stock
         $stockSql = "SELECT COALESCE(SUM(wp.quantity),0) AS available FROM warehouse_products wp WHERE wp.product_id = ?";
@@ -90,6 +129,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_bind_param($up, 'iii', $quantity, $cart_item_id, $cart_id);
         mysqli_stmt_execute($up);
         mysqli_stmt_close($up);
+        if (isset($_POST['ajax'])) {
+          // compute this item's total
+          $itSql = "SELECT ci.quantity, COALESCE(ci.price_at_time, p.price) AS unit_price FROM shop_owner_cart_items ci LEFT JOIN products p ON p.product_id = ci.product_id WHERE ci.cart_id=? AND ci.cart_item_id=?";
+          $ist = mysqli_prepare($conn, $itSql);
+          mysqli_stmt_bind_param($ist, 'ii', $cart_id, $cart_item_id);
+          mysqli_stmt_execute($ist);
+          $irs = mysqli_stmt_get_result($ist);
+          $irow = mysqli_fetch_assoc($irs) ?: ['quantity' => 0, 'unit_price' => 0];
+          mysqli_stmt_close($ist);
+          $item_total = (float)$irow['quantity'] * (float)$irow['unit_price'];
+          $tot = $computeTotals($conn, $cart_id);
+          header('Content-Type: application/json');
+          echo json_encode([
+            'success' => true,
+            'removed' => false,
+            'cart_item_id' => $cart_item_id,
+            'quantity' => (int)$irow['quantity'],
+            'item_total' => $item_total
+          ] + $tot);
+          exit;
+        }
       }
     }
   }
@@ -101,6 +161,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     mysqli_stmt_bind_param($del, 'ii', $cart_item_id, $cart_id);
     mysqli_stmt_execute($del);
     mysqli_stmt_close($del);
+    if (isset($_POST['ajax'])) {
+      header('Content-Type: application/json');
+      $tot = $computeTotals($conn, $cart_id);
+      echo json_encode(['success' => true, 'removed' => true, 'cart_item_id' => $cart_item_id] + $tot);
+      exit;
+    }
   }
 }
 
@@ -193,7 +259,7 @@ $grand_total = max(0, $total - $discount + $tax + $shipping);
         <div class="row g-5">
           <div class="col-md-5 col-lg-4 order-md-last">
             <div class="cart-header">
-              Your Cart (<span class="text-primary"><?php echo count($cart); ?></span> items)
+              Your Cart (<span id="cart-count" class="text-primary"><?php echo count($cart); ?></span> items)
             </div>
             <div class="cart-summary">
               <ul class="list-group" id="cart-items">
@@ -349,6 +415,84 @@ $grand_total = max(0, $total - $discount + $tax + $shipping);
   <script>
     // DOM manipulation for cart updates
     document.addEventListener('DOMContentLoaded', function() {
+      // Save-for-next-time profile handling (localStorage)
+      const USER_ID = <?php echo (int)$user_id; ?>;
+      const PROFILE_KEY = `checkout_profile_u${USER_ID}`;
+
+      const form = document.getElementById('paymentForm');
+      const saveInfoCheckbox = document.getElementById('save-info');
+
+      function getFormData() {
+        return {
+          shopName: document.getElementById('shopName').value || '',
+          ownerName: document.getElementById('ownerName').value || '',
+          phone: document.getElementById('phone').value || '',
+          email: document.getElementById('email').value || '',
+          address: document.getElementById('address').value || '',
+          shippingAddress: document.getElementById('shippingAddress').value || '',
+          country: document.getElementById('country').value || '',
+          state: document.getElementById('state').value || '',
+          zip: document.getElementById('zip').value || '',
+          notes: document.getElementById('notes').value || '',
+          taxId: document.getElementById('taxId').value || ''
+        };
+      }
+
+      function setFormData(data) {
+        if (!data || typeof data !== 'object') return;
+        const setVal = (id, val) => {
+          const el = document.getElementById(id);
+          if (el && val != null) el.value = val;
+        };
+        setVal('shopName', data.shopName);
+        setVal('ownerName', data.ownerName);
+        setVal('phone', data.phone);
+        setVal('email', data.email);
+        setVal('address', data.address);
+        setVal('shippingAddress', data.shippingAddress);
+        setVal('country', data.country);
+        setVal('state', data.state);
+        setVal('zip', data.zip);
+        setVal('notes', data.notes);
+        setVal('taxId', data.taxId);
+      }
+
+      function loadProfile() {
+        try {
+          const raw = localStorage.getItem(PROFILE_KEY);
+          if (!raw) return;
+          const profile = JSON.parse(raw);
+          setFormData(profile);
+          // Keep the checkbox checked to indicate data came from saved profile
+          if (saveInfoCheckbox) saveInfoCheckbox.checked = true;
+        } catch (e) {
+          /* ignore parse errors */
+        }
+      }
+
+      function saveProfile() {
+        try {
+          const data = getFormData();
+          localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+        } catch (e) {
+          /* ignore storage errors */
+        }
+      }
+
+      // Load saved profile on page load
+      loadProfile();
+
+      // If user toggles save-info, save or remove profile
+      if (saveInfoCheckbox) {
+        saveInfoCheckbox.addEventListener('change', function() {
+          if (this.checked) {
+            saveProfile();
+          } else {
+            localStorage.removeItem(PROFILE_KEY);
+          }
+        });
+      }
+
       const cartItems = document.getElementById('cart-items');
       const subtotalEl = document.getElementById('subtotal');
       const taxEl = document.getElementById('tax');
@@ -377,25 +521,82 @@ $grand_total = max(0, $total - $discount + $tax + $shipping);
         const deleteBtn = e.target.closest('.delete-btn');
 
         if (updateBtn) {
+          e.preventDefault();
           const index = updateBtn.dataset.index;
-          const item = cartItems.querySelector(`.cart-item[data-item-id="${cartItems.children[index].dataset.itemId}"]`);
-          const qtyInput = item.querySelector('.quantity-input');
-          const qty = parseInt(qtyInput.value);
-          if (qty >= 0) {
-            if (qty === 0) {
-              item.remove();
-            }
-            updateTotals();
-          } else {
-            qtyInput.value = 1; // Reset to 1 if negative
-            updateTotals();
-          }
+          const li = cartItems.children[index];
+          const itemId = li.dataset.itemId;
+          const qtyInput = li.querySelector('.quantity-input');
+          const qty = Math.max(0, parseInt(qtyInput.value || '0'));
+          // submit AJAX
+          const formData = new URLSearchParams();
+          formData.append('update_item', '1');
+          formData.append('ajax', '1');
+          formData.append('cart_item_id', itemId);
+          formData.append('quantity', String(qty));
+          fetch('', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: formData.toString()
+            })
+            .then(r => r.json())
+            .then(data => {
+              if (!data.success) return;
+              if (data.removed) {
+                li.remove();
+              } else {
+                // sync quantity (in case backend clamped it)
+                qtyInput.value = data.quantity;
+                const priceTag = li.querySelector('.price-tag');
+                priceTag.textContent = `Tk${(data.item_total || 0).toFixed(2)}`;
+              }
+              // totals
+              subtotalEl.textContent = `Tk${(data.subtotal || 0).toFixed(2)}`;
+              taxEl.textContent = `Tk${(data.tax || 0).toFixed(2)}`;
+              shippingEl.textContent = `Tk${(data.shipping || 0).toFixed(2)}`;
+              grandTotalEl.textContent = `Tk${(data.grand_total || 0).toFixed(2)}`;
+              const countEl = document.getElementById('cart-count');
+              if (countEl && typeof data.cart_count !== 'undefined') {
+                countEl.textContent = String(data.cart_count);
+              }
+            })
+            .catch(() => {
+              // fallback to local recalc
+              updateTotals();
+            });
         }
 
         if (deleteBtn) {
+          e.preventDefault();
           const index = deleteBtn.dataset.index;
-          cartItems.children[index].remove();
-          updateTotals();
+          const li = cartItems.children[index];
+          const itemId = li.dataset.itemId;
+          const formData = new URLSearchParams();
+          formData.append('delete_item', '1');
+          formData.append('ajax', '1');
+          formData.append('cart_item_id', itemId);
+          fetch('', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: formData.toString()
+            })
+            .then(r => r.json())
+            .then(data => {
+              if (!data.success) return;
+              li.remove();
+              subtotalEl.textContent = `Tk${(data.subtotal || 0).toFixed(2)}`;
+              taxEl.textContent = `Tk${(data.tax || 0).toFixed(2)}`;
+              shippingEl.textContent = `Tk${(data.shipping || 0).toFixed(2)}`;
+              grandTotalEl.textContent = `Tk${(data.grand_total || 0).toFixed(2)}`;
+              const countEl = document.getElementById('cart-count');
+              if (countEl && typeof data.cart_count !== 'undefined') {
+                countEl.textContent = String(data.cart_count);
+              }
+            })
+            .catch(() => updateTotals());
         }
       });
 
@@ -412,6 +613,39 @@ $grand_total = max(0, $total - $discount + $tax + $shipping);
         }
       });
 
+      // Wire up Clear Cart button via AJAX
+      const clearBtn = document.querySelector('button[name="clear_cart"]');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const formData = new URLSearchParams();
+          formData.append('clear_cart', '1');
+          formData.append('ajax', '1');
+          fetch('', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: formData.toString()
+            })
+            .then(r => r.json())
+            .then(data => {
+              if (!data.success) return;
+              // remove all li.cart-item entries
+              cartItems.querySelectorAll('li.cart-item').forEach(li => li.remove());
+              subtotalEl.textContent = `Tk${(data.subtotal || 0).toFixed(2)}`;
+              taxEl.textContent = `Tk${(data.tax || 0).toFixed(2)}`;
+              shippingEl.textContent = `Tk${(data.shipping || 0).toFixed(2)}`;
+              grandTotalEl.textContent = `Tk${(data.grand_total || 0).toFixed(2)}`;
+              const countEl = document.getElementById('cart-count');
+              if (countEl && typeof data.cart_count !== 'undefined') {
+                countEl.textContent = String(data.cart_count);
+              }
+            })
+            .catch(() => updateTotals());
+        });
+      }
+
       // Payment button postdata
       $('#sslczPayBtn').on('click', function(e) {
         e.preventDefault(); // Prevent default form submission
@@ -421,6 +655,11 @@ $grand_total = max(0, $total - $discount + $tax + $shipping);
           e.stopPropagation();
           form.classList.add('was-validated');
           return;
+        }
+
+        // Persist profile locally if requested
+        if (saveInfoCheckbox && saveInfoCheckbox.checked) {
+          saveProfile();
         }
 
         var obj = {

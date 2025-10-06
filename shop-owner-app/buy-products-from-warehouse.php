@@ -28,6 +28,21 @@ function bow_get_active_cart_id(mysqli $conn, int $user_id): int
     return $new_id;
 }
 
+// Initial cart count for floating cart badge
+$cart_id_for_count = bow_get_active_cart_id($conn, (int)$user_id);
+$cart_count = 0;
+$cntStmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM shop_owner_cart_items WHERE cart_id = ?");
+if ($cntStmt) {
+    $cntStmt->bind_param('i', $cart_id_for_count);
+    if ($cntStmt->execute()) {
+        $cntRes = $cntStmt->get_result();
+        if ($cntRow = $cntRes->fetch_assoc()) {
+            $cart_count = (int)$cntRow['cnt'];
+        }
+    }
+    $cntStmt->close();
+}
+
 // Handle AJAX request for adding to cart
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
@@ -133,7 +148,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
         $stmt->close();
 
-        echo json_encode(['status' => 'success', 'message' => 'Product added to cart']);
+        // compute updated cart count
+        $cst = $conn->prepare("SELECT COUNT(*) AS cnt FROM shop_owner_cart_items WHERE cart_id = ?");
+        $updated_count = 0;
+        if ($cst) {
+            $cst->bind_param('i', $cart_id);
+            if ($cst->execute()) {
+                $crs = $cst->get_result();
+                if ($crow = $crs->fetch_assoc()) {
+                    $updated_count = (int)$crow['cnt'];
+                }
+            }
+            $cst->close();
+        }
+
+        echo json_encode(['status' => 'success', 'message' => 'Product added to cart', 'cart_count' => $updated_count]);
         exit;
     }
 
@@ -320,7 +349,12 @@ mysqli_free_result($result);
         <!-- Floating Buttons -->
         <div class="fixed bottom-6 right-6 flex flex-col gap-3">
             <!-- <button onclick="window.location.href='cart.php'" class="bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700">🛒 Cart</button> -->
-            <button onclick="window.location.href='Checkout/checkout.php'" class="bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700">🛒 Cart</button>
+            <button onclick="window.location.href='Checkout/checkout.php'" class="relative bg-blue-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-blue-700">
+                🛒 Cart
+                <span id="cart-count" class="absolute -top-2 -right-2 inline-flex items-center justify-center text-xs font-bold bg-red-600 text-white rounded-full w-6 h-6">
+                    <?php echo (int)$cart_count; ?>
+                </span>
+            </button>
             <button onclick="window.location.href='requests.php'" class="bg-red-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-red-700">📦 Requests</button>
         </div>
 
@@ -436,9 +470,16 @@ mysqli_free_result($result);
                         return res.json();
                     })
                     .then(data => {
-                        alert(data.message);
                         if (data.status === 'success') {
+                            // Success: close modal and update cart badge without alert
                             closeModal('addCartModal');
+                            if (typeof data.cart_count !== 'undefined') {
+                                const cc = document.getElementById('cart-count');
+                                if (cc) cc.textContent = String(data.cart_count);
+                            }
+                        } else {
+                            // Error: show message
+                            alert(data.message || 'Failed to add to cart');
                         }
                     })
                     .catch(err => {
@@ -471,9 +512,11 @@ mysqli_free_result($result);
                         return res.json();
                     })
                     .then(data => {
-                        alert(data.message);
                         if (data.status === 'success') {
+                            // Success: close modal silently
                             closeModal('requestStockModal');
+                        } else {
+                            alert(data.message || 'Failed to submit stock request');
                         }
                     })
                     .catch(err => {

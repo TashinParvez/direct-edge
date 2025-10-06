@@ -126,7 +126,7 @@ ini_set('display_errors', 1);
 
                         <!-- <a href="javascript:void(0)" class="cmn-btn btn-bg-1"> Go to Home </a> -->
 
-                        <a href="/home/Homepage.php" class="btn cmn-btn btn-bg-1"> Go to Home </a>
+                        <a href="../../buy-products-from-warehouse.php" class="btn cmn-btn btn-bg-1"> Go to Buy products from warehouse </a>
 
                     </div>
                 </div>
