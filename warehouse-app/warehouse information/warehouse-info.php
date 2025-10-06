@@ -1,45 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warehouse Info</title>
     <link rel="stylesheet" href="../warehouse information/warehouse-info.css">
 </head>
+
 <body>
     <div class="container">
         <h1>Warehouse Information</h1>
 
         <!-- Metrics Section -->
         <?php
-        $inventory = [
-            ['id' => 10001, 'product_code' => 'VEG-001', 'product' => 'Carrot', 'special_instructions' => 'Store at 0-2°C', 'date_added' => '2025-01-10', 'quantity' => 500, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse A'],
-            ['id' => 10002, 'product_code' => 'VEG-002', 'product' => 'Potato', 'special_instructions' => null, 'date_added' => '2025-02-15', 'quantity' => 100, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse B'],
-            ['id' => 10003, 'product_code' => 'VEG-003', 'product' => 'Tomato', 'special_instructions' => 'Handle with care, avoid stacking', 'date_added' => '2025-03-01', 'quantity' => 300, 'status' => 'Completed', 'unit' => 'kg', 'warehouse' => 'Warehouse A'],
-            ['id' => 10004, 'product_code' => 'VEG-004', 'product' => 'Cabbage', 'special_instructions' => null, 'date_added' => '2025-04-05', 'quantity' => 200, 'status' => 'In progress', 'unit' => 'units', 'warehouse' => 'Warehouse C'],
-            ['id' => 10005, 'product_code' => 'VEG-005', 'product' => 'Broccoli', 'special_instructions' => 'Keep refrigerated', 'date_added' => '2025-05-12', 'quantity' => 150, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse B'],
-            ['id' => 10006, 'product_code' => 'RCE-001', 'product' => 'Basmati Rice', 'special_instructions' => 'Store in dry conditions', 'date_added' => '2025-06-20', 'quantity' => 200, 'status' => 'Completed', 'unit' => 'kg', 'warehouse' => 'Warehouse A'],
-            ['id' => 10007, 'product_code' => 'RCE-002', 'product' => 'Jasmine Rice', 'special_instructions' => null, 'date_added' => '2025-07-10', 'quantity' => 150, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse C'],
-            ['id' => 10008, 'product_code' => 'VEG-006', 'product' => 'Onion', 'special_instructions' => 'Store in ventilated area', 'date_added' => '2025-08-15', 'quantity' => 800, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse B'],
-            ['id' => 10009, 'product_code' => 'VEG-007', 'product' => 'Cauliflower', 'special_instructions' => null, 'date_added' => '2025-09-01', 'quantity' => 180, 'status' => 'Completed', 'unit' => 'units', 'warehouse' => 'Warehouse A'],
-            ['id' => 10010, 'product_code' => 'CRP-001', 'product' => 'Wheat Grain', 'special_instructions' => 'Protect from moisture', 'date_added' => '2025-09-10', 'quantity' => 250, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse C'],
-            ['id' => 10011, 'product_code' => 'VEG-008', 'product' => 'Spinach', 'special_instructions' => 'Refrigerate at 0-4°C', 'date_added' => '2025-09-15', 'quantity' => 100, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse B'],
-            ['id' => 10012, 'product_code' => 'VEG-009', 'product' => 'Green Beans', 'special_instructions' => null, 'date_added' => '2025-09-20', 'quantity' => 250, 'status' => 'Completed', 'unit' => 'kg', 'warehouse' => 'Warehouse A'],
-            ['id' => 10013, 'product_code' => 'RCE-003', 'product' => 'Brown Rice', 'special_instructions' => 'Store in airtight containers', 'date_added' => '2025-09-25', 'quantity' => 120, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse C'],
-            ['id' => 10014, 'product_code' => 'VEG-010', 'product' => 'Bell Pepper', 'special_instructions' => null, 'date_added' => '2025-09-30', 'quantity' => 200, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse B'],
-            ['id' => 10015, 'product_code' => 'CRP-002', 'product' => 'Corn', 'special_instructions' => 'Store in cool, dry place', 'date_added' => '2025-10-05', 'quantity' => 150, 'status' => 'Completed', 'unit' => 'kg', 'warehouse' => 'Warehouse A'],
-            ['id' => 10016, 'product_code' => 'VEG-011', 'product' => 'Cucumber', 'special_instructions' => null, 'date_added' => '2025-10-10', 'quantity' => 300, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse C'],
-            ['id' => 10017, 'product_code' => 'VEG-012', 'product' => 'Lettuce', 'special_instructions' => 'Keep refrigerated', 'date_added' => '2025-10-15', 'quantity' => 150, 'status' => 'In progress', 'unit' => 'units', 'warehouse' => 'Warehouse B'],
-            ['id' => 10018, 'product_code' => 'CRP-003', 'product' => 'Barley', 'special_instructions' => null, 'date_added' => '2025-10-20', 'quantity' => 100, 'status' => 'Completed', 'unit' => 'kg', 'warehouse' => 'Warehouse A'],
-            ['id' => 10019, 'product_code' => 'VEG-013', 'product' => 'Zucchini', 'special_instructions' => null, 'date_added' => '2025-10-25', 'quantity' => 200, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse C'],
-            ['id' => 10020, 'product_code' => 'VEG-014', 'product' => 'Eggplant', 'special_instructions' => 'Avoid direct sunlight', 'date_added' => '2025-10-30', 'quantity' => 250, 'status' => 'In progress', 'unit' => 'kg', 'warehouse' => 'Warehouse B'],
-        ];
+        // DB: connect and fetch metrics + inventory rows
+        require_once __DIR__ . '/../../include/connect-db.php';
 
-        $totalCapacity = 100000;
-        $usedCapacity = array_sum(array_column($inventory, 'quantity'));
+        // Metrics
+        $totalCapacity = 0;
+        $usedCapacity = 0;
+        $itemCount = 0;
+
+        $resCap = mysqli_query($conn, "SELECT SUM(capacity_total) AS total_capacity, SUM(capacity_used) AS used_capacity FROM warehouses");
+        if ($resCap) {
+            $capRow = mysqli_fetch_assoc($resCap);
+            $totalCapacity = (int)($capRow['total_capacity'] ?? 0);
+            $usedCapacity = (int)($capRow['used_capacity'] ?? 0);
+        }
         $freeCapacity = $totalCapacity - $usedCapacity;
-        $itemCount = count($inventory);
-        $currentDate = new DateTime('2025-09-23');
+        if ($freeCapacity < 0) {
+            $freeCapacity = 0;
+        }
+
+        $resCount = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM warehouse_products");
+        if ($resCount) {
+            $cntRow = mysqli_fetch_assoc($resCount);
+            $itemCount = (int)($cntRow['cnt'] ?? 0);
+        }
+
+        // Inventory rows
+        $inventoryRows = [];
+        $sql = "SELECT
+                    wp.id,
+                    wp.product_id,
+                    p.name AS product_name,
+                    p.special_instructions AS product_instructions,
+                    p.unit AS product_unit,
+                    wp.quantity,
+                    wp.unit_volume,
+                    CASE WHEN wp.request_status = 1 THEN 'In progress' ELSE 'Completed' END AS status,
+                    w.warehouse_id,
+                    w.name AS warehouse_name,
+                    wp.agent_id,
+                    wp.offer_percentage,
+                    wp.offer_start,
+                    wp.offer_end,
+                    wp.inbound_stock_date,
+                    wp.expiry_date,
+                    wp.last_updated
+                FROM warehouse_products wp
+                JOIN products p ON p.product_id = wp.product_id
+                JOIN warehouses w ON w.warehouse_id = wp.warehouse_id
+                ORDER BY wp.last_updated DESC";
+        $resInv = mysqli_query($conn, $sql);
+        if ($resInv) {
+            while ($row = mysqli_fetch_assoc($resInv)) {
+                $inventoryRows[] = $row;
+            }
+        }
+
+        $currentDate = new DateTime();
+
+        // Load warehouses for selects
+        $warehouses = [];
+        $resWh = mysqli_query($conn, "SELECT warehouse_id, name FROM warehouses ORDER BY name");
+        if ($resWh) {
+            while ($w = mysqli_fetch_assoc($resWh)) {
+                $warehouses[] = $w;
+            }
+        }
+
+        // Load products for selects (product code implied as PRD-<id>)
+        $products = [];
+        $resPr = mysqli_query($conn, "SELECT product_id, name, unit, special_instructions FROM products ORDER BY name");
+        if ($resPr) {
+            while ($p = mysqli_fetch_assoc($resPr)) {
+                $products[] = $p;
+            }
+        }
+
+        // Load agents (users with role = 'Agent') for selects
+        $agents = [];
+        $resAg = mysqli_query($conn, "SELECT user_id, full_name FROM users WHERE role = 'Agent' ORDER BY full_name");
+        if ($resAg) {
+            while ($a = mysqli_fetch_assoc($resAg)) {
+                $agents[] = $a;
+            }
+        }
         ?>
         <div class="metrics-grid">
             <div class="metric-card">
@@ -79,15 +137,23 @@
                         <div class="group">
                             <span class="group-title">Warehouse</span>
                             <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
-                            <label><input type="checkbox" class="filter-option" value="Warehouse A"> Warehouse A</label>
-                            <label><input type="checkbox" class="filter-option" value="Warehouse B"> Warehouse B</label>
-                            <label><input type="checkbox" class="filter-option" value="Warehouse C"> Warehouse C</label>
+                            <?php foreach ($warehouses as $w) { ?>
+                                <label><input type="checkbox" class="filter-option" value="<?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?>"> <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></label>
+                            <?php } ?>
                         </div>
                         <div class="group">
                             <span class="group-title">Unit</span>
                             <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
-                            <label><input type="checkbox" class="filter-option" value="kg"> kg</label>
-                            <label><input type="checkbox" class="filter-option" value="units"> units</label>
+                            <?php
+                            $units = [];
+                            foreach ($products as $p) {
+                                $u = trim((string)($p['unit'] ?? ''));
+                                if ($u !== '' && !in_array($u, $units, true)) $units[] = $u;
+                            }
+                            sort($units);
+                            foreach ($units as $u) { ?>
+                                <label><input type="checkbox" class="filter-option" value="<?php echo htmlspecialchars($u, ENT_QUOTES, 'UTF-8'); ?>"> <?php echo htmlspecialchars($u, ENT_QUOTES, 'UTF-8'); ?></label>
+                            <?php } ?>
                         </div>
                         <div class="dropdown-footer">
                             <button type="button" onclick="selectAll()">Select all</button>
@@ -115,52 +181,76 @@
                         <th>Product Code</th>
                         <th>Product Name</th>
                         <th>Special Instructions</th>
-                        <th>Date</th>
                         <th>Quantity</th>
-                        <th>Unit</th>
+                        <th>Unit Volume</th>
                         <th>Status</th>
                         <th>Warehouse</th>
+                        <th>Agent Id</th>
                         <th>Offer Suggestion</th>
+                        <th>Inbound Stock Date</th>
+                        <th>Expiry Date</th>
+                        <th>Last Updated</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="productTableBody">
-                    <?php foreach ($inventory as $item) {
-                        $statusClass = strtolower($item['status']) === 'completed' ? 'completed' : 'in-progress';
-                        $lowStock = $item['quantity'] < 10 ? 'low-stock' : '';
-                        $itemDate = new DateTime($item['date_added']);
-                        $monthsDiff = $currentDate->diff($itemDate)->m + ($currentDate->diff($itemDate)->y * 12);
-                        $offerSuggestion = ($item['quantity'] < 50 || $monthsDiff >= 6) ? '10% Discount' : 'No Offer';
+                    <?php foreach ($inventoryRows as $row) {
+                        $statusClass = strtolower($row['status']) === 'completed' ? 'completed' : 'in-progress';
+                        $lowStock = ((int)$row['quantity']) < 10 ? 'low-stock' : '';
+                        $productCode = 'PRD-' . str_pad((string)$row['product_id'], 3, '0', STR_PAD_LEFT);
+                        $productName = htmlspecialchars($row['product_name'] ?? '', ENT_QUOTES, 'UTF-8');
+                        $specialInstructions = htmlspecialchars($row['product_instructions'] ?? '—', ENT_QUOTES, 'UTF-8');
+                        $quantity = (int)$row['quantity'];
+                        $unitVolume = htmlspecialchars((string)$row['unit_volume'], ENT_QUOTES, 'UTF-8');
+                        $statusText = htmlspecialchars($row['status'], ENT_QUOTES, 'UTF-8');
+                        $warehouseName = htmlspecialchars($row['warehouse_name'] ?? '', ENT_QUOTES, 'UTF-8');
+                        $agentId = $row['agent_id'] !== null ? htmlspecialchars((string)$row['agent_id'], ENT_QUOTES, 'UTF-8') : '—';
+                        $offerPct = $row['offer_percentage'];
+                        $offerStart = $row['offer_start'];
+                        $offerEnd = $row['offer_end'];
+                        $offerSuggestion = ($offerPct !== null && $offerPct > 0)
+                            ? ($offerStart && $offerEnd
+                                ? ($offerPct . '% (' . $offerStart . ' to ' . $offerEnd . ')')
+                                : ($offerPct . '%'))
+                            : 'No Offer';
+                        $inboundDate = $row['inbound_stock_date'] ?? '—';
+                        $expiryDate = $row['expiry_date'] ?? '—';
+                        $lastUpdated = $row['last_updated'] ?? '—';
+                        $productUnit = htmlspecialchars($row['product_unit'] ?? '', ENT_QUOTES, 'UTF-8');
                         echo "
-                        <tr data-id='{$item['id']}' data-offer='$offerSuggestion'>
-                            <td>{$item['product_code']}</td>
-                            <td>{$item['product']}</td>
-                            <td>" . ($item['special_instructions'] ?? '—') . "</td>
-                            <td>{$item['date_added']}</td>
-                            <td class='$lowStock'>{$item['quantity']}</td>
-                            <td>{$item['unit']}</td>
-                            <td class='$statusClass'>{$item['status']}</td>
-                            <td>{$item['warehouse']}</td>
-                            <td>$offerSuggestion</td>
+                        <tr data-id='" . (int)$row['id'] . "' data-product-id='" . (int)$row['product_id'] . "' data-warehouse-id='" . (int)$row['warehouse_id'] . "' data-offer='" . htmlspecialchars($offerSuggestion, ENT_QUOTES, 'UTF-8') . "' data-unit='" . $productUnit . "'>
+                            <td>" . $productCode . "</td>
+                            <td>" . $productName . "</td>
+                            <td>" . ($specialInstructions !== '' ? $specialInstructions : '—') . "</td>
+                            <td class='" . $lowStock . "'>" . $quantity . "</td>
+                            <td>" . $unitVolume . "</td>
+                            <td class='" . $statusClass . "'>" . $statusText . "</td>
+                            <td>" . $warehouseName . "</td>
+                            <td>" . $agentId . "</td>
+                            <td>" . htmlspecialchars($offerSuggestion, ENT_QUOTES, 'UTF-8') . "</td>
+                            <td>" . ($inboundDate ?: '—') . "</td>
+                            <td>" . ($expiryDate ?: '—') . "</td>
+                            <td>" . $lastUpdated . "</td>
                             <td>
-                                <button class='action-btn edit-btn' onclick='editProduct({$item['id']})'>✎</button>
-                                <button class='action-btn delete-btn' onclick='deleteProduct({$item['id']})'>🗑</button>
-                                <button class='action-btn offer-btn' onclick='manageOffer({$item['id']})'>🏷️</button>
+                                <button class='action-btn edit-btn' onclick='editProduct(" . (int)$row['id'] . ")'>✎</button>
+                                <button class='action-btn delete-btn' onclick='deleteProduct(" . (int)$row['id'] . ")'>🗑</button>
+                                <button class='action-btn offer-btn' onclick='manageOffer(" . (int)$row['id'] . ")'>🏷️</button>
                             </td>
                         </tr>";
                     } ?>
                 </tbody>
                 <tfoot id="totalRow">
                     <tr>
-                       
-                        <td colspan="4" >
+
+                        <td colspan="6">
                             <span class="label">TotalItems:</span>
                             <span class="value" id="totalItems">0</span>
-                            
+
                         </td>
-                        <td colspan="6"><span class="label">TotalQuantity:</span>
-                            <span class="value" id="totalQuantity">0</span></td>
-                       
+                        <td colspan="7"><span class="label">TotalQuantity:</span>
+                            <span class="value" id="totalQuantity">0</span>
+                        </td>
+
                     </tr>
                 </tfoot>
             </table>
@@ -184,26 +274,34 @@
                 <span class="close-btn" onclick="closePopup('add')">&times;</span>
                 <h2>Add New Product</h2>
                 <form id="addProductForm">
-                    <label for="productCode">Product Code:</label>
-                    <input type="text" id="productCode" name="productCode" required>
+                    <label for="productCodeSelect">Product Code:</label>
+                    <select id="productCodeSelect" name="productCodeSelect" required>
+                        <option value="">Select code</option>
+                        <?php foreach ($products as $p) {
+                            $code = 'PRD-' . str_pad((string)$p['product_id'], 3, '0', STR_PAD_LEFT); ?>
+                            <option value="<?php echo (int)$p['product_id']; ?>" data-instructions="<?php echo htmlspecialchars($p['special_instructions'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" data-unit="<?php echo htmlspecialchars($p['unit'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo $code; ?></option>
+                        <?php } ?>
+                    </select>
 
-                    <label for="productName">Product Name:</label>
-                    <input type="text" id="productName" name="productName" required>
+                    <label for="productNameSelect">Product Name:</label>
+                    <select id="productNameSelect" name="productNameSelect" required>
+                        <option value="">Select product</option>
+                        <?php foreach ($products as $p) { ?>
+                            <option value="<?php echo (int)$p['product_id']; ?>" data-instructions="<?php echo htmlspecialchars($p['special_instructions'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" data-unit="<?php echo htmlspecialchars($p['unit'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php } ?>
+                    </select>
 
                     <label for="specialInstructions">Special Instructions:</label>
                     <input type="text" id="specialInstructions" name="specialInstructions">
 
-                    <label for="dateAdded">Date:</label>
+                    <label for="dateAdded">Inbound Stock Date:</label>
                     <input type="date" id="dateAdded" name="dateAdded" required>
 
                     <label for="quantity">Quantity:</label>
                     <input type="number" id="quantity" name="quantity" min="1" required>
 
-                    <label for="unit">Unit:</label>
-                    <select id="unit" name="unit" required>
-                        <option value="kg">kg</option>
-                        <option value="units">units</option>
-                    </select>
+                    <label for="unitVolume">Unit Volume:</label>
+                    <input type="number" id="unitVolume" name="unitVolume" step="0.01" min="0" required>
 
                     <label for="status">Status:</label>
                     <select id="status" name="status" required>
@@ -213,10 +311,21 @@
 
                     <label for="warehouse">Warehouse:</label>
                     <select id="warehouse" name="warehouse" required>
-                        <option value="Warehouse A">Warehouse A</option>
-                        <option value="Warehouse B">Warehouse B</option>
-                        <option value="Warehouse C">Warehouse C</option>
+                        <?php foreach ($warehouses as $w) { ?>
+                            <option value="<?php echo (int)$w['warehouse_id']; ?>"><?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php } ?>
                     </select>
+
+                    <label for="agentId">Agent Id:</label>
+                    <select id="agentId" name="agentId">
+                        <option value="">Select agent</option>
+                        <?php foreach ($agents as $a) { ?>
+                            <option value="<?php echo (int)$a['user_id']; ?>"><?php echo (int)$a['user_id'] . ' - ' . htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php } ?>
+                    </select>
+
+                    <label for="expiryDate">Expiry Date:</label>
+                    <input type="date" id="expiryDate" name="expiryDate">
 
                     <button type="submit">Add Product</button>
                 </form>
@@ -229,26 +338,24 @@
                 <h2>Edit Product</h2>
                 <form id="editProductForm">
                     <input type="hidden" id="editProductId">
+                    <input type="hidden" id="editProductProductId">
                     <label for="editProductCode">Product Code:</label>
-                    <input type="text" id="editProductCode" name="editProductCode" required>
+                    <input type="text" id="editProductCode" name="editProductCode" readonly>
 
                     <label for="editProductName">Product Name:</label>
-                    <input type="text" id="editProductName" name="editProductName" required>
+                    <input type="text" id="editProductName" name="editProductName" readonly>
 
                     <label for="editSpecialInstructions">Special Instructions:</label>
                     <input type="text" id="editSpecialInstructions" name="editSpecialInstructions">
 
-                    <label for="editDateAdded">Date:</label>
+                    <label for="editDateAdded">Inbound Stock Date:</label>
                     <input type="date" id="editDateAdded" name="editDateAdded" required>
 
                     <label for="editQuantity">Quantity:</label>
                     <input type="number" id="editQuantity" name="editQuantity" min="1" required>
 
-                    <label for="editUnit">Unit:</label>
-                    <select id="editUnit" name="editUnit" required>
-                        <option value="kg">kg</option>
-                        <option value="units">units</option>
-                    </select>
+                    <label for="editUnitVolume">Unit Volume:</label>
+                    <input type="number" id="editUnitVolume" name="editUnitVolume" step="0.01" min="0" required>
 
                     <label for="editStatus">Status:</label>
                     <select id="editStatus" name="editStatus" required>
@@ -258,10 +365,21 @@
 
                     <label for="editWarehouse">Warehouse:</label>
                     <select id="editWarehouse" name="editWarehouse" required>
-                        <option value="Warehouse A">Warehouse A</option>
-                        <option value="Warehouse B">Warehouse B</option>
-                        <option value="Warehouse C">Warehouse C</option>
+                        <?php foreach ($warehouses as $w) { ?>
+                            <option value="<?php echo (int)$w['warehouse_id']; ?>"><?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php } ?>
                     </select>
+
+                    <label for="editAgentId">Agent Id:</label>
+                    <select id="editAgentId" name="editAgentId">
+                        <option value="">Select agent</option>
+                        <?php foreach ($agents as $a) { ?>
+                            <option value="<?php echo (int)$a['user_id']; ?>"><?php echo (int)$a['user_id'] . ' - ' . htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                        <?php } ?>
+                    </select>
+
+                    <label for="editExpiryDate">Expiry Date:</label>
+                    <input type="date" id="editExpiryDate" name="editExpiryDate">
 
                     <button type="submit">Update Product</button>
                 </form>
@@ -292,4 +410,5 @@
 
     <script src="../warehouse information/warehouse-info.js"></script>
 </body>
+
 </html>
