@@ -10,7 +10,8 @@
 
 <body>
     <div class="container">
-        <h1>Warehouse Information</h1>
+        <img src="warehouse-products-icon.png" alt="Warehouse Products Icon" style="width:90px;height:90px;display:block;margin:0 auto 16px auto;">
+        <h1>Warehouse Products</h1>
 
         <!-- Metrics Section -->
         <?php
@@ -182,6 +183,7 @@
                         <th>Product Name</th>
                         <th>Special Instructions</th>
                         <th>Quantity</th>
+
                         <th>Unit Volume</th>
                         <th>Status</th>
                         <th>Warehouse</th>
@@ -219,18 +221,20 @@
                         $productUnit = htmlspecialchars($row['product_unit'] ?? '', ENT_QUOTES, 'UTF-8');
                         echo "
                         <tr data-id='" . (int)$row['id'] . "' data-product-id='" . (int)$row['product_id'] . "' data-warehouse-id='" . (int)$row['warehouse_id'] . "' data-offer='" . htmlspecialchars($offerSuggestion, ENT_QUOTES, 'UTF-8') . "' data-unit='" . $productUnit . "'>
-                            <td>" . $productCode . "</td>
-                            <td>" . $productName . "</td>
-                            <td>" . ($specialInstructions !== '' ? $specialInstructions : '—') . "</td>
-                            <td class='" . $lowStock . "'>" . $quantity . "</td>
-                            <td>" . $unitVolume . "</td>
-                            <td class='" . $statusClass . "'>" . $statusText . "</td>
-                            <td>" . $warehouseName . "</td>
-                            <td>" . $agentId . "</td>
-                            <td>" . htmlspecialchars($offerSuggestion, ENT_QUOTES, 'UTF-8') . "</td>
-                            <td>" . ($inboundDate ?: '—') . "</td>
-                            <td>" . ($expiryDate ?: '—') . "</td>
-                            <td>" . $lastUpdated . "</td>
+                            <td title='" . $productCode . "'>" . $productCode . "</td>
+                            <td title='" . $productName . "'>" . $productName . "</td>
+                            <td title='" . ($specialInstructions !== '' ? $specialInstructions : '—') . "'>" . ($specialInstructions !== '' ? $specialInstructions : '—') . "</td>
+                            <td class='" . $lowStock . "' title='" . $quantity . "'>" . $quantity . "</td>
+                            <td title='" . $unitVolume . "'>" . $unitVolume . "</td>
+                            <td class='" . $statusClass . "' title='" . $statusText . "'>" . $statusText . "</td>
+                            <td title='" . $warehouseName . "'>" . $warehouseName . "</td>
+                            <td title='" . $agentId . "'>" . $agentId . "</td>
+                            <td>
+                                <button class='offer-suggestion-link' title='View offer suggestion'>" . htmlspecialchars($offerSuggestion, ENT_QUOTES, 'UTF-8') . "</button>
+                            </td>
+                            <td title='" . ($inboundDate ?: '—') . "'>" . ($inboundDate ?: '—') . "</td>
+                            <td title='" . ($expiryDate ?: '—') . "'>" . ($expiryDate ?: '—') . "</td>
+                            <td title='" . $lastUpdated . "'>" . $lastUpdated . "</td>
                             <td>
                                 <button class='action-btn edit-btn' onclick='editProduct(" . (int)$row['id'] . ")'>✎</button>
                                 <button class='action-btn delete-btn' onclick='deleteProduct(" . (int)$row['id'] . ")'>🗑</button>
@@ -383,6 +387,21 @@
 
                     <button type="submit">Update Product</button>
                 </form>
+            </div>
+        </div>
+
+        <!-- Offer Suggestion Modal -->
+        <div id="offerSuggestionPopup" class="popup">
+            <div class="popup-content">
+                <span class="close-btn" onclick="closePopup('offer-suggestion')">&times;</span>
+                <h2>Offer Suggestion</h2>
+                <div id="offerSuggestionDetails">
+                    <!-- Filled by JavaScript with product info and suggested offer -->
+                </div>
+                <div class="actions" style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button id="offerSuggestionApplyBtn">Apply Suggestion</button>
+                    <button id="offerSuggestionEditBtn">Edit in Offer Form</button>
+                </div>
             </div>
         </div>
 
