@@ -373,35 +373,129 @@ while ($row = $result->fetch_assoc()) {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Right: Editable Form -->
-                    <div class="w-2/3 p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-lg font-semibold">Edit Product</h2>
-                            <button onclick="closeModal('modal-<?= $row['wp_id'] ?>')" class="text-gray-400 hover:text-gray-600">
-                                <i class='bx bx-x text-2xl'></i>
-                            </button>
-                        </div>
-                        
-                        <form method="POST" action="" class="space-y-4">
-                            <input type="hidden" name="wp_id" value="<?= $row['wp_id'] ?>">
-                            <input type="hidden" name="product_id" value="<?= $row['product_id'] ?>">
+        </form>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
-                                <input type="text" name="product_name" value="<?= htmlspecialchars($row['product_name']) ?>" 
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+        <!-- =====================  Products Table  ====================== -->
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Products in this Warehouse</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full border border-gray-200 rounded-lg overflow-hidden">
+                <thead class="bg-gray-100 text-gray-700">
+                    <tr>
+                        <th class="p-3 text-left">Image</th>
+                        <th class="p-3 text-left">Product</th>
+                        <th class="p-3 text-left">Quantity</th>
+                        <th class="p-3 text-left">Volume (ft<sup>2</sup>)</th>
+                        <th class="p-3 text-left">Expiry Date</th>
+                        <th class="p-3 text-left">Status</th>
+                        <th class="p-3 text-left">Edit</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    <?php foreach ($productsArray as $row): ?>
+                        <?php
+                        $qty = (float)$row['quantity'];
+                        $unitVol = (float)$row['unit_volume'];
+                        $totalVol = $qty * $unitVol; // ft²
+                        ?>
+                        <tr class="hover:bg-gray-50">
+                            <td class="p-3">
+                                <?php if ($row['img_url']): ?>
+                                    <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-16 w-16 object-cover rounded">
+                                <?php else: ?>
+                                    <span class="text-gray-400 italic">No Image</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="p-3 font-medium"><?= htmlspecialchars($row['product_name']) ?></td>
+                            <td class="p-3"><?= htmlspecialchars($row['quantity']) ?></td>
+                            <!-- Total Volume with ft² in parentheses -->
+                            <td class="p-3"><?= number_format($totalVol, 2) ?></td>
+                            <td class="p-3"><?= htmlspecialchars($row['expiry_date']) ?></td>
+                            <td class="p-3">
+                                <?php if ($row['request_status'] == 1): ?>
+                                    <span class="text-green-600 font-semibold">Approved</span>
+                                <?php else: ?>
+                                    <span class="text-yellow-600 font-semibold">Pending</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="p-3">
+                                <button onclick="openModal('modal-<?= $row['wp_id'] ?>')" class="text-blue-500 hover:text-blue-700">
+                                    <img width="24" height="24" src="https://img.icons8.com/material-rounded/24/create-new.png" alt="create-new" />
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+
+            <!-- ============================ update modal ===================================== -->
+            <?php foreach ($productsArray as $row): ?>
+                <?php
+                $qty = (float)$row['quantity'];
+                $unitVol = (float)$row['unit_volume'];
+                $totalVol = $qty * $unitVol;
+                ?>
+                <div id="modal-<?= $row['wp_id'] ?>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                    <div class="bg-white w-11/12 md:w-2/3 lg:w-1/2 rounded-lg shadow-lg overflow-hidden">
+                        <div class="flex">
+                            <!-- Left: Product Image -->
+                            <div class="w-1/3 bg-gray-100 p-4 flex items-center justify-center">
+                                <?php if ($row['img_url']): ?>
+                                    <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-32 w-32 object-cover rounded">
+                                <?php else: ?>
+                                    <span class="text-gray-400 italic">No Image</span>
+                                <?php endif; ?>
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
-                                <input type="number" id="qty-<?= $row['wp_id'] ?>" name="quantity" value="<?= htmlspecialchars($row['quantity']) ?>" 
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
-                            </div>
+                            <!-- Right: Editable Form -->
+                            <div class="w-2/3 p-4">
+                                <h2 class="text-lg font-semibold mb-4">Edit Product</h2>
+                                <form method="POST" action="">
+                                    <input type="hidden" name="wp_id" value="<?= $row['wp_id'] ?>">
+                                    <input type="hidden" name="product_id" value="<?= $row['product_id'] ?>">
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Unit Volume (m³)</label>
-                                <input type="number" step="0.01" id="unit-<?= $row['wp_id'] ?>" name="unit_volume" value="<?= htmlspecialchars($row['unit_volume']) ?>" 
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <div class="mb-2">
+                                        <label class="block text-sm font-medium text-gray-700">Product</label>
+                                        <input type="text" name="product_name" value="<?= htmlspecialchars($row['product_name']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                                        <input type="number" id="qty-<?= $row['wp_id'] ?>" name="quantity" value="<?= htmlspecialchars($row['quantity']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="block text-sm font-medium text-gray-700">Unit Volume</label>
+                                        <div class="flex items-center">
+                                            <input type="number" step="0.01" id="unit-<?= $row['wp_id'] ?>" name="unit_volume" value="<?= htmlspecialchars($row['unit_volume']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                                            <span class="unit-after">ft<sup>2</sup></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="block text-sm font-medium text-gray-700">Total Volume</label>
+                                        <div class="flex items-center">
+                                            <input type="number" step="0.01" id="total-<?= $row['wp_id'] ?>" value="<?= number_format($totalVol, 2, '.', '') ?>" class="w-full border rounded p-2 mt-1 bg-gray-100" readonly>
+                                            <span class="unit-after">ft<sup>2</sup></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="block text-sm font-medium text-gray-700">Expiry Date</label>
+                                        <input type="date" name="expiry_date" value="<?= htmlspecialchars($row['expiry_date']) ?>" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700">Status</label>
+                                        <select name="request_status" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                                            <option value="1" <?= ($row['request_status'] == 1) ? 'selected' : '' ?>>Approved</option>
+                                            <option value="0" <?= ($row['request_status'] == 0) ? 'selected' : '' ?>>Pending</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex justify-end space-x-2">
+                                        <button type="button" onclick="closeModal('modal-<?= $row['wp_id'] ?>')" class="px-4 py-2 rounded border">Cancel</button>
+                                        <button type="submit" name="updateProduct" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Update</button>
+                                    </div>
+                                </form>
                             </div>
 
                             <div>

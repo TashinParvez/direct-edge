@@ -1,4 +1,3 @@
-
 <?php
 
 $to = "mahmed221209@bscse.uiu.ac.bd";
@@ -46,15 +45,15 @@ mail($to, $subject, $message, $headers);
 #       Prabal Mallick <prabal.mallick@sslwireless.com>
 ######
 
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 
 <head>
-<meta charset="UTF-8">
+    <meta charset="UTF-8">
 
     <!-- <meta name="author" content="SSLCommerz">
     <title>Successful Transaction - SSLCommerz</title>
@@ -87,21 +86,16 @@ ini_set('display_errors', 0);
 <body>
 
 
-<?php
+    <?php
 
     ?>
 
-    <!--  -->
-    <!-- remove -->
-    <?php foreach ($allcategories as $category) { ?>
-        <?php echo htmlspecialchars($category['name']); ?>
-    <?php } ?>
-    <!-- remove -->
+    <!-- This section was removed as it was causing errors -->
 
 
 
 
-<!-- 
+    <!-- 
 <div class="congratulation-area text-center mt-5">
         <div class="container">
             <div class="congratulation-wrapper">
@@ -118,30 +112,30 @@ ini_set('display_errors', 0);
             </div>
         </div>
     </div> -->
-<!--.........................................new code............................................-->
-<div class="container">
+    <!--.........................................new code............................................-->
+    <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-5">
                 <div class="message-box _success">
-                     <i class="fa fa-check-circle" aria-hidden="true"></i>
+                    <i class="fa fa-check-circle" aria-hidden="true"></i>
                     <h2> Your payment was successful </h2>
-                   <p> Thank you for your payment. we will <br>
-be in contact with more details shortly </p>      
-<div class="btn-wrapper mt-4">
-<!-- <a href="../Home/Homepage.php" class="cmn-btn btn-bg-1"> Go to Home </a> -->
+                    <p> Thank you for your payment. we will <br>
+                        be in contact with more details shortly </p>
+                    <div class="btn-wrapper mt-4">
+                        <!-- <a href="../Home/Homepage.php" class="cmn-btn btn-bg-1"> Go to Home </a> -->
 
                         <!-- <a href="javascript:void(0)" class="cmn-btn btn-bg-1"> Go to Home </a> -->
 
-                        <a href="/home/Homepage.php" class="btn cmn-btn btn-bg-1"> Go to Home </a>
+                        <a href="../../buy-products-from-warehouse.php" class="btn cmn-btn btn-bg-1"> Go to Buy products from warehouse </a>
 
                     </div>
-</div> 
-        </div> 
-    </div> 
-  
-  
-  
-  <!-- <div class="row justify-content-center">
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- <div class="row justify-content-center">
             <div class="col-md-5">
                 <div class="message-box _success _failed">
                      <i class="fa fa-times-circle" aria-hidden="true"></i>
@@ -153,95 +147,96 @@ be in contact with more details shortly </p>
     </div> 
    -->
 
-<!--......................................... old code............................................-->
-    <div class="container">
-        <div class="row" style="margin-top: 10%;">
-            <div class="col-md-8 offset-md-2">
-                <?php
-                echo $_POST['tran_id'];
-                echo ' - ' . $_POST['amount'];
-                echo ' - ' . $_POST['currency'];
-                require_once(__DIR__ . "/../lib/SslCommerzNotification.php");
-                include_once(__DIR__ . "/../db_connection.php");
-                include_once(__DIR__ . "/../OrderTransaction.php");
+        <!--......................................... old code............................................-->
+        <div class="container">
+            <div class="row" style="margin-top: 10%;">
+                <div class="col-md-8 offset-md-2">
+                    <?php
+                    echo $_POST['tran_id'];
+                    echo ' - ' . $_POST['amount'];
+                    echo ' - ' . $_POST['currency'];
+                    require_once(__DIR__ . "/../lib/SslCommerzNotification.php");
+                    include_once(__DIR__ . "/../../../include/connect-db.php");
+                    if (!isset($conn) || !$conn) {
+                        die('<h2 class="text-center text-danger">Database connection failed. Please check connect-db.php path and connection settings.</h2>');
+                    }
+                    include_once(__DIR__ . "/../OrderTransaction.php");
 
-                use SslCommerz\SslCommerzNotification;
+                    use SslCommerz\SslCommerzNotification;
 
-                $sslc = new SslCommerzNotification();
-                $tran_id = $_POST['tran_id'];
-                $amount =  $_POST['amount'];
-                $currency =  $_POST['currency'];
+                    $sslc = new SslCommerzNotification();
+                    $tran_id = $_POST['tran_id'];
+                    $amount =  $_POST['amount'];
+                    $currency =  $_POST['currency'];
 
-                $ot = new OrderTransaction();
-                $sql = $ot->getRecordQuery($tran_id);
-                $result = $conn_integration->query($sql);
-                $row = $result->fetch_array(MYSQLI_ASSOC);
+                    $ot = new OrderTransaction();
+                    $sql = $ot->getRecordQuery($tran_id);
+                    $result = $conn->query($sql);
+                    $row = $result->fetch_array(MYSQLI_ASSOC);
 
-                if ($row['status'] == 'Pending' || $row['status'] == 'Processing') {
-                    $validated = $sslc->orderValidate($_POST, $tran_id, $amount, $currency);
+                    if ($row && $row['payment_status'] == 'Pending') {
+                        $validated = $sslc->orderValidate($_POST, $tran_id, $amount, $currency);
 
-                    if ($validated) {
-                        $sql = $ot->updateTransactionQuery($tran_id, 'Processing');
+                        if ($validated) {
+                            $sql = $ot->updateTransactionQuery($tran_id, 'Paid');
 
-                        if ($conn_integration->query($sql) === TRUE) { ?>
-                            <h2 class="text-center text-success">Congratulations! Your Transaction is Successful.</h2>
-                            <br>
-                            <table border="1" class="table table-striped">
-                                <thead class="thead-dark">
-                                    <tr class="text-center">
-                                        <th colspan="2">Payment Details</th>
+                            if ($conn->query($sql) === TRUE) { ?>
+                                <h2 class="text-center text-success">Congratulations! Your Transaction is Successful.</h2>
+                                <br>
+                                <table border="1" class="table table-striped">
+                                    <thead class="thead-dark">
+                                        <tr class="text-center">
+                                            <th colspan="2">Payment Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tr>
+                                        <td class="text-right">Transaction ID</td>
+                                        <td><?= $_POST['tran_id'] ?></td>
                                     </tr>
-                                </thead>
-                                <tr>
-                                    <td class="text-right">Transaction ID</td>
-                                    <td><?= $_POST['tran_id'] ?></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right">Transaction Time</td>
-                                    <td><?= $_POST['tran_date'] ?></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right">Payment Method</td>
-                                    <td><?= $_POST['card_issuer'] ?></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right">Bank Transaction ID</td>
-                                    <td><?= $_POST['bank_tran_id'] ?></td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right">Amount</td>
-                                    <td><?= $_POST['amount'] . ' ' . $_POST['currency'] ?></td>
-                                </tr>
-                            </table>
+                                    <tr>
+                                        <td class="text-right">Transaction Time</td>
+                                        <td><?= $_POST['tran_date'] ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right">Payment Method</td>
+                                        <td><?= $_POST['card_issuer'] ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right">Bank Transaction ID</td>
+                                        <td><?= $_POST['bank_tran_id'] ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right">Amount</td>
+                                        <td><?= $_POST['amount'] . ' ' . $_POST['currency'] ?></td>
+                                    </tr>
+                                </table>
 
-                        <?php
+                    <?php
 
-                        } else { // update query returned error
+                            } else { // update query returned error
 
-                            echo '<h2 class="text-center text-danger">Error updating record: </h2>' . $conn_integration->error;
+                                echo '<h2 class="text-center text-danger">Error updating record: </h2>' . $conn_integration->error;
+                            } // update query successful or not 
 
-                        } // update query successful or not 
+                        } else { // $validated is false
 
-                    } else { // $validated is false
+                            echo '<h2 class="text-center text-danger">Payment was not valid. Please contact with the merchant.</h2>';
+                        } // check if validated or not
 
-                        echo '<h2 class="text-center text-danger">Payment was not valid. Please contact with the merchant.</h2>';
+                    } else { // status is something else
 
-                    } // check if validated or not
+                        echo '<h2 class="text-center text-danger">Invalid Information.</h2>';
+                    } // status is 'Pending' or already 'Processing'
+                    ?>
 
-                } else { // status is something else
-
-                    echo '<h2 class="text-center text-danger">Invalid Information.</h2>';
-
-                } // status is 'Pending' or already 'Processing'
-                ?>
-
+                </div>
             </div>
         </div>
-    </div>
 
-    
-    <!-- ============================== Footer ==================================== -->
-  
-    <!-- ============================== Footer End ==================================== -->
+
+        <!-- ============================== Footer ==================================== -->
+
+        <!-- ============================== Footer End ==================================== -->
 </body>
+
 </html>

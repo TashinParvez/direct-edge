@@ -6,6 +6,42 @@ include '../include/connect-db.php'; // Database connection
 
 $user_id = $_SESSION['user_id'] ?? 2;
 
+// Helper: get or create active cart for this user
+function bow_get_active_cart_id(mysqli $conn, int $user_id): int
+{
+    $sql = "SELECT cart_id FROM shop_owner_cart_list WHERE user_id = ? AND status = 'active' ORDER BY updated_at DESC LIMIT 1";
+    $st = $conn->prepare($sql);
+    $st->bind_param('i', $user_id);
+    $st->execute();
+    $rs = $st->get_result();
+    $row = $rs->fetch_assoc();
+    $st->close();
+    if ($row && isset($row['cart_id'])) {
+        return (int)$row['cart_id'];
+    }
+    $ins = $conn->prepare("INSERT INTO shop_owner_cart_list (user_id, status) VALUES (?, 'active')");
+    $ins->bind_param('i', $user_id);
+    $ins->execute();
+    $new_id = (int)$conn->insert_id;
+    $ins->close();
+    return $new_id;
+}
+
+// Initial cart count for floating cart badge
+$cart_id_for_count = bow_get_active_cart_id($conn, (int)$user_id);
+$cart_count = 0;
+$cntStmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM shop_owner_cart_items WHERE cart_id = ?");
+if ($cntStmt) {
+    $cntStmt->bind_param('i', $cart_id_for_count);
+    if ($cntStmt->execute()) {
+        $cntRes = $cntStmt->get_result();
+        if ($cntRow = $cntRes->fetch_assoc()) {
+            $cart_count = (int)$cntRow['cnt'];
+        }
+    }
+    $cntStmt->close();
+}
+
 // Handle AJAX request for adding to cart
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
@@ -57,14 +93,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
         }
 
-        // 3. Check if product exists in cart
-        $sql = "SELECT cart_item_id, quantity FROM shop_owner_cart_items WHERE user_id = ? AND product_id = ? AND status = 'active'";
+        // 3. Ensure we have an active cart_id
+        $cart_id = bow_get_active_cart_id($conn, (int)$user_id);
+
+        // 4. Check if product exists in cart (by cart_id)
+        $sql = "SELECT cart_item_id, quantity FROM shop_owner_cart_items WHERE cart_id = ? AND product_id = ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             echo json_encode(['status' => 'error', 'message' => 'Cart query preparation failed: ' . $conn->error]);
             exit;
         }
-        $stmt->bind_param("ii", $user_id, $product_id);
+        $stmt->bind_param("ii", $cart_id, $product_id);
         if (!$stmt->execute()) {
             echo json_encode(['status' => 'error', 'message' => 'Cart query execution failed: ' . $stmt->error]);
             $stmt->close();
@@ -72,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
         $result = $stmt->get_result();
         if ($row = $result->fetch_assoc()) {
-            // 4a. Update existing item
+            // 5a. Update existing item
             $new_qty = $row['quantity'] + $quantity;
             if ($new_qty > $available_quantity) {
                 echo json_encode(['status' => 'error', 'message' => 'Total quantity (' . $new_qty . ') exceeds available stock (' . $available_quantity . ')']);
@@ -92,14 +131,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 exit;
             }
         } else {
-            // 4b. Insert new item
-            $sql = "INSERT INTO shop_owner_cart_items (user_id, product_id, quantity, price_at_time, status) VALUES (?, ?, ?, ?, 'active')";
+            // 5b. Insert new item for this cart
+            $sql = "INSERT INTO shop_owner_cart_items (cart_id, product_id, quantity, price_at_time) VALUES (?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
                 echo json_encode(['status' => 'error', 'message' => 'Insert query preparation failed: ' . $conn->error]);
                 exit;
             }
-            $stmt->bind_param("iiid", $user_id, $product_id, $quantity, $price);
+            $stmt->bind_param("iiid", $cart_id, $product_id, $quantity, $price);
             if (!$stmt->execute()) {
                 echo json_encode(['status' => 'error', 'message' => 'Insert failed: ' . $stmt->error]);
                 $stmt->close();
@@ -108,7 +147,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
         $stmt->close();
 
-        echo json_encode(['status' => 'success', 'message' => 'Product added to cart']);
+        // compute updated cart count
+        $cst = $conn->prepare("SELECT COUNT(*) AS cnt FROM shop_owner_cart_items WHERE cart_id = ?");
+        $updated_count = 0;
+        if ($cst) {
+            $cst->bind_param('i', $cart_id);
+            if ($cst->execute()) {
+                $crs = $cst->get_result();
+                if ($crow = $crs->fetch_assoc()) {
+                    $updated_count = (int)$crow['cnt'];
+                }
+            }
+            $cst->close();
+        }
+
+        echo json_encode(['status' => 'success', 'message' => 'Product added to cart', 'cart_count' => $updated_count]);
         exit;
     }
 
@@ -676,12 +729,41 @@ mysqli_free_result($result);
             currentProduct = null;
         }
 
-        // Modal event handlers
-        document.getElementById('confirmAddCart').onclick = function() {
-            if (!currentProduct) {
-                alert('No product selected');
-                return;
-            }
+                const quantity = parseInt(document.getElementById('cartProductQty').value);
+
+                fetch('', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `action=add_to_cart&user_id=${USER_ID}&product_id=${currentProduct.product_id}&quantity=${quantity}`
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            return res.text().then(text => {
+                                throw new Error(`HTTP error! Status: ${res.status}, Response: ${text}`);
+                            });
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Success: close modal and update cart badge without alert
+                            closeModal('addCartModal');
+                            if (typeof data.cart_count !== 'undefined') {
+                                const cc = document.getElementById('cart-count');
+                                if (cc) cc.textContent = String(data.cart_count);
+                            }
+                        } else {
+                            // Error: show message
+                            alert(data.message || 'Failed to add to cart');
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error adding to cart:', err);
+                        alert('Error adding to cart: ' + err.message);
+                    });
+            };
 
             const quantity = parseInt(document.getElementById('cartProductQty').value);
             const button = this;

@@ -1,17 +1,24 @@
 <?php
 include '../../include/connect-db.php'; // database connection
 
-// Handle status update (Accept/Reject)
+// Handle status update (Accept/Reject/Toggle Working-Pending)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['request_id'])) {
     $action = $_POST['action'];
     $requestId = (int)$_POST['request_id'];
-    if (in_array($action, ['Accept', 'Reject'], true) && $requestId > 0) {
-        $newStatus = $action === 'Accept' ? 'Done' : 'Rejected';
+
+    $allowed = ['Accept', 'Reject', 'SetWorking', 'SetPending'];
+    if (in_array($action, $allowed, true) && $requestId > 0) {
+        if ($action === 'Accept')      $newStatus = 'Done';
+        elseif ($action === 'Reject')  $newStatus = 'Rejected';
+        elseif ($action === 'SetWorking') $newStatus = 'Working';
+        else /* SetPending */             $newStatus = 'Pending';
+
         $stmt = $conn->prepare("UPDATE stock_requests SET status = ?, updated_at = NOW() WHERE request_id = ?");
         $stmt->bind_param('si', $newStatus, $requestId);
         $ok = $stmt->execute();
+
         header('Content-Type: application/json');
-        echo json_encode(['success' => $ok]);
+        echo json_encode(['success' => $ok, 'status' => $newStatus]);
         exit;
     }
     header('Content-Type: application/json');
@@ -21,20 +28,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['req
 
 /*
  Compute requiredSpace from products.unit_space * sr.quantity.
- Make sure the column products.unit_space exists (DECIMAL) as per your previous ALTER.
- If products uses imgurl instead of img_url, switch the column name below.
+ If products uses imgurl instead of img_url, switch below.
 */
 $sql = "SELECT 
     sr.request_id AS id,
     p.name,
     p.category,
-    ROUND(p.unit_space * sr.quantity, 3) AS requiredSpace,   -- computed required space (m³)
-    p.img_url AS image,                                      -- change to p.imgurl if schema uses that
+    ROUND(p.unit_space * sr.quantity, 3) AS requiredSpace,
+    p.img_url AS image,
     sr.quantity,
     sr.requested_at AS requested_at,
     sr.updated_at AS updated_at,
     sr.status,
-    sr.note AS notes,                                        -- note (singular)
+    sr.note AS notes,
     u.full_name AS requester_name
 FROM stock_requests sr
 JOIN products p ON sr.product_id = p.product_id
@@ -493,7 +499,7 @@ while ($row = $result->fetch_assoc()) {
             } else if (sortValue === 'a-z') {
                 filtered.sort((a, b) => a.name.localeCompare(b.name));
             } else if (sortValue === 'request-order') {
-                // First Come, First Serve = oldest requested_at first (ascending)
+                // First placed first: ascending by requested_at
                 filtered.sort((a, b) => new Date(a.requested_at) - new Date(b.requested_at));
             }
 
@@ -582,6 +588,8 @@ while ($row = $result->fetch_assoc()) {
                     const item = items.find(i => i.id == itemId);
                     if (item) {
                         selectedRequestId = item.id;
+
+                        // Populate modal
                         const reqSpaceText = (typeof item.requiredSpace === 'number') ?
                             item.requiredSpace.toFixed(3) + ' m³' :
                             'N/A';
@@ -599,19 +607,44 @@ while ($row = $result->fetch_assoc()) {
 
                         const badge = document.getElementById('modalStatusBadge');
                         const sClass = String(item.status || '').toLowerCase();
-                        badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses[sClass] || 'bg-gray-100 text-gray-800 border border-gray-200'}`;
-                        badge.textContent = item.status || 'N/A';
+                        badge.className = `status-badge ${sClass}`;
+                        badge.textContent = item.status ?? '-';
 
-                        document.getElementById('modalRequester').textContent = item.requester_name || 'N/A';
-                        document.getElementById('modalRequestedAt').textContent = item.requested_at || 'N/A';
-                        document.getElementById('modalName').textContent = item.name || 'N/A';
-                        document.getElementById('modalCategory').textContent = item.category || 'N/A';
-                        document.getElementById('modalQuantity').textContent = item.quantity || 'N/A';
-                        document.getElementById('modalNotes').textContent = item.notes || 'No notes provided';
-                        document.getElementById('modalUpdatedAt').textContent = item.updated_at || 'N/A';
+                        document.getElementById('modalRequester').textContent = item.requester_name ?? '-';
+                        document.getElementById('modalRequestedAt').textContent = item.requested_at ?? '-';
+                        document.getElementById('modalName').textContent = item.name ?? '-';
+                        document.getElementById('modalCategory').textContent = item.category ?? '-';
+                        document.getElementById('modalQuantity').textContent = item.quantity ?? '-';
+                        document.getElementById('modalNotes').textContent = item.notes ?? '-';
+                        document.getElementById('modalUpdatedAt').textContent = item.updated_at ?? '-';
 
-                        modal.classList.remove('hidden');
-                        document.body.style.overflow = 'hidden';
+                        // Set the "In Progress" checkbox based on current status
+                        const inProgress = document.getElementById('inProgressToggle');
+                        inProgress.checked = (String(item.status).toLowerCase() === 'working');
+
+                        modal.style.display = 'block';
+
+                        // Bind once: toggle Working/Pending when checkbox changes
+                        if (!inProgress._bound) {
+                            inProgress._bound = true;
+                            inProgress.addEventListener('change', async () => {
+                                if (!selectedRequestId) return;
+                                const make = inProgress.checked ? 'SetWorking' : 'SetPending';
+                                const updated = await updateRequestStatus(make, selectedRequestId, false);
+                                if (updated) {
+                                    // reflect local state + badge
+                                    const idx = items.findIndex(i => i.id == selectedRequestId);
+                                    if (idx > -1) items[idx].status = inProgress.checked ? 'Working' : 'Pending';
+                                    const cls = inProgress.checked ? 'working' : 'pending';
+                                    badge.className = `status-badge ${cls}`;
+                                    badge.textContent = items.find(i => i.id == selectedRequestId).status;
+                                } else {
+                                    // revert checkbox on failure
+                                    inProgress.checked = !inProgress.checked;
+                                    alert('Failed to update status.');
+                                }
+                            });
+                        }
                     }
                 });
             });
@@ -668,8 +701,7 @@ while ($row = $result->fetch_assoc()) {
                     document.getElementById('requestModal').classList.add('hidden');
                     document.body.style.overflow = 'auto';
                     renderCards();
-                } else {
-                    alert('Failed to update status.');
+                    return true;
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -678,6 +710,7 @@ while ($row = $result->fetch_assoc()) {
                 button.innerHTML = originalText;
                 button.disabled = false;
             }
+            return false;
         }
 
         // Close modal with Escape key

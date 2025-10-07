@@ -279,6 +279,22 @@ $agents_filtered = array_filter($agents, function ($a) use ($search, $area_filte
                 </div>
             <?php endif; ?>
 
+
+            <?php foreach ($agents_filtered as $agent): ?>
+                <a href="one-agent-info.php?id=<?= $agent['id'] ?>" class="bg-white rounded-lg shadow hover:shadow-lg overflow-hidden transition duration-200">
+                    <img src="../../<?= $agent['image'] ?>" alt="<?= htmlspecialchars($agent['name']) ?>" class="w-full h-40 object-cover">
+                    <div class="p-4">
+                        <h2 class="font-bold text-lg"><?= htmlspecialchars($agent['name']) ?></h2>
+                        <p class="text-sm text-gray-500"><?= htmlspecialchars($agent['email']) ?></p>
+                        <p class="text-sm text-gray-500">Phone: <?= htmlspecialchars($agent['phone']) ?></p>
+                        <p class="text-sm text-gray-500">Area: <?= htmlspecialchars($agent['area']) ?></p>
+                        <p class="text-sm text-gray-500">Warehouse: <?= htmlspecialchars($agent['warehouse']) ?></p>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+
+
+            
         </div>
     </section>
 </body>

@@ -157,25 +157,31 @@ $locations = mysqli_fetch_all($locRes, MYSQLI_ASSOC);
                 </div>
             </div>
 
-            <!-- Warehouse Cards -->
-            <div id="warehouseCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 warehouse-grid">
-                <?php foreach ($allwarehouses as $warehouse):
-                    $available = (int)$warehouse['capacity_total'] - (int)$warehouse['capacity_used'];
-                    $derived = $available > 0 ? 'Available' : 'Occupied';
-                    if ($warehouse['status'] === 'Under Maintenance') $derived = 'Under Maintenance';
-                    $usagePercent = $warehouse['capacity_total'] > 0 ? ($warehouse['capacity_used'] / $warehouse['capacity_total']) * 100 : 0;
-                ?>
-                    <div
-                        data-city="<?= htmlspecialchars(strtolower($warehouse['location'])) ?>"
-                        data-capacity-total="<?= (int)$warehouse['capacity_total'] ?>"
-                        data-capacity-used="<?= (int)$warehouse['capacity_used'] ?>"
-                        data-available="<?= max(0, $available) ?>"
-                        data-derived-status="<?= strtolower($derived) ?>"
-                        onclick="window.location.href='manage_warehouse.php?id=<?= $warehouse['warehouse_id'] ?>'"
-                        class="bg-white rounded-xl shadow-md hover:shadow-xl overflow-hidden warehouse-card border border-gray-100 cursor-pointer relative">
-                        
-                        <!-- Status Badge -->
-                        <div class="absolute top-4 right-4">
+        <!-- Warehouse Cards -->
+        <div id="warehouseCards" class="space-y-4">
+            <?php foreach ($allwarehouses as $warehouse):
+                $available = (int)$warehouse['capacity_total'] - (int)$warehouse['capacity_used'];
+                $derived = $available > 0 ? 'Available' : 'Occupied';
+                if ($warehouse['status'] === 'Under Maintenance') $derived = 'Under Maintenance';
+            ?>
+                <div
+                    data-city="<?= htmlspecialchars(strtolower($warehouse['location'])) ?>"
+                    data-capacity-total="<?= (int)$warehouse['capacity_total'] ?>"
+                    data-capacity-used="<?= (int)$warehouse['capacity_used'] ?>"
+                    data-available="<?= max(0, $available) ?>"
+                    data-derived-status="<?= strtolower($derived) ?>"
+                    onclick="window.location.href='manage_warehouse.php?id=<?= $warehouse['warehouse_id'] ?>'"
+                    class="card bg-white rounded-lg shadow-md p-5 transition hover:shadow-lg">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h5 class="text-lg font-semibold text-gray-800"><?= $warehouse['name'] ?></h5>
+                            <p class="text-gray-600"><strong>Location:</strong> <?= $warehouse['location'] ?></p>
+                            <p class="text-gray-600"><strong>Total Capacity:</strong> <?= $warehouse['capacity_total'] ?> ft<sup>2</sup></p>
+                            <p class="text-gray-600"><strong>Used:</strong> <?= $warehouse['capacity_used'] ?> ft<sup>2</sup></p>
+                            <p class="text-gray-600"><strong>Available:</strong> <?= $available ?> ft<sup>2</sup></p>
+                            <p class="text-gray-600"><strong>Type:</strong> <?= $warehouse['type'] ?></p>
+                        </div>
+                        <div>
                             <?php
                             $statusColors = [
                                 'Available' => 'bg-green-100 text-green-800 border border-green-200',
@@ -296,9 +302,9 @@ $locations = mysqli_fetch_all($locRes, MYSQLI_ASSOC);
 
         function isInCapacityRange(card, capacity) {
             const total = parseInt(card.dataset.capacityTotal, 10) || 0;
-            if (capacity === '0 - 1000 sq ft') return total >= 0 && total <= 1000;
-            if (capacity === '1001 - 5000 sq ft') return total >= 1001 && total <= 5000;
-            if (capacity === '5001+ sq ft') return total >= 5001;
+            if (capacity === '0 - 1000 ft\u00B2') return total >= 0 && total <= 1000;
+            if (capacity === '1001 - 5000 ft\u00B2') return total >= 1001 && total <= 5000;
+            if (capacity === '5001+ ft\u00B2') return total >= 5001;
             return true; // 'All'
         }
 
