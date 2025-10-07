@@ -239,7 +239,7 @@ function sanitize($v) { return htmlspecialchars($v ?? "", ENT_QUOTES, 'UTF-8'); 
                     <?php endif; ?>
 
                     <div class="text-center sm:text-left pb-2">
-                        <h1 class="text-2xl font-bold text-gray-900"><?php echo sanitize($user['full_name']); ?></h1>
+                        <h1 class="text-2xl font-bold text-white"><?php echo sanitize($user['full_name']); ?></h1>
                         <p class="text-sm text-gray-600 flex items-center gap-2 justify-center sm:justify-start mt-1">
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                                 🌾 Agricultural Agent

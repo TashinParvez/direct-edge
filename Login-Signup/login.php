@@ -37,6 +37,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // ✅ Redirect based on user role
             if ($user['role'] === 'Agent') {
                 header("Location: ../agent-app/agent-profile.php");
+            } else if ($user['role'] === 'Admin') {
+                header("Location: ../warehouse-app/admin-dashboard/admin-agent-management.php");
             } else {
                 header("Location: profile.php");
             }
