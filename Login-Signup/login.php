@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user = mysqli_fetch_assoc($result);
 
         if (password_verify($password, $user['password'])) {
-            // ✅ Fix user_id mismatch
+            // Store all user info in session
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['full_name'] = $user['full_name'];
             $_SESSION['email'] = $user['email'];
@@ -34,7 +34,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['created_at'] = $user['created_at'];
             $_SESSION['login_time'] = date('Y-m-d H:i:s');
 
-            header("Location: profile.php");
+            // ✅ Redirect based on user role
+            if ($user['role'] === 'Agent') {
+                header("Location: ../agent-app/agent-profile.php");
+            } else {
+                header("Location: profile.php");
+            }
             exit();
         } else {
             $error = "Invalid password!";
