@@ -96,116 +96,282 @@ while ($row = $result->fetch_assoc()) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Manage Warehouse</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Manage Warehouse - Stock Integrated</title>
+    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
+    <link rel="stylesheet" href="../../Include/sidebar.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        .edit-warehouse-btn {
-            transition: background 0.2s;
+        .warehouse-card {
+            transition: all 0.3s ease;
         }
-
-        .edit-warehouse-btn:hover {
-            background: #e0e7ff;
+        .warehouse-card:hover {
+            background-color: #f9fafb;
         }
-
-        .warehouse-edit-icon {
-            cursor: pointer;
+        .product-row {
+            transition: all 0.2s ease;
         }
-
-        .unit-after {
-            margin-left: 6px;
-            color: #4b5563;
-            font-size: 0.9rem;
+        .product-row:hover {
+            background-color: #f3f4f6;
+            transform: translateY(-1px);
+        }
+        .edit-btn {
+            transition: all 0.2s ease;
+        }
+        .edit-btn:hover {
+            transform: scale(1.1);
+        }
+        .modal {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media print {
+            .no-print { display: none !important; }
         }
     </style>
 </head>
 
-<body class="bg-gray-50 p-8">
+<body class="bg-gray-100">
+    <?php include '../../include/Sidebar.php'; ?>
+    
+    <section class="home-section p-0">
+        <div class="flex justify-between items-center p-4">
+            <h1 class="text-2xl font-bold">Manage Warehouse</h1>
+        </div>
 
-    <div class="max-w-5xl mx-auto bg-white shadow rounded-lg p-6 relative">
-        <h1 class="text-3xl font-bold text-blue-700 mb-6">
-            Manage Warehouse: <?= htmlspecialchars($warehouse['name']) ?>
-        </h1>
+        <div class="container mx-auto px-4">
 
-        <!-- Top right warehouse info edit icon -->
-        <span class="absolute top-8 right-8 warehouse-edit-icon" id="warehouseEditIcon" onclick="enableWarehouseEdit()" title="Edit Warehouse">
-            <img width="28" height="28" src="https://img.icons8.com/material-rounded/28/create-new.png" alt="Edit warehouse" />
-        </span>
-        <!-- Top right warehouse info cancel icon (initially hidden) -->
-        <span class="absolute top-8 right-8 warehouse-edit-icon" id="warehouseCancelIcon" onclick="disableWarehouseEdit()" title="Cancel Edit" style="display: none;">
-            <img width="28" height="28" src="https://img.icons8.com/material-rounded/28/cancel.png" alt="Cancel edit" />
-        </span>
-
-        <?php if (!empty($success)): ?>
-            <p class="mb-4 text-green-600 font-semibold"><?= $success ?></p>
-        <?php elseif (!empty($error)): ?>
-            <p class="mb-4 text-red-600 font-semibold"><?= $error ?></p>
-        <?php endif; ?>
-
-        <!-- ====================  Warehouse Info Update  ==================== -->
-        <form id="warehouseForm" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-
-            <!-- 1st Row -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Warehouse Name</label>
-                <input type="text" name="name" value="<?= htmlspecialchars($warehouse['name']) ?>"
-                    class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" readonly>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Location (City)</label>
-                <input type="text" name="location_city" value="<?= htmlspecialchars($warehouse['location']) ?>"
-                    class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" readonly>
-            </div>
-
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700">Type</label>
-                <select name="type" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" disabled>
-                    <option value="Normal" <?= ($warehouse['type'] == 'Normal') ? 'selected' : '' ?>>Normal</option>
-                    <option value="Cold Storage" <?= ($warehouse['type'] == 'Cold Storage') ? 'selected' : '' ?>>Cold Storage</option>
-                    <option value="Hazardous" <?= ($warehouse['type'] == 'Hazardous') ? 'selected' : '' ?>>Hazardous</option>
-                </select>
-            </div>
-
-            <!-- 2nd Row: 4-column grid -->
-            <div class="mb-4 col-span-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Status</label>
-                    <select name="status" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" disabled>
-                        <option value="Active" <?= ($warehouse['status'] == 'Active') ? 'selected' : '' ?>>Active</option>
-                        <option value="Inactive" <?= ($warehouse['status'] == 'Inactive') ? 'selected' : '' ?>>Inactive</option>
-                        <option value="Under Maintenance" <?= ($warehouse['status'] == 'Under Maintenance') ? 'selected' : '' ?>>Under Maintenance</option>
-                    </select>
+            <!-- Warehouse Info Card -->
+            <div class="bg-white shadow-lg rounded-lg p-6 mb-6 warehouse-card relative">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-blue-700 mb-2">
+                            <?= htmlspecialchars($warehouse['name']) ?>
+                        </h2>
+                        <p class="text-gray-600">Warehouse Management</p>
+                    </div>
+                    
+                    <!-- Edit Toggle Button -->
+                    <div class="flex space-x-2">
+                        <button id="warehouseEditIcon" onclick="enableWarehouseEdit()" 
+                            class="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors no-print" 
+                            title="Edit Warehouse">
+                            <i class='bx bx-edit text-lg'></i>
+                        </button>
+                        <button id="warehouseCancelIcon" onclick="disableWarehouseEdit()" 
+                            class="bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 transition-colors no-print" 
+                            title="Cancel Edit" style="display: none;">
+                            <i class='bx bx-x text-lg'></i>
+                        </button>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Total Capacity</label>
-                    <input type="number" name="capacity_total" value="<?= htmlspecialchars($warehouse['capacity_total']) ?>"
-                        class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" readonly>
-                </div>
+                <?php if (!empty($success)): ?>
+                    <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                        <i class='bx bx-check-circle mr-2'></i><?= $success ?>
+                    </div>
+                <?php elseif (!empty($error)): ?>
+                    <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        <i class='bx bx-error-circle mr-2'></i><?= $error ?>
+                    </div>
+                <?php endif; ?>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Filled Capacity</label>
-                    <input type="number" name="capacity_used" value="<?= htmlspecialchars($warehouse['capacity_used']) ?>"
-                        class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" readonly>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Free Capacity</label>
-                    <input type="number" name="capacity_free" value="<?= htmlspecialchars($warehouse['capacity_total'] - $warehouse['capacity_used']) ?>"
-                        class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" readonly>
-                </div>
+                <!-- Warehouse Info Form -->
+                <form id="warehouseForm" method="POST" class="space-y-6">
+                    
+                    <!-- Basic Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-building mr-1'></i>Warehouse Name
+                            </label>
+                            <input type="text" name="name" value="<?= htmlspecialchars($warehouse['name']) ?>"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-map mr-1'></i>Location (City)
+                            </label>
+                            <input type="text" name="location_city" value="<?= htmlspecialchars($warehouse['location']) ?>"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-category mr-1'></i>Type
+                            </label>
+                            <select name="type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" disabled>
+                                <option value="Normal" <?= ($warehouse['type'] == 'Normal') ? 'selected' : '' ?>>Normal</option>
+                                <option value="Cold Storage" <?= ($warehouse['type'] == 'Cold Storage') ? 'selected' : '' ?>>Cold Storage</option>
+                                <option value="Hazardous" <?= ($warehouse['type'] == 'Hazardous') ? 'selected' : '' ?>>Hazardous</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Capacity Info -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-check-circle mr-1'></i>Status
+                            </label>
+                            <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" disabled>
+                                <option value="Active" <?= ($warehouse['status'] == 'Active') ? 'selected' : '' ?>>Active</option>
+                                <option value="Inactive" <?= ($warehouse['status'] == 'Inactive') ? 'selected' : '' ?>>Inactive</option>
+                                <option value="Under Maintenance" <?= ($warehouse['status'] == 'Under Maintenance') ? 'selected' : '' ?>>Under Maintenance</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-cube mr-1'></i>Total Capacity (m³)
+                            </label>
+                            <input type="number" name="capacity_total" value="<?= htmlspecialchars($warehouse['capacity_total']) ?>"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-package mr-1'></i>Used Capacity (m³)
+                            </label>
+                            <input type="number" name="capacity_used" value="<?= htmlspecialchars($warehouse['capacity_used']) ?>"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" readonly>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-layer-plus mr-1'></i>Free Capacity (m³)
+                            </label>
+                            <input type="number" name="capacity_free" value="<?= htmlspecialchars($warehouse['capacity_total'] - $warehouse['capacity_used']) ?>"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50" readonly>
+                        </div>
+                    </div>
+
+                    <!-- Full Address -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class='bx bx-location-plus mr-1'></i>Location (Full Address)
+                        </label>
+                        <textarea name="location_full" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" rows="2" readonly><?= htmlspecialchars($warehouse['location']) ?></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div id="updateWarehouseBtnDiv" style="display: none;" class="no-print">
+                        <button type="submit" name="updateWarehouse"
+                            class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+                            <i class='bx bx-save mr-2'></i>Update Warehouse
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            <!-- 3rd Row: Full Address -->
-            <div class="mb-4 col-span-full">
-                <label class="block text-sm font-medium text-gray-700">Location (Full Address)</label>
-                <textarea name="location_full" class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200" rows="2" readonly><?= htmlspecialchars($warehouse['location']) ?></textarea>
+            <!-- Products Table Card -->
+            <div class="bg-white shadow-lg rounded-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                    <i class='bx bx-package mr-2 text-green-600'></i>Products in this Warehouse
+                </h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume (m³)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider no-print">Edit</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <?php foreach ($productsArray as $row): ?>
+                                <?php
+                                $qty = (float)$row['quantity'];
+                                $unitVol = (float)$row['unit_volume'];
+                                $totalVol = $qty * $unitVol; // m³
+                                ?>
+                                <tr class="product-row">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="h-16 w-16 rounded-lg overflow-hidden">
+                                            <?php if ($row['img_url']): ?>
+                                                <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-16 w-16 object-cover">
+                                            <?php else: ?>
+                                                <div class="h-16 w-16 bg-gray-100 flex items-center justify-center rounded-lg">
+                                                    <i class='bx bx-package text-2xl text-gray-400'></i>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900"><?= htmlspecialchars($row['product_name']) ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900"><?= htmlspecialchars($row['quantity']) ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900"><?= number_format($totalVol, 2) ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900"><?= htmlspecialchars($row['expiry_date']) ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <?php if ($row['request_status'] == 1): ?>
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                <i class='bx bx-check mr-1'></i>Approved
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                <i class='bx bx-time mr-1'></i>Pending
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center no-print">
+                                        <button onclick="openModal('modal-<?= $row['wp_id'] ?>')" 
+                                            class="text-blue-600 hover:text-blue-900 edit-btn">
+                                            <i class='bx bx-edit text-lg'></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
+        </div>
+    </section>
 
-            <!-- Submit Button (initially hidden) -->
-            <div class="col-span-full" id="updateWarehouseBtnDiv" style="display: none;">
-                <button type="submit" name="updateWarehouse"
-                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Update Warehouse</button>
-            </div>
+    <!-- Product Edit Modals -->
+    <?php foreach ($productsArray as $row): ?>
+        <?php
+        $qty = (float)$row['quantity'];
+        $unitVol = (float)$row['unit_volume'];
+        $totalVol = $qty * $unitVol;
+        ?>
+        <div id="modal-<?= $row['wp_id'] ?>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
+            <div class="bg-white w-11/12 md:w-2/3 lg:w-1/2 rounded-lg shadow-lg overflow-hidden modal-content">
+                <div class="flex">
+                    <!-- Left: Product Image -->
+                    <div class="w-1/3 bg-gray-100 p-6 flex items-center justify-center">
+                        <?php if ($row['img_url']): ?>
+                            <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-32 w-32 object-cover rounded-lg">
+                        <?php else: ?>
+                            <div class="h-32 w-32 bg-gray-200 flex items-center justify-center rounded-lg">
+                                <i class='bx bx-package text-4xl text-gray-400'></i>
+                            </div>
+                        <?php endif; ?>
+                    </div>
 
         </form>
 
@@ -331,77 +497,108 @@ while ($row = $result->fetch_assoc()) {
                                     </div>
                                 </form>
                             </div>
-                        </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Total Volume (m³)</label>
+                                <input type="number" step="0.01" id="total-<?= $row['wp_id'] ?>" value="<?= number_format($totalVol, 2, '.', '') ?>" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Date</label>
+                                <input type="date" name="expiry_date" value="<?= htmlspecialchars($row['expiry_date']) ?>" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                <select name="request_status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <option value="1" <?= ($row['request_status'] == 1) ? 'selected' : '' ?>>Approved</option>
+                                    <option value="0" <?= ($row['request_status'] == 0) ? 'selected' : '' ?>>Pending</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex justify-end space-x-3 pt-4">
+                                <button type="button" onclick="closeModal('modal-<?= $row['wp_id'] ?>')" 
+                                    class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit" name="updateProduct" 
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                    <i class='bx bx-save mr-2'></i>Update
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-            <?php endforeach; ?>
-
-            <script>
-                // Modal handlers for products
-                function openModal(id) {
-                    document.getElementById(id).classList.remove('hidden');
-                }
-
-                function closeModal(id) {
-                    document.getElementById(id).classList.add('hidden');
-                }
-
-                // Recalculate total volume per modal when qty/unit changes
-                <?php foreach ($productsArray as $row): ?>
-                        (function() {
-                            const qtyEl = document.getElementById('qty-<?= $row['wp_id'] ?>');
-                            const unitEl = document.getElementById('unit-<?= $row['wp_id'] ?>');
-                            const totalEl = document.getElementById('total-<?= $row['wp_id'] ?>');
-
-                            function recalc() {
-                                const q = parseFloat(qtyEl.value) || 0;
-                                const u = parseFloat(unitEl.value) || 0;
-                                const t = q * u;
-                                totalEl.value = t.toFixed(2);
-                            }
-                            qtyEl.addEventListener('input', recalc);
-                            unitEl.addEventListener('input', recalc);
-                        })();
-                <?php endforeach; ?>
-
-                // Warehouse Info edit handlers
-                function enableWarehouseEdit() {
-                    let form = document.getElementById('warehouseForm');
-                    Array.from(form.elements).forEach(el => {
-                        if (el.name !== "") {
-                            if (el.type === 'select-one') el.disabled = false;
-                            else el.readOnly = false;
-                        }
-                    });
-                    // Show button
-                    document.getElementById('updateWarehouseBtnDiv').style.display = '';
-                    // Hide edit icon, show cancel icon
-                    document.getElementById('warehouseEditIcon').style.display = 'none';
-                    document.getElementById('warehouseCancelIcon').style.display = '';
-                }
-
-                function disableWarehouseEdit() {
-                    let form = document.getElementById('warehouseForm');
-                    Array.from(form.elements).forEach(el => {
-                        if (el.name !== "") {
-                            if (el.type === 'select-one') el.disabled = true;
-                            else el.readOnly = true;
-                        }
-                    });
-                    // Hide button
-                    document.getElementById('updateWarehouseBtnDiv').style.display = 'none';
-                    // Show edit icon, hide cancel icon
-                    document.getElementById('warehouseEditIcon').style.display = '';
-                    document.getElementById('warehouseCancelIcon').style.display = 'none';
-                }
-
-                // Ensure selects stay enabled on submit so values post
-                document.getElementById('warehouseForm').addEventListener('submit', function() {
-                    this.querySelectorAll('select').forEach(s => s.disabled = false);
-                });
-            </script>
+            </div>
         </div>
-    </div>
+    <?php endforeach; ?>
+
+    <script>
+        // Modal handlers for products
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // Recalculate total volume per modal when qty/unit changes
+        <?php foreach ($productsArray as $row): ?>
+            (function() {
+                const qtyEl = document.getElementById('qty-<?= $row['wp_id'] ?>');
+                const unitEl = document.getElementById('unit-<?= $row['wp_id'] ?>');
+                const totalEl = document.getElementById('total-<?= $row['wp_id'] ?>');
+
+                function recalc() {
+                    const q = parseFloat(qtyEl.value) || 0;
+                    const u = parseFloat(unitEl.value) || 0;
+                    const t = q * u;
+                    totalEl.value = t.toFixed(2);
+                }
+                qtyEl.addEventListener('input', recalc);
+                unitEl.addEventListener('input', recalc);
+            })();
+        <?php endforeach; ?>
+
+        // Warehouse Info edit handlers
+        function enableWarehouseEdit() {
+            let form = document.getElementById('warehouseForm');
+            Array.from(form.elements).forEach(el => {
+                if (el.name !== "") {
+                    if (el.type === 'select-one') el.disabled = false;
+                    else el.readOnly = false;
+                }
+            });
+            // Show button
+            document.getElementById('updateWarehouseBtnDiv').style.display = '';
+            // Hide edit icon, show cancel icon
+            document.getElementById('warehouseEditIcon').style.display = 'none';
+            document.getElementById('warehouseCancelIcon').style.display = '';
+        }
+
+        function disableWarehouseEdit() {
+            let form = document.getElementById('warehouseForm');
+            Array.from(form.elements).forEach(el => {
+                if (el.name !== "") {
+                    if (el.type === 'select-one') el.disabled = true;
+                    else el.readOnly = true;
+                }
+            });
+            // Hide button
+            document.getElementById('updateWarehouseBtnDiv').style.display = 'none';
+            // Show edit icon, hide cancel icon
+            document.getElementById('warehouseEditIcon').style.display = '';
+            document.getElementById('warehouseCancelIcon').style.display = 'none';
+        }
+
+        // Ensure selects stay enabled on submit so values post
+        document.getElementById('warehouseForm').addEventListener('submit', function() {
+            this.querySelectorAll('select').forEach(s => s.disabled = false);
+        });
+    </script>
 </body>
 
 </html>
