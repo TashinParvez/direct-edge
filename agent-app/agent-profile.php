@@ -133,7 +133,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
             $stmt->execute();
             $agent_info = $stmt->get_result()->fetch_assoc();
             $stmt->close();
-
         } catch (Exception $e) {
             mysqli_rollback($conn);
             $message = "Update failed: " . $e->getMessage();
@@ -174,10 +173,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
 
 mysqli_close($conn);
 
-function sanitize($v) { return htmlspecialchars($v ?? "", ENT_QUOTES, 'UTF-8'); }
+function sanitize($v)
+{
+    return htmlspecialchars($v ?? "", ENT_QUOTES, 'UTF-8');
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -185,6 +188,7 @@ function sanitize($v) { return htmlspecialchars($v ?? "", ENT_QUOTES, 'UTF-8'); 
     <link rel="icon" type="image/x-icon" href="../Logo/Favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-50">
     <!-- Navigation -->
     <nav class="bg-white border-b border-gray-200 shadow-sm">
@@ -218,11 +222,11 @@ function sanitize($v) { return htmlspecialchars($v ?? "", ENT_QUOTES, 'UTF-8'); 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Status Message -->
         <?php if ($message): ?>
-        <div class="mb-6 rounded-lg p-4 <?php echo $success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'; ?>">
-            <p class="<?php echo $success ? 'text-green-800' : 'text-red-800'; ?> text-sm font-medium">
-                <?php echo sanitize($message); ?>
-            </p>
-        </div>
+            <div class="mb-6 rounded-lg p-4 <?php echo $success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'; ?>">
+                <p class="<?php echo $success ? 'text-green-800' : 'text-red-800'; ?> text-sm font-medium">
+                    <?php echo sanitize($message); ?>
+                </p>
+            </div>
         <?php endif; ?>
 
         <!-- Profile Header -->
@@ -245,9 +249,9 @@ function sanitize($v) { return htmlspecialchars($v ?? "", ENT_QUOTES, 'UTF-8'); 
                                 🌾 Agricultural Agent
                             </span>
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
-                                <?php 
+                                <?php
                                 $status = $agent_info['status'] ?? 'Pending';
-                                echo match($status) {
+                                echo match ($status) {
                                     'Approved' => 'bg-green-100 text-green-700',
                                     'Rejected' => 'bg-red-100 text-red-700',
                                     default => 'bg-yellow-100 text-yellow-700'
@@ -257,7 +261,7 @@ function sanitize($v) { return htmlspecialchars($v ?? "", ENT_QUOTES, 'UTF-8'); 
                             </span>
                         </p>
                         <p class="text-xs text-gray-500 mt-2">
-                            📍 <?php echo sanitize($agent_info['region'] ?? 'N/A'); ?> • 
+                            📍 <?php echo sanitize($agent_info['region'] ?? 'N/A'); ?> •
                             Member since <?php echo date('F Y', strtotime($user['created_at'])); ?>
                         </p>
                     </div>
@@ -323,9 +327,13 @@ function sanitize($v) { return htmlspecialchars($v ?? "", ENT_QUOTES, 'UTF-8'); 
                         <a href="orders.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
                             📦 Orders
                         </a>
+                        <a href="agent-farmer-dashboard.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border">
+                            🌾 Manage Farmers
+                        </a>
                         <a href="support.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
                             📞 Contact Support
                         </a>
+
                     </div>
                 </div>
             </aside>
@@ -448,4 +456,5 @@ function sanitize($v) { return htmlspecialchars($v ?? "", ENT_QUOTES, 'UTF-8'); 
         </div>
     </main>
 </body>
+
 </html>
