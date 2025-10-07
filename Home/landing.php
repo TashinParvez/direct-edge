@@ -32,12 +32,8 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button class="bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
-                        Get Started
-                    </button>
-                    <button class="text-green-600 border border-green-600 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition-colors">
-                        Login
-                    </button>
+                    <a href="../Login-Signup/login.php" class="bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">Get started</a>
+                    <a href="../Login-Signup/login.php" class="text-green-600 border border-green-600 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition-colors">Login</a>
                 </div>
             </div>
         </div>
