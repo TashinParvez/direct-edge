@@ -8,12 +8,138 @@ require_once(__DIR__ . "/lib/SslCommerzNotification.php");
 
 use SslCommerz\SslCommerzNotification;
 
-$requestData = (array) json_decode($_POST['cart_json']);
+// Accept data from SSLCommerz embed: either 'cart_json', 'postdata' or raw POST fields
+$requestData = [];
+if (isset($_POST['cart_json'])) {
+    $decoded = json_decode($_POST['cart_json'], true);
+    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+        $requestData = $decoded;
+    }
+} elseif (isset($_POST['postdata'])) {
+    $decoded = json_decode($_POST['postdata'], true);
+    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+        $requestData = $decoded;
+    } else {
+        $requestData = $_POST; // fallback
+    }
+} else {
+    $requestData = $_POST;
+}
 
-// $post_data['total_amount'] = $requestData['amount'];
-$post_data['total_amount'] = 9500;
+// Insert into orders and billing_info tables
+include '../../include/connect-db.php';
+session_start();
+$user_id = $_SESSION['user_id'] ?? 2; // Default to 2 if not set
+
+$grand_total = (float)($requestData['amount'] ?? 0);
+$full_name = $requestData['shopName'] ?? ($requestData['shop_name'] ?? '');
+$billing_address = $requestData['address'] ?? ($requestData['cus_addr1'] ?? '');
+$shipping_address = $requestData['shippingAddress'] ?? ($requestData['address'] ?? '');
+$notes = $requestData['notes'] ?? '';
+$tax_id = $requestData['taxId'] ?? '';
+$state = $requestData['state'] ?? '';
+$country = $requestData['country'] ?? '';
+$zip = $requestData['zip'] ?? '';
+
+$billing_address_full = $billing_address . ', ' . $state . ', ' . $country . ' ' . $zip;
+$shipping_address_full = $shipping_address . ', ' . $state . ', ' . $country . ' ' . $zip;
+
+// Insert into orders first
+mysqli_begin_transaction($conn);
+
+try {
+    $order_insert = mysqli_prepare($conn, "INSERT INTO orders (shopowner_id, total_amount, status, payment_status) VALUES (?, ?, 'Pending', 'Pending')");
+    mysqli_stmt_bind_param($order_insert, "id", $user_id, $grand_total);
+    if (!mysqli_stmt_execute($order_insert)) {
+        throw new Exception('Error inserting into orders: ' . mysqli_error($conn));
+    }
+    $order_id = mysqli_insert_id($conn);
+
+    // Now insert into billing_info
+    $stmt = mysqli_prepare($conn, "INSERT INTO billing_info (user_id, order_id, shop_owener_name, billing_address, shipping_address, special_nstructions, tax_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    mysqli_stmt_bind_param($stmt, "iisssss", $user_id, $order_id, $full_name, $billing_address_full, $shipping_address_full, $notes, $tax_id);
+    if (!mysqli_stmt_execute($stmt)) {
+        throw new Exception("Error inserting billing info: " . mysqli_error($conn));
+    }
+
+    // Fetch items from the current active cart for this user
+    $cart_list_sql = "SELECT cart_id FROM shop_owner_cart_list WHERE user_id = ? AND status = 'active' ORDER BY updated_at DESC LIMIT 1";
+    $cart_list_stmt = mysqli_prepare($conn, $cart_list_sql);
+    mysqli_stmt_bind_param($cart_list_stmt, 'i', $user_id);
+    mysqli_stmt_execute($cart_list_stmt);
+    $cart_list_rs = mysqli_stmt_get_result($cart_list_stmt);
+    $cart_list_row = mysqli_fetch_assoc($cart_list_rs);
+    mysqli_stmt_close($cart_list_stmt);
+
+    if (!$cart_list_row) {
+        throw new Exception('No active cart found.');
+    }
+    $cart_id = (int)$cart_list_row['cart_id'];
+
+    $cart_sql = "SELECT ci.product_id, ci.quantity, COALESCE(ci.price_at_time, p.price) AS unit_price
+                 FROM shop_owner_cart_items ci
+                 LEFT JOIN products p ON p.product_id = ci.product_id
+                 WHERE ci.cart_id = ?";
+    $cart_stmt = mysqli_prepare($conn, $cart_sql);
+    mysqli_stmt_bind_param($cart_stmt, 'i', $cart_id);
+    mysqli_stmt_execute($cart_stmt);
+    $cart_rs = mysqli_stmt_get_result($cart_stmt);
+
+    $hasItems = false;
+    $ins_item = mysqli_prepare($conn, "INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)");
+    while ($ci = mysqli_fetch_assoc($cart_rs)) {
+        // Skip if product_id not present or quantity invalid
+        if (empty($ci['product_id']) || (int)$ci['quantity'] <= 0) {
+            continue;
+        }
+        $hasItems = true;
+        $pid = (int)$ci['product_id'];
+        $qty = (int)$ci['quantity'];
+        $unit = (float)$ci['unit_price'];
+        mysqli_stmt_bind_param($ins_item, 'iiid', $order_id, $pid, $qty, $unit);
+        if (!mysqli_stmt_execute($ins_item)) {
+            throw new Exception('Error inserting order item: ' . mysqli_error($conn));
+        }
+    }
+    mysqli_stmt_close($cart_stmt);
+    mysqli_stmt_close($ins_item);
+
+    if (!$hasItems) {
+        throw new Exception('Cart is empty. Cannot place order.');
+    }
+
+    // Clear items and mark cart as ordered after creating order items
+    $clr = mysqli_prepare($conn, "DELETE FROM shop_owner_cart_items WHERE cart_id=?");
+    mysqli_stmt_bind_param($clr, 'i', $cart_id);
+    if (!mysqli_stmt_execute($clr)) {
+        throw new Exception('Failed to clear cart items: ' . mysqli_error($conn));
+    }
+    mysqli_stmt_close($clr);
+
+    $mark = mysqli_prepare($conn, "UPDATE shop_owner_cart_list SET status='ordered', updated_at=CURRENT_TIMESTAMP WHERE cart_id=?");
+    mysqli_stmt_bind_param($mark, 'i', $cart_id);
+    if (!mysqli_stmt_execute($mark)) {
+        throw new Exception('Failed to mark cart as ordered: ' . mysqli_error($conn));
+    }
+    mysqli_stmt_close($mark);
+
+    mysqli_commit($conn);
+} catch (Exception $e) {
+    mysqli_rollback($conn);
+    http_response_code(400);
+    die($e->getMessage());
+}
+
+// SSLCommerz payment processing
+$post_data['total_amount'] = $grand_total;
 $post_data['currency'] = "BDT";
 $post_data['tran_id'] = "SSLCZ_TEST_" . uniqid();
+
+// Update the order with the transaction ID
+$update_tran_id_sql = "UPDATE orders SET tran_id = ? WHERE order_id = ?";
+$update_stmt = mysqli_prepare($conn, $update_tran_id_sql);
+mysqli_stmt_bind_param($update_stmt, "si", $post_data['tran_id'], $order_id);
+mysqli_stmt_execute($update_stmt);
 
 //# CUSTOMER INFORMATION
 $post_data['cus_name'] = isset($requestData['cus_name']) ? $requestData['cus_name'] : "John Doe";
@@ -140,8 +266,8 @@ $post_data["num_of_item"] = "1";
 // if ($conn_integration->query($sql) === TRUE) {
 
 //     # Call the Payment Gateway Library
-    $sslcz = new SslCommerzNotification();
-    $sslcz->makePayment($post_data, 'checkout', 'plain');
+$sslcz = new SslCommerzNotification();
+$sslcz->makePayment($post_data, 'checkout', 'plain');
 // } else {
 //     echo "Error: " . $sql . "<br>" . $conn_integration->error;
 // }

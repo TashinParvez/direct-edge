@@ -2,21 +2,25 @@
 // Connect database
 include '../include/connect-db.php'; // Database connection
 
+
 // Pagination
 $records_per_page = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $records_per_page;
+
 
 // Search functionality
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 $search_condition = '';
 $search_params = [];
 
+
 if (!empty($search)) {
     $search_condition = "WHERE full_name LIKE ? OR contact_number LIKE ? OR crops_cultivated LIKE ?";
     $search_term = "%$search%";
     $search_params = [$search_term, $search_term, $search_term];
 }
+
 
 // Get total records for pagination
 $count_sql = "SELECT COUNT(*) as total FROM farmers $search_condition";
@@ -28,18 +32,22 @@ $count_stmt->execute();
 $total_records = $count_stmt->get_result()->fetch_assoc()['total'];
 $total_pages = ceil($total_records / $records_per_page);
 
+
 // Check if created_at column exists
 $columns_query = "SHOW COLUMNS FROM farmers LIKE 'created_at'";
 $has_created_at = $conn->query($columns_query)->num_rows > 0;
+
 
 // Get farmers data - adjust query based on column existence
 $select_columns = "id, full_name, contact_number, farmer_type, crops_cultivated, land_size, profile_picture";
 $order_by = "ORDER BY id DESC"; // Default ordering by id
 
+
 if ($has_created_at) {
     $select_columns .= ", created_at";
     $order_by = "ORDER BY created_at DESC";
 }
+
 
 $sql = "SELECT $select_columns 
         FROM farmers $search_condition 
@@ -47,15 +55,18 @@ $sql = "SELECT $select_columns
         LIMIT ? OFFSET ?";
 $stmt = $conn->prepare($sql);
 
+
 if (!empty($search_params)) {
     $stmt->bind_param("ssii", ...[...$search_params, $records_per_page, $offset]);
 } else {
     $stmt->bind_param("ii", $records_per_page, $offset);
 }
 
+
 $stmt->execute();
 $result = $stmt->get_result();
 $farmers = $result->fetch_all(MYSQLI_ASSOC);
+
 
 $stmt->close();
 $conn->close();
@@ -63,96 +74,184 @@ $conn->close();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <title>Farmers Directory - Stock Integrated</title>
+    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
+    <link rel="stylesheet" href="../Include/sidebar.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmers Directory</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .farmer-card {
+            transition: all 0.3s ease;
+        }
+        .farmer-card:hover {
+            background-color: #f9fafb;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .search-container {
+            transition: all 0.3s ease;
+        }
+        .search-container:hover {
+            background-color: #f9fafb;
+        }
+        .profile-image {
+            transition: all 0.3s ease;
+        }
+        .profile-image:hover {
+            transform: scale(1.1);
+        }
+        .pagination-btn {
+            transition: all 0.2s ease;
+        }
+        .pagination-btn:hover {
+            transform: translateY(-1px);
+        }
+        .empty-state {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .farmer-grid {
+            animation: staggerIn 0.6s ease-out;
+        }
+        @keyframes staggerIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media print {
+            .no-print { display: none !important; }
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
-    <div class="px-8 md:px-16 lg:px-24 xl:px-32 2xl:px-40">
-        <div class="max-w-6xl mx-auto px-12 py-4">
+<body class="bg-gray-100">
+    <?php include '../Include/Sidebar.php'; ?>
+    
+    <section class="home-section p-0">
+        <div class="flex justify-between items-center p-4">
+            <h1 class="text-2xl font-bold">Farmers Directory</h1>
+            <a href="add-farmers-info.php" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                <i class='bx bx-plus'></i> Add Farmer
+            </a>
+        </div>
 
-            <!-- Search Bar and Add Button - Horizontal Layout -->
-            <div class="bg-white rounded-lg shadow-sm p-3 mb-4">
+        <div class="container mx-auto px-4">
+
+            <!-- Search Bar Container -->
+            <div class="bg-white shadow-md rounded-lg p-4 mb-6 search-container">
                 <form method="GET" class="flex items-center gap-3">
                     <div class="flex-grow">
                         <input type="text" 
                                name="search" 
                                value="<?php echo htmlspecialchars($search); ?>"
-                               placeholder="Search farmers..." 
-                               class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:outline-none text-sm">
+                               placeholder="Search farmers by name, phone, or crops..." 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                     </div>
-                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
-                        <i class="fas fa-search"></i>
+                    <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">
+                        <i class='bx bx-search'></i>
                     </button>
                     <?php if (!empty($search)): ?>
-                        <a href="farmers-list.php" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition text-sm">
-                            <i class="fas fa-times"></i>
+                        <a href="farmers-list.php" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors">
+                            <i class='bx bx-x'></i>
                         </a>
                     <?php endif; ?>
-                    <a href="add-farmers-info.php" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition text-sm">
-                        <i class="fas fa-plus mr-1"></i>Add Farmer
-                    </a>
                 </form>
             </div>
 
-            <!-- Farmers Grid -->
+            <!-- Results Summary -->
+            <?php if (!empty($search)): ?>
+                <div class="mb-4 text-sm text-gray-600">
+                    <?php echo $total_records; ?> farmer<?php echo $total_records != 1 ? 's' : ''; ?> found for "<?php echo htmlspecialchars($search); ?>"
+                </div>
+            <?php endif; ?>
+
+            <!-- Farmers Grid or Empty State -->
             <?php if (empty($farmers)): ?>
-                <div class="bg-white rounded-lg shadow-md p-8 text-center">
-                    <i class="fas fa-users text-gray-300 text-6xl mb-4"></i>
+                <div class="bg-white shadow-lg rounded-lg p-8 text-center empty-state">
+                    <i class='bx bx-group text-gray-300 text-6xl mb-4'></i>
                     <h3 class="text-xl font-semibold text-gray-600 mb-2">No farmers found</h3>
-                    <p class="text-gray-500 mb-4">
-                        <?php echo !empty($search) ? 'Try adjusting your search terms.' : 'Start by adding your first farmer.'; ?>
+                    <p class="text-gray-500 mb-6">
+                        <?php echo !empty($search) ? 'Try adjusting your search terms or browse all farmers.' : 'Start by adding your first farmer to the directory.'; ?>
                     </p>
-                    <a href="add-farmers-info.php" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
-                        <i class="fas fa-plus mr-2"></i>Add First Farmer
-                    </a>
+                    <div class="flex justify-center space-x-3">
+                        <a href="add-farmers-info.php" class="bg-green-500 text-white px-6 py-3 rounded hover:bg-green-600 transition-colors">
+                            <i class='bx bx-plus mr-2'></i>Add First Farmer
+                        </a>
+                        <?php if (!empty($search)): ?>
+                            <a href="farmers-list.php" class="bg-gray-500 text-white px-6 py-3 rounded hover:bg-gray-600 transition-colors">
+                                <i class='bx bx-list-ul mr-2'></i>View All Farmers
+                            </a>
+                        <?php endif; ?>
+                    </div>
                 </div>
             <?php else: ?>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 farmer-grid">
                     <?php foreach ($farmers as $farmer): ?>
-                        <!-- Clickable Card -->
+                        <!-- Clickable Farmer Card -->
                         <a href="farmer-profile.php?id=<?php echo $farmer['id']; ?>" 
-                           class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 p-4 block cursor-pointer transform hover:scale-105">
+                           class="bg-white rounded-lg shadow-md hover:shadow-lg p-6 block cursor-pointer farmer-card">
 
                             <!-- Profile Picture -->
-                            <div class="text-center mb-3">
+                            <div class="text-center mb-4">
                                 <?php if ($farmer['profile_picture'] && file_exists($farmer['profile_picture'])): ?>
                                     <img src="<?php echo htmlspecialchars($farmer['profile_picture']); ?>" 
                                          alt="<?php echo htmlspecialchars($farmer['full_name']); ?>" 
-                                         class="w-16 h-16 rounded-full mx-auto object-cover border border-green-200">
+                                         class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-green-200 profile-image">
                                 <?php else: ?>
-                                    <div class="w-16 h-16 bg-green-200 rounded-full mx-auto flex items-center justify-center">
-                                        <i class="fas fa-user text-lg text-green-600"></i>
+                                    <div class="w-16 h-16 bg-green-200 rounded-full mx-auto flex items-center justify-center profile-image">
+                                        <i class='bx bx-user text-2xl text-green-600'></i>
                                     </div>
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Farmer Info -->
+                            <!-- Farmer Information -->
                             <div class="text-center">
-                                <h3 class="text-base font-semibold text-gray-800 mb-3">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-3">
                                     <?php echo htmlspecialchars($farmer['full_name']); ?>
                                 </h3>
+                                
                                 <div class="space-y-2 text-sm text-gray-600">
                                     <p class="flex items-center justify-center">
-                                        <i class="fas fa-phone mr-2 text-green-600"></i>
+                                        <i class='bx bx-phone mr-2 text-green-600'></i>
                                         <?php echo htmlspecialchars($farmer['contact_number']); ?>
                                     </p>
+                                    
                                     <p class="flex items-center justify-center">
-                                        <i class="fas fa-tag mr-2 text-green-600"></i>
+                                        <i class='bx bx-category mr-2 text-green-600'></i>
                                         <?php echo htmlspecialchars($farmer['farmer_type']); ?> Farmer
                                     </p>
+                                    
                                     <?php if ($farmer['land_size']): ?>
                                         <p class="flex items-center justify-center">
-                                            <i class="fas fa-map mr-2 text-green-600"></i>
-                                            <?php echo $farmer['land_size']; ?> acres
+                                            <i class='bx bx-map mr-2 text-green-600'></i>
+                                            <?php echo $farmer['land_size']; ?> acres/bigha
+                                        </p>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($farmer['crops_cultivated']): ?>
+                                        <p class="flex items-center justify-center text-xs">
+                                            <i class='bx bx-leaf mr-2 text-green-600'></i>
+                                            <?php echo htmlspecialchars(substr($farmer['crops_cultivated'], 0, 20)) . (strlen($farmer['crops_cultivated']) > 20 ? '...' : ''); ?>
                                         </p>
                                     <?php endif; ?>
                                 </div>
+
+                                <!-- Registration Date if available -->
+                                <?php if ($has_created_at && isset($farmer['created_at'])): ?>
+                                    <div class="mt-3 pt-3 border-t border-gray-100">
+                                        <p class="text-xs text-gray-400 flex items-center justify-center">
+                                            <i class='bx bx-calendar mr-1'></i>
+                                            Joined <?php echo date('M Y', strtotime($farmer['created_at'])); ?>
+                                        </p>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </a>
                     <?php endforeach; ?>
@@ -160,12 +259,12 @@ $conn->close();
 
                 <!-- Pagination -->
                 <?php if ($total_pages > 1): ?>
-                    <div class="mt-6 flex justify-center">
+                    <div class="mt-8 flex justify-center">
                         <nav class="flex space-x-2">
                             <?php if ($page > 1): ?>
                                 <a href="?page=<?php echo ($page-1); ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>" 
-                                   class="px-3 py-2 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">
-                                    <i class="fas fa-chevron-left"></i>
+                                   class="px-3 py-2 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 pagination-btn">
+                                    <i class='bx bx-chevron-left'></i>
                                 </a>
                             <?php endif; ?>
 
@@ -175,15 +274,15 @@ $conn->close();
 
                             for ($i = $start_page; $i <= $end_page; $i++): ?>
                                 <a href="?page=<?php echo $i; ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>" 
-                                   class="px-3 py-2 border rounded text-sm <?php echo ($i == $page) ? 'bg-green-600 text-white border-green-600' : 'bg-white border-gray-300 hover:bg-gray-50'; ?>">
+                                   class="px-3 py-2 border rounded text-sm pagination-btn <?php echo ($i == $page) ? 'bg-green-500 text-white border-green-500' : 'bg-white border-gray-300 hover:bg-gray-50'; ?>">
                                     <?php echo $i; ?>
                                 </a>
                             <?php endfor; ?>
 
                             <?php if ($page < $total_pages): ?>
                                 <a href="?page=<?php echo ($page+1); ?><?php echo !empty($search) ? '&search='.urlencode($search) : ''; ?>" 
-                                   class="px-3 py-2 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50">
-                                    <i class="fas fa-chevron-right"></i>
+                                   class="px-3 py-2 bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 pagination-btn">
+                                    <i class='bx bx-chevron-right'></i>
                                 </a>
                             <?php endif; ?>
                         </nav>
@@ -192,13 +291,14 @@ $conn->close();
                     <div class="mt-4 text-center text-sm text-gray-600">
                         Showing <?php echo (($page-1) * $records_per_page + 1); ?> to 
                         <?php echo min($page * $records_per_page, $total_records); ?> of 
-                        <?php echo $total_records; ?> farmers
+                        <?php echo $total_records; ?> farmer<?php echo $total_records != 1 ? 's' : ''; ?>
                     </div>
                 <?php endif; ?>
 
             <?php endif; ?>
 
         </div>
-    </div>
+    </section>
 </body>
+
 </html>

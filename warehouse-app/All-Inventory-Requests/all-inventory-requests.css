@@ -4,6 +4,20 @@
   padding: 20px;
 }
 
+/* Page container to prevent full-bleed header/search */
+.page-container {
+  max-width: clamp(1200px, 95vw, 1680px);
+  margin: 0 auto;
+  padding: 0 12px;
+}
+
+.page-container h1 {
+  margin: 8px 0 16px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 /* Search bar */
 .search-container {
   position: relative;
@@ -19,12 +33,13 @@
   padding: 10px 40px 10px 10px;
   font-size: 16px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 8px;
+  background: #fff;
 }
 
 .search-icon {
   position: absolute;
-  right: 10px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 20px;
@@ -40,23 +55,25 @@
 /* Main container */
 .main-container {
   display: flex;
+  gap: 20px;
 }
 
 .filter-column {
   width: 20%;
-  padding-right: 20px;
+  padding-right: 0;
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
   padding: 15px;
 }
 
 .cards-column {
   width: 80%;
-  padding-left: 20px;
+  padding-left: 0;
 }
 
+/* Filters */
 .filter-group {
   margin-bottom: 20px;
 }
@@ -73,11 +90,12 @@
 }
 
 .filter-group input[type="number"] {
-  width: 80px;
+  width: 100px;
   padding: 8px;
   border: 1px solid #ccc;
-  border-radius: 4px;
-  margin-right: 5px;
+  border-radius: 6px;
+  margin: 0 5px;
+  background: #fff;
 }
 
 input[type="number"]::-webkit-outer-spin-button,
@@ -99,74 +117,90 @@ input[type="number"] {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  padding: 12px 15px;
 }
 
 .all-products-header h2 {
   margin: 0;
+  font-size: 18px;
 }
 
 .dropdown {
   padding: 8px;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 6px;
   margin-left: 10px;
+  background: #fff;
 }
 
 .label-text {
   margin-right: 5px;
 }
 
-/* Products container */
+/* Products container: ALWAYS two cards per row */
 .products-container {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.product-row {
-  display: flex;
-  align-items: center;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  padding: 15px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  box-sizing: border-box;
-  height: auto;
+/* Card layout (balanced with Tailwind-like look but in CSS) */
+.product-card .card-inner {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-.product-row img {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+.product-card .card-inner:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.product-card .card-left img {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
   object-fit: cover;
-  margin-right: 15px;
+  border: 1px solid #e5e7eb;
 }
 
-.product-info {
-  flex: 1;
+.product-card .card-inner {
   display: flex;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.product-card .card-right {
+  flex: 1;
+}
+
+.product-card .card-title-row {
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
 }
 
-.product-info h3 {
-  font-size: 16px;
+.product-card h3 {
   margin: 0;
-  flex: 0 0 100%;
+  font-size: 16px;
+  color: #111827;
 }
 
-.product-info span {
+.product-card .card-meta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3px;
+  margin-top: 6px;
   font-size: 14px;
+  color: #374151;
 }
 
 .view-details-link {
@@ -175,7 +209,7 @@ input[type="number"] {
   color: forestgreen;
   text-decoration: underline;
   cursor: pointer;
-  margin-left: auto;
+  margin-top: 10px;
   background: none;
   padding: 0;
   border: none;
@@ -198,7 +232,7 @@ input[type="number"] {
   background: #007bff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -226,29 +260,30 @@ input[type="number"] {
 
 .modal-content {
   background-color: white;
-  margin: 15% auto;
+  margin: 10% auto;
   padding: 20px;
   border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   width: 85%;
-  max-width: 550px;
+  max-width: 600px;
   position: relative;
 }
 
 .modal-content h2 {
   margin-top: 0;
-  margin-bottom: 15px;
+  margin-bottom: 8px;
   font-size: 18px;
 }
 
 .modal-content img {
   width: 100px;
   height: 100px;
-  border-radius: 50%;
+  border-radius: 10px;
   object-fit: cover;
   margin-right: 15px;
   float: left;
+  border: 1px solid #e5e7eb;
 }
 
 .modal-details {
@@ -256,7 +291,7 @@ input[type="number"] {
 }
 
 .modal-details p {
-  margin: 5px 0;
+  margin: 6px 0;
   font-size: 16px;
 }
 
@@ -269,7 +304,7 @@ input[type="number"] {
   padding: 8px 15px;
   margin-left: 10px;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -283,17 +318,6 @@ input[type="number"] {
   color: white;
 }
 
-.modal-buttons .switch-branch {
-  color: forestgreen;
-  text-decoration: underline;
-  background: none;
-  padding: 0;
-  margin-left: 20px;
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-}
-
 .close-modal {
   position: absolute;
   top: 10px;
@@ -303,4 +327,61 @@ input[type="number"] {
   color: #888;
   border: none;
   background: none;
+}
+
+/* Status badge styles */
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  color: #fff;
+}
+
+.status-badge.pending {
+  background: #f59e0b;
+}
+.status-badge.done {
+  background: #10b981;
+}
+.status-badge.rejected {
+  background: #ef4444;
+}
+.status-badge.working {
+  background: #3b82f6;
+}
+
+/* Status chip for cards */
+.status-chip {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.1;
+}
+.status-chip.pending {
+  background: #f59e0b;
+}
+.status-chip.done {
+  background: #10b981;
+}
+.status-chip.rejected {
+  background: #ef4444;
+}
+.status-chip.working {
+  background: #3b82f6;
+}
+
+/* Modal header layout helpers */
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 13px;
 }
