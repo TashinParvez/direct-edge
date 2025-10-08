@@ -245,6 +245,12 @@ $conn->close();
                     <a href="login.php" class="text-green-600 hover:underline">Log in</a>
                 </p>
 
+                <p class="text-center text-sm text-gray-600 mt-4">
+                    Want to join as an agricultural agent?
+                    <a href="../agent-app/become-agent.php" class="text-green-600 hover:underline font-semibold">Become an Agent →</a>
+                </p>
+
+
             </form>
         </div>
     </div>

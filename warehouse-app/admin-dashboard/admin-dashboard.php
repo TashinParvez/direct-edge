@@ -352,6 +352,12 @@ $activity_logs = [
                     Warehouse Status
                 </button>
 
+                <button
+                    class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
+                    onclick="window.location.href='admin-agent-management.php'">
+                    Agent Management
+                </button>
+
 
             </div>
         </header>
