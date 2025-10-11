@@ -1,3 +1,30 @@
+<?php
+include __DIR__ . '/../include/connect-db.php'; // Database connection
+
+session_start();
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+}
+
+$name = '';
+
+$stmt = $conn->prepare('SELECT full_name FROM users WHERE user_id = ? LIMIT 1');
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$stmt->bind_result($name);
+$stmt->fetch();
+
+$stmt->close();
+
+// Take only first name from full_name
+if (!empty($name)) {
+    $name = explode(' ', trim($name))[0];
+}
+
+// echo $user_id;
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -24,7 +51,7 @@
         /* Mega menu width and position */
         .mega-menu {
             width: 900px;
-            left: -650px;
+            left: -700px;
         }
 
         /* Hide scroll on search suggestions */
@@ -45,7 +72,7 @@
             <div class="w-full flex items-center justify-between py-2 relative">
                 <!-- Logo -->
                 <a class="flex items-center" href="/Home/Homepage.php">
-                    <img src="nav.jpg" alt="Logo" class="h-24 w-24 object-contain absolute left-0 top-0 z-50">
+                    <img src="../assets/Logo/logo.png" alt="Logo" class="h-24 w-24 object-contain absolute left-0 top-0 z-50">
                 </a>
 
                 <!-- Search Bar -->
@@ -75,11 +102,19 @@
                 </form>
 
                 <!-- Login / Signup -->
-                <div class="ml-auto flex items-center space-x-2 absolute right-4">
-                    <a href="../../Login SignUp/Login.php" class="text-black hover:text-green-600 text-sm">Login</a>
-                    <span>|</span>
-                    <a href="../../Login SignUp/Signup.php" class="text-black hover:text-green-600 text-sm">Sign Up</a>
-                </div>
+                <?php if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])): ?>
+                    <div class="ml-auto flex items-center space-x-2 absolute right-4">
+                        <span> <a href="../Login-Signup/profile.php" class="text-black hover:text-green-600 text-sm font-semibold"><?php echo htmlspecialchars($name); ?></a></span>
+                        <span>|</span>
+                        <a href="../Login-Signup/logout.php" class="text-black hover:text-green-600 text-sm font-semibold">Logout</a>
+                    </div>
+                <?php else: ?>
+                    <div class="ml-auto flex items-center space-x-2 absolute right-4">
+                        <a href="../Login-Signup/login.php" class="text-black hover:text-green-600 text-sm font-semibold">Login</a>
+                        <span>|</span>
+                        <a href="../Login-Signup/signup.php" class="text-black hover:text-green-600 text-sm font-semibold">Sign Up</a>
+                    </div>
+                <?php endif; ?>
             </div>
         </nav>
 
@@ -88,7 +123,7 @@
             <div class="w-full flex flex-wrap justify-center py-2">
                 <ul class="flex space-x-6 items-center">
                     <li>
-                        <a class="relative inline-block text-green-700 font-semibold" href="/Home/Homepage.php">Home</a>
+                        <a class="relative inline-block text-green-700 font-semibold" href="../Home/landing.php">Home</a>
                     </li>
 
                     <li>
