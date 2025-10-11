@@ -42,6 +42,9 @@ if (!empty($name)) {
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/Logo/favicon.png">
+
     <style>
         body,
         * {
@@ -62,7 +65,7 @@ if (!empty($name)) {
         <nav class="w-full">
             <div class="flex items-center justify-between px-6 py-2">
                 <!-- Logo -->
-                <a class="flex items-center flex-shrink-0" href="/Home/Homepage.php">
+                <a class="flex items-center flex-shrink-0" href="../Home/landing.php">
                     <img src="../assets/Logo/logo.png" alt="Logo" class="h-14 w-14 object-contain">
                 </a>
 

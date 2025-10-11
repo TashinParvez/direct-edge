@@ -51,7 +51,7 @@ if (!empty($name)) {
         <nav class="w-full">
             <div class="flex items-center justify-between px-6 py-2">
                 <!-- Logo -->
-                <a class="flex items-center flex-shrink-0" href="/Home/Homepage.php">
+                <a class="flex items-center flex-shrink-0" href="../Home/landing.php">
                     <img src="../assets/Logo/logo.png" alt="Logo" class="h-14 w-14 object-contain">
                 </a>
 
