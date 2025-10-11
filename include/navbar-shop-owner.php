@@ -27,7 +27,7 @@ if (!empty($name)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Dashboard</title>
+    <title>Buyer Dashboard</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -59,13 +59,22 @@ if (!empty($name)) {
                 <div class="flex-1 flex justify-center">
                     <ul class="flex space-x-6 items-center">
                         <li>
-                            <a class="text-green-700 font-semibold hover:text-green-600" href="../User/update-profile.php">Update Profile</a>
+                            <a class="text-green-700 font-semibold hover:text-green-600" href="../Buyer/buy-products.php">Buy Products</a>
                         </li>
                         <li>
-                            <a class="text-gray-700 hover:text-green-700 font-semibold" href="../User/dashboard.php">Dashboard</a>
+                            <a class="text-gray-700 hover:text-green-700 font-semibold" href="../Buyer/self-service-orders.php">Self-Service Orders</a>
                         </li>
                         <li>
-                            <a class="text-gray-700 hover:text-green-700 font-semibold" href="../User/about-us.php">About Us</a>
+                            <a class="text-gray-700 hover:text-green-700 font-semibold" href="../Buyer/dashboard.php">Dashboard</a>
+                        </li>
+                        <li>
+                            <a class="text-gray-700 hover:text-green-700 font-semibold" href="../Buyer/demand-forecasting.php">Demand Forecasting</a>
+                        </li>
+                        <li>
+                            <a class="text-gray-700 hover:text-green-700 font-semibold" href="../Buyer/home.php">Home (Available Products)</a>
+                        </li>
+                        <li>
+                            <a class="text-gray-700 hover:text-green-700 font-semibold" href="../Buyer/request-products.php">Request Products</a>
                         </li>
                     </ul>
                 </div>
