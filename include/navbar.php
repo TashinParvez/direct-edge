@@ -20,6 +20,21 @@ if (isset($_SESSION['user_id'])) {
     if (!empty($name)) {
         $name = explode(' ', trim($name))[0];
     }
+
+    // If role is 'Agent', fetch status from agent_info
+    if ($role === 'Agent') {
+        $status = ''; // Default empty
+        $agentStmt = $conn->prepare('SELECT status FROM agent_info WHERE user_id = ? LIMIT 1');
+        $agentStmt->bind_param('i', $user_id);
+        $agentStmt->execute();
+        $agentStmt->bind_result($status);
+        if ($agentStmt->fetch()) {
+            // $status now holds the value from DB
+        } else {
+            $status = ''; // No record found
+        }
+        $agentStmt->close();
+    }
 }
 ?>
 
@@ -118,12 +133,40 @@ if (isset($_SESSION['user_id'])) {
                                 </div>
                             </li>
 
-                        <?php elseif ($role === 'Agent'): ?>
+                        <?php elseif ($role === 'Agent'):
+
+                            $isPending = ($role === 'Agent' && $status === 'Pending');
+                            $linkClass = $isPending ? 'text-gray-500 cursor-not-allowed pointer-events-none' : 'text-gray-700 hover:text-green-700';
+                            $activeClass = $isPending ? 'text-gray-500' : 'text-green-700';
+                            $hrefAttr = $isPending ? '' : 'href="'; // Remove href for pending
+                        ?>
                             <!-- AGENT NAV -->
-                            <li><a class="text-green-700 font-semibold hover:text-green-600" href="../Agent/profile.php">Agent Profile</a></li>
-                            <li><a class="text-gray-700 hover:text-green-700 font-semibold" href="../Agent/farmers.php">Farmer under Agent</a></li>
-                            <li><a class="text-gray-700 hover:text-green-700 font-semibold" href="../Agent/payment.php">Payment Info</a></li>
-                            <li><a class="text-gray-700 hover:text-green-700 font-semibold" href="../Agent/add-farmer.php">Add Farmer</a></li>
+                            <li>
+                                <a class="<?php echo $activeClass; ?> font-semibold <?php echo $linkClass; ?>" <?php echo $hrefAttr . '../agent-app/agent-farmer-dashboard.php"' ?>">
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <a class="<?php echo $linkClass; ?> font-semibold" <?php echo $hrefAttr . '../agent-app/farmers-list.php"'; ?>">
+                                    Farmer under Agent
+                                </a>
+                            </li>
+                            <li>
+                                <a class="<?php echo $linkClass; ?> font-semibold" <?php echo $hrefAttr . '../agent-app/payment-details.php"'; ?>">
+                                    Payment Info
+                                </a>
+                            </li>
+                            <li>
+                                <a class="<?php echo $linkClass; ?> font-semibold" <?php echo $hrefAttr . '../agent-app/add-farmers-info.php"'; ?>">
+                                    Add Farmer
+                                </a>
+                            </li>
+
+
+                            <!-- <li><a class="text-green-700 font-semibold hover:text-green-600" href="../agent-app/agent-farmer-dashboard.php">Dashboard</a></li>
+                            <li><a class="text-gray-700 hover:text-green-700 font-semibold" href="../agent-app/farmers-list.php">Farmer under Agent</a></li>
+                            <li><a class="text-gray-700 hover:text-green-700 font-semibold" href="../agent-app/payment-details.php">Payment Info</a></li>
+                            <li><a class="text-gray-700 hover:text-green-700 font-semibold" href="../agent-app/add-farmers-info.php">Add Farmer</a></li> -->
 
                         <?php elseif ($role === 'Shop-Owner'): ?>
                             <!-- SHOP OWNER (BUYER) NAV -->
@@ -146,7 +189,8 @@ if (isset($_SESSION['user_id'])) {
                 <!-- Login / Logout Section -->
                 <?php if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])): ?>
                     <div class="flex items-center space-x-2 flex-shrink-0">
-                        <a href="../Login-Signup/profile.php" class="text-black hover:text-green-600 text-sm font-semibold">
+
+                        <a href="<?php echo ($role == 'Agent') ? '../agent-app/agent-profile.php' : '../Login-Signup/profile.php'; ?>" class="text-black hover:text-green-600 text-sm font-semibold">
                             <?php echo htmlspecialchars($name); ?>
                         </a>
                         <span>|</span>

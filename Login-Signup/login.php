@@ -27,6 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Store all user info in session
             $_SESSION['user_id'] = $user['user_id'];
+            
             // $_SESSION['full_name'] = $user['full_name'];
             // $_SESSION['email'] = $user['email'];
             // $_SESSION['phone'] = $user['phone'];
