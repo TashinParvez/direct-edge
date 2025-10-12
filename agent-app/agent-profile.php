@@ -1,12 +1,9 @@
 <?php
 // agent-profile.php - Dedicated profile page for agents only
-session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+include '../include/navbar.php';
+$user_id = isset($user_id) ? $user_id : 51;
+
 
 // Database connection
 $servername = "localhost";
@@ -18,8 +15,6 @@ $conn = mysqli_connect($servername, $username, $password, $databasename);
 if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
-
-$user_id = (int)$_SESSION['user_id'];
 
 // Fetch user data
 $stmt = $conn->prepare("SELECT user_id, full_name, email, phone, password, role, image_url, created_at, updated_at FROM users WHERE user_id = ? LIMIT 1");
@@ -192,7 +187,6 @@ function sanitize($v)
 </head>
 
 <body class="bg-gray-50">
-    <?php include '../include/navbar.php'; ?>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Status Message -->

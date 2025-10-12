@@ -1,4 +1,8 @@
 <?php
+
+include '../include/navbar.php';
+$agent_id = isset($user_id) ? $user_id : 45;
+
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -186,7 +190,6 @@ mysqli_close($conn);
 </head>
 
 <body class="bg-gradient-to-br from-green-50 via-white to-emerald-50 min-h-screen pb-8">
-    <?php include '../include/navbar.php'; ?>
 
     <div class="max-w-4xl mx-auto px-4 pb-4">
         <!-- Header -->

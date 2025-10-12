@@ -1,4 +1,8 @@
 <?php
+
+include '../include/navbar.php';
+$agent_id = isset($user_id) ? $user_id : 45;
+
 // Connect database
 include '../include/connect-db.php'; // Database connection
 
@@ -160,7 +164,6 @@ $conn->close();
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../Include/navbar.php'; ?>
 
     <section class="home-section p-0 pb-4 mx-2 md:mx-8 lg:mx-16">
         <div class="flex justify-between items-center p-4">
