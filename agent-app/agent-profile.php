@@ -185,39 +185,14 @@ function sanitize($v)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Profile - DirectEdge</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/Favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/Logo/favicon.png">
 </head>
 
 <body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white border-b border-gray-200 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-green-600 text-white grid place-items-center font-bold">DE</div>
-                    <div>
-                        <h1 class="text-lg font-bold text-gray-900">DirectEdge</h1>
-                        <p class="text-xs text-gray-500">Agent Dashboard</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-sm font-medium text-gray-900"><?php echo sanitize($user['full_name']); ?></p>
-                        <p class="text-xs text-green-600">🌾 Agricultural Agent</p>
-                    </div>
-                    <?php if (!empty($user['image_url'])): ?>
-                        <img src="<?php echo sanitize($user['image_url']); ?>" alt="Avatar" class="w-10 h-10 rounded-full object-cover">
-                    <?php else: ?>
-                        <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 grid place-items-center font-bold">
-                            <?php echo strtoupper(substr($user['full_name'], 0, 1)); ?>
-                        </div>
-                    <?php endif; ?>
-                    <a href="logout.php" class="text-sm text-red-600 hover:text-red-700 font-medium">Logout</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <?php include '../include/navbar.php'; ?>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Status Message -->
@@ -455,6 +430,8 @@ function sanitize($v)
             </section>
         </div>
     </main>
+
+    <?php include '../include/footer.php'; ?>
 </body>
 
 </html>
