@@ -1,4 +1,8 @@
 <?php
+
+include '../include/navbar.php';
+$agent_id = isset($user_id) ? $user_id : 45;
+
 // Connect database
 include '../include/connect-db.php'; // Database connection
 
@@ -123,7 +127,6 @@ function displayField($label, $value, $default = "Not provided")
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../Include/navbar.php'; ?>
 
     <section class="home-section mx-2 md:mx-8 lg:mx-16 pb-4">
         <div class="flex justify-between items-center p-4 no-print">

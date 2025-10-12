@@ -1,4 +1,8 @@
 <?php
+
+include '../include/navbar.php';
+$agent_id = isset($user_id) ? $user_id : 45;
+
 // connect database
 include '../include/connect-db.php'; // Database connection
 
@@ -55,12 +59,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Insert into DB if no errors
     if (empty($errors)) {
         $stmt = $conn->prepare("INSERT INTO farmers 
-            (full_name, dob, nid_number, contact_number, present_address, profile_picture, farmer_type, crops_cultivated, land_size, land_ownership, fertilizer_usage, bank_account, mobile_banking_account, training_received, avg_selling_price, additional_notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            (full_name, dob, nid_number, contact_number, present_address, profile_picture, farmer_type, crops_cultivated, land_size, land_ownership, fertilizer_usage, bank_account, mobile_banking_account, training_received, avg_selling_price, additional_notes, agent_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 
         $stmt->bind_param(
-            "ssssssssdsisssss",
+            "ssssssssdsissssss",
             $full_name,
             $dob,
             $nid_number,
@@ -76,7 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $mobile_banking_account,
             $training_received,
             $avg_selling_price,
-            $additional_notes
+            $additional_notes,
+            $agent_id
         );
 
 
@@ -155,8 +160,7 @@ $conn->close();
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../include/navbar.php'; ?>
-    
+
     <div class="max-w-6xl mx-auto px-6 md:px-12">
 
         <section class="home-section pb-4">
