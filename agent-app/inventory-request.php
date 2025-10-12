@@ -97,8 +97,6 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
 <head>
     <meta charset="UTF-8">
     <title>Agent Inventory Request - Stock Integrated</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
-    <link rel="stylesheet" href="../Include/sidebar.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -106,67 +104,101 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
         .request-form {
             transition: all 0.3s ease;
         }
+
         .request-form:hover {
             background-color: #f9fafb;
         }
+
         .form-field {
             transition: all 0.3s ease;
         }
+
         .form-field:hover {
             background-color: #f3f4f6;
         }
+
         .form-field:focus {
             background-color: #ffffff;
             border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
+
         .product-list {
             transition: all 0.2s ease;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+
         .product-item {
             transition: all 0.2s ease;
         }
+
         .product-item:hover {
             background-color: #f3f4f6;
             padding-left: 1rem;
         }
+
         .warehouse-option {
             transition: all 0.2s ease;
         }
+
         .preview-image {
             transition: all 0.3s ease;
         }
+
         .preview-image:hover {
             transform: scale(1.05);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
+
         .space-display {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             animation: pulseGlow 2s infinite;
         }
+
         @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
-            50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+            }
         }
+
         .success-message {
             animation: slideIn 0.3s ease-out;
         }
+
         @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         @media print {
-            .no-print { display: none !important; }
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/Logo/favicon.png">
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../Include/Sidebar.php'; ?>
-    
-    <section class="home-section p-0">
+    <?php include '../Include/navbar.php'; ?>
+
+    <section class="home-section max-w-6xl mx-auto px-6 md:px-12 pb-4">
         <div class="flex justify-between items-center p-4">
             <h1 class="text-2xl font-bold">Agent Inventory Request</h1>
             <button onclick="window.history.back()" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
@@ -194,7 +226,7 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
         <div class="container mx-auto px-4">
             <div class="bg-white shadow-lg rounded-lg p-6 request-form">
-                
+
                 <!-- Form Header -->
                 <div class="mb-6 text-center">
                     <h2 class="text-xl font-semibold text-gray-800 flex items-center justify-center">
@@ -253,30 +285,30 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <i class='bx bx-calendar mr-1'></i>Expiry Date
                         </label>
-                        <input type="date" name="expiry" 
+                        <input type="date" name="expiry"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
                     </div>
 
 
-                <!-- Inbound Date -->
-                <div>
-                    <label class="block mb-1 font-medium">Inbound Date</label>
-                    <input type="date" name="inbound" class="w-full p-2 border border-gray-300 rounded">
-                </div>
+                    <!-- Inbound Date -->
+                    <div>
+                        <label class="block mb-1 font-medium">Inbound Date</label>
+                        <input type="date" name="inbound" class="w-full p-2 border border-gray-300 rounded">
+                    </div>
 
-                <!-- Expiry Date -->
-                <div>
-                    <label class="block mb-1 font-medium">Expiry Date</label>
-                    <input type="date" name="expiry" class="w-full p-2 border border-gray-300 rounded">
-                </div>
+                    <!-- Expiry Date -->
+                    <div>
+                        <label class="block mb-1 font-medium">Expiry Date</label>
+                        <input type="date" name="expiry" class="w-full p-2 border border-gray-300 rounded">
+                    </div>
 
-                <!-- Product Image Upload -->
-                <div>
-                    <label class="block mb-1 font-medium">Upload Product Image</label>
-                    <input type="file" name="productFile" id="productFile" accept="image/*"
-                        class="w-full p-2 border border-gray-300 rounded">
-                    <img id="productPreview" src="" class="mt-2 h-32 w-32 object-cover rounded hidden">
-                </div>
+                    <!-- Product Image Upload -->
+                    <div>
+                        <label class="block mb-1 font-medium">Upload Product Image</label>
+                        <input type="file" name="productFile" id="productFile" accept="image/*"
+                            class="w-full p-2 border border-gray-300 rounded">
+                        <img id="productPreview" src="" class="mt-2 h-32 w-32 object-cover rounded hidden">
+                    </div>
 
 
                     <!-- Required Space Display -->
@@ -292,7 +324,7 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <i class='bx bx-building mr-1'></i>Select Warehouse *
                         </label>
-                        <select id="warehouse" name="warehouse" 
+                        <select id="warehouse" name="warehouse"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field" required>
                             <option value="">-- Choose Available Warehouse --</option>
                         </select>
@@ -301,7 +333,7 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
                     <!-- Submit Button -->
                     <div class="flex justify-center pt-4">
-                        <button type="submit" class="bg-green-500 text-white px-8 py-3 rounded hover:bg-green-600 transition-colors font-semibold">
+                        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors font-semibold text-sm">
                             <i class='bx bx-send mr-2'></i>Submit Request
                         </button>
                     </div>
@@ -373,7 +405,7 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
         function updateWarehouses(space = parseFloat(requiredSpace.textContent) || 0) {
             warehouseDropdown.innerHTML = '<option value="">-- Choose Available Warehouse --</option>';
             let availableWarehouses = 0;
-            
+
             warehouses.forEach(wh => {
                 if (wh.free_capacity >= space) {
                     const option = document.createElement('option');
@@ -412,6 +444,9 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
         // Initialize warehouses on page load
         updateWarehouses();
     </script>
+
+    <?php include '../Include/footer.php'; ?>
+
 </body>
 
 </html>

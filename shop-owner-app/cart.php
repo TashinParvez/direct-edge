@@ -37,87 +37,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $discount_amount = 0.00; // No discount for now  
         $total_amount = $subtotal + $tax_amount - $discount_amount;
 
-        // Generate transaction number
-        $transaction_number_query = "SELECT generate_transaction_number() as txn_number";
-        $txn_result = $conn->query($transaction_number_query);
-        $txn_row = $txn_result->fetch_assoc();
-        $transaction_number = $txn_row['txn_number'];
+        // Generate simple transaction number
+        $transaction_number = 'TXN-' . date('YmdHis') . '-' . rand(100, 999);
 
-        // Insert main transaction record
-        $stmt_transaction = $conn->prepare("
-            INSERT INTO sales_transactions 
-            (transaction_number, subtotal, tax_amount, discount_amount, total_amount, payment_method, transaction_status) 
-            VALUES (?, ?, ?, ?, ?, 'Cash', 'Completed')
-        ");
-        $stmt_transaction->bind_param("sdddd", $transaction_number, $subtotal, $tax_amount, $discount_amount, $total_amount);
-
-        if (!$stmt_transaction->execute()) {
-            throw new Exception("Failed to create transaction record");
-        }
-
-        $transaction_id = $conn->insert_id;
-        $stmt_transaction->close();
-
-        // Process each cart item
+        // Process each cart item and deduct from shop_products
         $stock_issues = [];
         $processed_items = [];
 
         foreach ($_SESSION['cart'] as $product_id => $item) {
-            // Check current stock before processing
+            // Check current stock in shop_products (assuming shop_id = 6 for this example)
+            $shop_id = 6; // You can make this dynamic based on your requirements
+
             $stock_check = $conn->prepare("
-                SELECT current_quantity, minimum_stock_level 
-                FROM store_inventory 
-                WHERE product_id = ? AND store_location = 'Main Store'
+                SELECT sp.quantity as current_quantity, p.name, sp.selling_price
+                FROM shop_products sp
+                JOIN products p ON sp.product_id = p.product_id  
+                WHERE sp.product_id = ? AND sp.shop_id = ?
             ");
-            $stock_check->bind_param("i", $product_id);
+            $stock_check->bind_param("ii", $product_id, $shop_id);
             $stock_check->execute();
             $stock_result = $stock_check->get_result();
 
             if ($stock_row = $stock_result->fetch_assoc()) {
                 $available_stock = $stock_row['current_quantity'];
-                $minimum_stock = $stock_row['minimum_stock_level'];
 
                 if ($available_stock < $item['quantity']) {
                     $stock_issues[] = "Insufficient stock for {$item['name']}. Available: {$available_stock}, Required: {$item['quantity']}";
                     continue;
-                } elseif (($available_stock - $item['quantity']) < $minimum_stock) {
-                    $stock_issues[] = "Warning: {$item['name']} will be below minimum stock level after this sale";
+                } elseif ($available_stock - $item['quantity'] <= 10) {
+                    $stock_issues[] = "Warning: {$item['name']} will be low in stock after this sale";
                 }
             } else {
-                $stock_issues[] = "Product {$item['name']} not found in store inventory";
+                $stock_issues[] = "Product {$item['name']} not found in shop inventory";
                 continue;
             }
             $stock_check->close();
 
-            // Insert transaction item
-            $stmt_item = $conn->prepare("
-                INSERT INTO transaction_items 
-                (transaction_id, product_id, product_name, quantity_sold, unit_price, discount_per_item) 
-                VALUES (?, ?, ?, ?, ?, 0.00)
+            // Deduct stock from shop_products
+            $update_stock = $conn->prepare("
+                UPDATE shop_products 
+                SET quantity = quantity - ? 
+                WHERE product_id = ? AND shop_id = ? AND quantity >= ?
             ");
-            $stmt_item->bind_param("iisid", $transaction_id, $product_id, $item['name'], $item['quantity'], $item['price']);
+            $update_stock->bind_param("iiii", $item['quantity'], $product_id, $shop_id, $item['quantity']);
 
-            if (!$stmt_item->execute()) {
-                throw new Exception("Failed to create transaction item for {$item['name']}");
+            if (!$update_stock->execute() || $conn->affected_rows == 0) {
+                throw new Exception("Failed to deduct stock for {$item['name']}");
             }
-            $stmt_item->close();
-
-            // Use stored procedure to safely deduct stock
-            $stmt_stock = $conn->prepare("CALL deduct_store_stock(?, ?, ?, @success, @message)");
-            $stmt_stock->bind_param("iii", $product_id, $item['quantity'], $transaction_id);
-
-            if (!$stmt_stock->execute()) {
-                throw new Exception("Failed to execute stock deduction for {$item['name']}");
-            }
-            $stmt_stock->close();
-
-            // Get the result of the stored procedure
-            $result_query = $conn->query("SELECT @success as success, @message as message");
-            $result_row = $result_query->fetch_assoc();
-
-            if (!$result_row['success']) {
-                throw new Exception("Stock deduction failed: " . $result_row['message']);
-            }
+            $update_stock->close();
 
             $processed_items[] = $item;
         }
@@ -158,19 +125,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($_POST['action'] === 'search_products') {
         $search = $_POST['search'] ?? '';
+        $shop_id = 6; // You can make this dynamic
 
-        // Search products that are available in store inventory
-        $sql = "SELECT p.product_id, p.name, p.category, p.price, p.unit, p.image_url, si.current_quantity
+        // Search products that are available in shop_products
+        $sql = "SELECT p.product_id, p.name, p.category, sp.selling_price as price, p.unit, p.img_url as image_url, sp.quantity as current_quantity
                 FROM products p
-                JOIN store_inventory si ON p.product_id = si.product_id
+                JOIN shop_products sp ON p.product_id = sp.product_id
                 WHERE (p.name LIKE ? OR p.category LIKE ?) 
-                  AND si.store_location = 'Main Store'
-                  AND si.current_quantity > 0
+                  AND sp.shop_id = ?
+                  AND sp.quantity > 0
                 ORDER BY p.name 
                 LIMIT 20";
         $stmt = $conn->prepare($sql);
         $searchParam = "%$search%";
-        $stmt->bind_param("ss", $searchParam, $searchParam);
+        $stmt->bind_param("ssi", $searchParam, $searchParam, $shop_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -184,15 +152,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     if ($_POST['action'] === 'get_inventory_status') {
+        $shop_id = 6; // You can make this dynamic
+
         $sql = "SELECT 
                     COUNT(*) as total_products,
-                    COUNT(CASE WHEN si.current_quantity <= si.minimum_stock_level THEN 1 END) as low_stock_count,
-                    SUM(si.current_quantity * p.price) as total_inventory_value
-                FROM store_inventory si
-                JOIN products p ON si.product_id = p.product_id
-                WHERE si.store_location = 'Main Store'";
+                    COUNT(CASE WHEN sp.quantity <= 10 THEN 1 END) as low_stock_count,
+                    SUM(sp.quantity * sp.selling_price) as total_inventory_value
+                FROM shop_products sp
+                JOIN products p ON sp.product_id = p.product_id
+                WHERE sp.shop_id = ?";
 
-        $result = $conn->query($sql);
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $shop_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
         $status = $result->fetch_assoc();
 
         echo json_encode($status);
@@ -206,13 +179,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
     $action = $_POST['cart_action'];
 
     if ($action === 'add' && $product_id > 0) {
+        $shop_id = 6; // You can make this dynamic
+
         // Check stock availability before adding to cart
-        $stock_sql = "SELECT si.current_quantity, p.product_id, p.name, p.price, p.unit, p.image_url
-                      FROM store_inventory si
-                      JOIN products p ON si.product_id = p.product_id  
-                      WHERE si.product_id = ? AND si.store_location = 'Main Store'";
+        $stock_sql = "SELECT sp.quantity as current_quantity, p.product_id, p.name, sp.selling_price as price, p.unit, p.img_url as image_url
+                      FROM shop_products sp
+                      JOIN products p ON sp.product_id = p.product_id  
+                      WHERE sp.product_id = ? AND sp.shop_id = ?";
         $stmt = $conn->prepare($stock_sql);
-        $stmt->bind_param("i", $product_id);
+        $stmt->bind_param("ii", $product_id, $shop_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -237,6 +212,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
             } else {
                 $_SESSION['cart_message'] = "Cannot add more. Only {$available_stock} items available in stock.";
             }
+        } else {
+            $_SESSION['cart_message'] = "Product not available in this shop.";
         }
         $stmt->close();
     } elseif ($action === 'remove' && $product_id > 0) {
@@ -490,7 +467,7 @@ $conn->close();
         <div class="bg-white p-6 rounded-lg max-w-4xl w-full mx-4 max-h-96 overflow-hidden">
             <h3 class="text-xl font-bold mb-4">Add Product Manually</h3>
             <div class="mb-4">
-                <input type="text" id="product-search" placeholder="Search for products in store inventory..."
+                <input type="text" id="product-search" placeholder="Search for products in shop inventory..."
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div id="search-results" class="max-h-64 overflow-y-auto mb-4">
@@ -576,7 +553,7 @@ $conn->close();
 
                     if (products.length === 0) {
                         resultsDiv.innerHTML =
-                            '<p class="text-gray-500 text-center">No products found in store inventory</p>';
+                            '<p class="text-gray-500 text-center">No products found in shop inventory</p>';
                         return;
                     }
 
@@ -752,7 +729,7 @@ $conn->close();
             }
         });
 
-        // Webcam scanning code (keep existing functionality)
+        // Webcam scanning code
         const scanBtn = document.querySelector('.scan-btn');
         const modal = document.getElementById('webcam-modal');
         const video = document.getElementById('webcam-video');
@@ -764,11 +741,13 @@ $conn->close();
         let detectionInterval = null;
         let detected = false;
 
-        // Product mapping for detection (expand this based on your trained models)
+        // Product mapping for detection - Updated to use actual products from your database
         const productMappings = {
-            'lays': 18, // T-Shirt product ID as example
-            'chips': 18,
-            'snack': 18
+            'lays': 1, // Apple - since you mentioned product_id 18 but your database shows products 1-15
+            'chips': 2, // Banana 
+            'snack': 3, // Mango
+            'banana': 2, // Banana
+            'orange': 4 // Orange
         };
 
         scanBtn.addEventListener('click', async () => {
