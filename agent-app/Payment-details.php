@@ -4,8 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Payment & Financial Handling - Stock Integrated</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
-    <link rel="stylesheet" href="../Include/sidebar.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,63 +11,94 @@
         .financial-container {
             transition: all 0.3s ease;
         }
+
         .financial-container:hover {
             background-color: #f9fafb;
         }
+
         .table-row {
             transition: all 0.2s ease;
         }
+
         .table-row:hover {
             background-color: #f3f4f6;
             transform: translateY(-1px);
         }
+
         .filter-container {
             transition: all 0.3s ease;
         }
+
         .filter-container:hover {
             background-color: #f9fafb;
         }
+
         .search-field {
             transition: all 0.3s ease;
         }
+
         .search-field:hover {
             background-color: #f3f4f6;
         }
+
         .search-field:focus {
             background-color: #ffffff;
             border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
+
         .status-badge {
             transition: all 0.2s ease;
         }
+
         .status-badge:hover {
             transform: scale(1.05);
         }
+
         .action-btn {
             transition: all 0.2s ease;
         }
+
         .action-btn:hover {
             transform: translateY(-1px);
         }
+
         .table-container {
             animation: fadeIn 0.6s ease-out;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         @media print {
-            .no-print { display: none !important; }
-            .table-row:hover { background-color: transparent !important; transform: none !important; }
+            .no-print {
+                display: none !important;
+            }
+
+            .table-row:hover {
+                background-color: transparent !important;
+                transform: none !important;
+            }
         }
     </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/Logo/favicon.png">
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../Include/Sidebar.php'; ?>
-    
-    <section class="home-section p-0">
+    <?php include '../Include/navbar.php'; ?>
+
+    <section class="home-section p-0 pb-4 mx-2 md:mx-8 lg:mx-16">
         <div class="flex justify-between items-center p-4 no-print">
             <h1 class="text-2xl font-bold">Payment & Financial Records</h1>
             <div class="flex space-x-2">
@@ -83,10 +112,10 @@
         </div>
 
         <div class="container mx-auto px-4">
-            
+
             <!-- Main Financial Records Card -->
             <div class="bg-white shadow-lg rounded-lg p-6 financial-container">
-                
+
                 <!-- Filters / Search Section -->
                 <div class="bg-gray-50 p-4 rounded-lg mb-6 filter-container">
                     <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
@@ -97,7 +126,7 @@
                             <input type="text" placeholder="Search by farmer name..."
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 <i class='bx bx-filter mr-1'></i>Payment Status
@@ -109,7 +138,7 @@
                                 <option>Overdue</option>
                             </select>
                         </div>
-                        
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 <i class='bx bx-calendar mr-1'></i>Date Range
@@ -117,7 +146,7 @@
                             <input type="date"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
                         </div>
-                        
+
                         <div>
                             <button class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors w-full">
                                 <i class='bx bx-filter-alt mr-2'></i>Apply Filter
@@ -298,6 +327,8 @@
             </div>
         </div>
     </section>
+
+    <?php include '../include/footer.php'; ?>
 </body>
 
 </html>

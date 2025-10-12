@@ -4,7 +4,7 @@ include __DIR__ . '/../include/connect-db.php'; // Database connection
 session_start();
 
 $name = '';
-$role = ''; // role: admin, agent, buyer, user
+$role = ''; // role: admin, agent, shop-owner, user
 
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];

@@ -6,7 +6,6 @@ include '../include/connect-db.php'; // Database connection
 // Get farmer ID from URL parameter
 $farmer_id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 
-
 if ($farmer_id <= 0) {
     die("Invalid farmer ID");
 }
@@ -37,7 +36,8 @@ $conn->close();
 
 
 // Helper function to display field
-function displayField($label, $value, $default = "Not provided") {
+function displayField($label, $value, $default = "Not provided")
+{
     return $value ? $value : "<span class='text-gray-400'>$default</span>";
 }
 ?>
@@ -48,8 +48,6 @@ function displayField($label, $value, $default = "Not provided") {
 <head>
     <meta charset="UTF-8">
     <title><?php echo htmlspecialchars($farmer['full_name']); ?> - Farmer Profile - Stock Integrated</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
-    <link rel="stylesheet" href="../Include/sidebar.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,48 +55,77 @@ function displayField($label, $value, $default = "Not provided") {
         .profile-card {
             transition: all 0.3s ease;
         }
+
         .profile-card:hover {
             background-color: #f9fafb;
         }
+
         .profile-picture {
             transition: all 0.3s ease;
         }
+
         .profile-picture:hover {
             transform: scale(1.05);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
+
         .info-section {
             transition: all 0.3s ease;
         }
+
         .info-section:hover {
             background-color: #f3f4f6;
         }
+
         .field-item {
             transition: all 0.2s ease;
         }
+
         .field-item:hover {
             background-color: #f9fafb;
             padding-left: 0.75rem;
         }
+
         .badge-farmer-type {
             animation: pulseGlow 2s infinite;
         }
+
         @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.3); }
-            50% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.6); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 5px rgba(34, 197, 94, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 15px rgba(34, 197, 94, 0.6);
+            }
         }
+
         @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; }
-            .shadow-lg { box-shadow: none !important; border: 1px solid #e5e7eb !important; }
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+            }
+
+            .shadow-lg {
+                box-shadow: none !important;
+                border: 1px solid #e5e7eb !important;
+            }
         }
     </style>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/Logo/favicon.png">
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../Include/Sidebar.php'; ?>
-    
-    <section class="home-section p-0">
+    <?php include '../Include/navbar.php'; ?>
+
+    <section class="home-section mx-2 md:mx-8 lg:mx-16 pb-4">
         <div class="flex justify-between items-center p-4 no-print">
             <h1 class="text-2xl font-bold">Farmer Profile</h1>
             <div class="flex space-x-2">
@@ -115,15 +142,15 @@ function displayField($label, $value, $default = "Not provided") {
         </div>
 
         <div class="container mx-auto px-4">
-            
+
             <!-- Profile Header Card -->
             <div class="bg-white shadow-lg rounded-lg mb-6 p-6 profile-card">
                 <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
                     <div class="flex-shrink-0">
                         <?php if ($farmer['profile_picture'] && file_exists($farmer['profile_picture'])): ?>
-                            <img src="<?php echo htmlspecialchars($farmer['profile_picture']); ?>" 
-                                 alt="Profile Picture" 
-                                 class="w-32 h-32 rounded-full object-cover border-4 border-green-200 profile-picture">
+                            <img src="<?php echo htmlspecialchars($farmer['profile_picture']); ?>"
+                                alt="Profile Picture"
+                                class="w-32 h-32 rounded-full object-cover border-4 border-green-200 profile-picture">
                         <?php else: ?>
                             <div class="w-32 h-32 bg-green-200 rounded-full flex items-center justify-center profile-picture">
                                 <i class='bx bx-user text-4xl text-green-600'></i>
@@ -285,7 +312,7 @@ function displayField($label, $value, $default = "Not provided") {
                             <div class="pt-4 border-t field-item rounded p-2">
                                 <div class="flex items-center text-sm text-gray-500">
                                     <i class='bx bx-calendar mr-2'></i>
-                                    <span>Profile created: 
+                                    <span>Profile created:
                                         <?php echo date('d M Y, g:i A', strtotime($farmer['created_at'])); ?>
                                     </span>
                                 </div>
@@ -297,17 +324,20 @@ function displayField($label, $value, $default = "Not provided") {
 
             <!-- Mobile Action Buttons -->
             <div class="mt-6 flex justify-center space-x-4 md:hidden no-print">
-                <a href="edit-farmer.php?id=<?php echo $farmer['id']; ?>" 
-                   class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600 transition-colors">
+                <a href="edit-farmer.php?id=<?php echo $farmer['id']; ?>"
+                    class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600 transition-colors">
                     <i class='bx bx-edit mr-2'></i> Edit Profile
                 </a>
-                <button onclick="window.print()" 
-                        class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600 transition-colors">
+                <button onclick="window.print()"
+                    class="bg-gray-500 text-white px-4 py-2 rounded text-sm hover:bg-gray-600 transition-colors">
                     <i class='bx bx-printer mr-2'></i> Print
                 </button>
             </div>
         </div>
     </section>
+
+    <?php include '../include/footer.php'; ?>
+
 </body>
 
 </html>
