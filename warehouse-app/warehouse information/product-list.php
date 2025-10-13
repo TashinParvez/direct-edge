@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['addProduct'])) {
         $specialInstructions = $specialInstructions ?: null;
 
         // Insert into database
-        $query = "INSERT INTO products (name, category, price, unit, image_url, special_instructions, created_at, updated_at)
+        $query = "INSERT INTO products (name, category, price, unit, img_url, special_instructions, created_at, updated_at)
                   VALUES ('$productName', '$category', $price, '$unit', " . ($imagePath ? "'$imagePath'" : 'NULL') . ", " . ($specialInstructions ? "'$specialInstructions'" : 'NULL') . ", NOW(), NOW())";
         if ($conn->query($query)) {
             echo "<script>alert('Product added successfully!'); window.location.href='product-list.php';</script>";
@@ -129,16 +129,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editProduct'])) {
 
     if (!$error) {
         // Get existing image path if no new file is uploaded
-        $query = "SELECT image_url FROM products WHERE product_id = $productId";
+        $query = "SELECT img_url FROM products WHERE product_id = $productId";
         $result = $conn->query($query);
         $existingProduct = $result->fetch_assoc();
-        $imagePath = !empty($fileName) ? 'uploads/' . time() . '_' . basename($fileName) : $existingProduct['image_url'];
+        $imagePath = !empty($fileName) ? 'uploads/' . time() . '_' . basename($fileName) : $existingProduct['img_url'];
         $specialInstructions = $specialInstructions ?: null;
 
         // Update database
         $query = "UPDATE products
                   SET name = '$productName', category = '$category', price = $price, unit = '$unit',
-                      image_url = " . ($imagePath ? "'$imagePath'" : 'NULL') . ",
+                      img_url = " . ($imagePath ? "'$imagePath'" : 'NULL') . ",
                       special_instructions = " . ($specialInstructions ? "'$specialInstructions'" : 'NULL') . ",
                       updated_at = NOW()
                   WHERE product_id = $productId";
@@ -158,12 +158,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['editProduct'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deleteProduct'])) {
     $productId = intval($_POST['productId'] ?? 0);
     // Optionally, delete the image file from the server
-    $query = "SELECT image_url FROM products WHERE product_id = $productId";
+    $query = "SELECT img_url FROM products WHERE product_id = $productId";
     $result = $conn->query($query);
     if ($result && $result->num_rows > 0) {
         $product = $result->fetch_assoc();
-        if ($product['image_url'] && file_exists(__DIR__ . '/' . $product['image_url'])) {
-            unlink(__DIR__ . '/' . $product['image_url']);
+        if ($product['img_url'] && file_exists(__DIR__ . '/' . $product['img_url'])) {
+            unlink(__DIR__ . '/' . $product['img_url']);
         }
     }
 
@@ -189,12 +189,14 @@ if ($result) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product List</title>
     <link rel="stylesheet" href="../warehouse information/product-list.css">
 </head>
+
 <body>
     <div class="container">
         <h1>Product List</h1>
@@ -257,8 +259,8 @@ if ($result) {
                             <td><?php echo number_format($product['price'], 2); ?></td>
                             <td><?php echo htmlspecialchars($product['unit']); ?></td>
                             <td>
-                                <?php if ($product['image_url']): ?>
-                                    <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" style="width: 50px; height: auto;">
+                                <?php if ($product['img_url']): ?>
+                                    <img src="<?php echo htmlspecialchars($product['img_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" style="width: 50px; height: auto;">
                                 <?php else: ?>
                                     —
                                 <?php endif; ?>
@@ -312,7 +314,7 @@ if ($result) {
                     <datalist id="categoryList">
                         <?php foreach ($categories as $cat): ?>
                             <option value="<?php echo htmlspecialchars($cat); ?>">
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
                     </datalist>
 
                     <label for="price">Price (BDT):</label>
@@ -352,7 +354,7 @@ if ($result) {
                     <datalist id="categoryList">
                         <?php foreach ($categories as $cat): ?>
                             <option value="<?php echo htmlspecialchars($cat); ?>">
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
                     </datalist>
 
                     <label for="editPrice">Price (BDT):</label>
@@ -380,4 +382,5 @@ if ($result) {
 
     <script src="../warehouse information/product-list.js"></script>
 </body>
+
 </html>
