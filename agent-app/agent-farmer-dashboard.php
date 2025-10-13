@@ -140,9 +140,9 @@ function sanitize($v)
                     <h2 class="text-3xl font-bold text-gray-900">My Farmers</h2>
                     <p class="text-gray-600 mt-1">Manage and track all farmers in your network</p>
                 </div>
-                <a href="add-farmers-info.php" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all">
+                <!-- <a href="add-farmers-info.php" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all">
                     Add New Farmer
-                </a>
+                </a> -->
             </div>
         </div>
 
