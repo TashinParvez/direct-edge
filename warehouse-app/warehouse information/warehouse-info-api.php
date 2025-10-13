@@ -371,6 +371,18 @@ try {
         $page = max(1, (int)($data['page'] ?? 1));
         $pageSize = max(1, min(100, (int)($data['pageSize'] ?? 10)));
 
+        // Preload warehouse capacities
+        $warehouseCaps = [];
+        $resCaps = mysqli_query($conn, "SELECT warehouse_id, capacity_total, capacity_used FROM warehouses");
+        if ($resCaps) {
+            while ($c = mysqli_fetch_assoc($resCaps)) {
+                $warehouseCaps[(int)$c['warehouse_id']] = [
+                    'total' => (float)$c['capacity_total'],
+                    'used' => (float)$c['capacity_used']
+                ];
+            }
+        }
+
         $where = [];
         // Statuses
         $statusFlags = [];
@@ -466,7 +478,11 @@ try {
         if ($res) {
             while ($row = mysqli_fetch_assoc($res)) {
                 $one = load_row($conn, (int)$row['id']);
-                if ($one) $rows[] = $one;
+                if ($one) {
+                    $whId = $one['warehouse_id'];
+                    $one['free_space'] = isset($warehouseCaps[$whId]) ? max(0, $warehouseCaps[$whId]['total'] - $warehouseCaps[$whId]['used']) : 0;
+                    $rows[] = $one;
+                }
             }
         }
 

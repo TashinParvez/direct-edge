@@ -187,6 +187,7 @@
                         <th>Unit Volume</th>
                         <th>Status</th>
                         <th>Warehouse</th>
+                        <th>Warehouse Free Space</th>
                         <th>Agent Id</th>
                         <th>Offer Suggestion</th>
                         <th>Inbound Stock Date</th>
@@ -246,7 +247,7 @@
                 <tfoot id="totalRow">
                     <tr>
 
-                        <td colspan="6">
+                        <td colspan="7">
                             <span class="label">TotalItems:</span>
                             <span class="value" id="totalItems">0</span>
 
@@ -269,6 +270,7 @@
                 <option value="10">10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
+                <option value="0">All</option>
             </select>
             <span>Rows per page</span>
         </div>
