@@ -1,4 +1,8 @@
 <?php
+
+include '../include/navbar.php';
+$agent_id = isset($user_id) ? $user_id : 45;
+
 // Connect database
 include '../include/connect-db.php'; // Database connection
 
@@ -123,15 +127,14 @@ function displayField($label, $value, $default = "Not provided")
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../Include/navbar.php'; ?>
 
     <section class="home-section mx-2 md:mx-8 lg:mx-16 pb-4">
         <div class="flex justify-between items-center p-4 no-print">
             <h1 class="text-2xl font-bold">Farmer Profile</h1>
             <div class="flex space-x-2">
-                <a href="farmers-list.php" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                <!-- <a href="farmers-list.php" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
                     <i class='bx bx-arrow-back'></i> Back to List
-                </a>
+                </a> -->
                 <a href="edit-farmer.php?id=<?php echo $farmer['id']; ?>" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                     <i class='bx bx-edit'></i> Edit Profile
                 </a>

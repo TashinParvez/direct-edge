@@ -4,7 +4,7 @@ include '../include/connect-db.php'; // Database connection
 
 
 // Get farmer ID from URL parameter
-$farmer_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$farmer_id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 
 
 if ($farmer_id <= 0) {
@@ -199,9 +199,9 @@ $conn->close();
                 <a href="farmer-profile.php?id=<?php echo $farmer_id; ?>" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                     <i class='bx bx-show'></i> View Profile
                 </a>
-                <a href="farmers-list.php" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                <!-- <a href="farmers-list.php" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
                     <i class='bx bx-list-ul'></i> All Farmers
-                </a>
+                </a> -->
             </div>
         </div>
 

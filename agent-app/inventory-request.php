@@ -201,9 +201,9 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
     <section class="home-section max-w-6xl mx-auto px-6 md:px-12 pb-4">
         <div class="flex justify-between items-center p-4">
             <h1 class="text-2xl font-bold">Agent Inventory Request</h1>
-            <button onclick="window.history.back()" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
+            <!-- <button onclick="window.history.back()" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
                 <i class='bx bx-arrow-back'></i> Back
-            </button>
+            </button> -->
         </div>
 
         <?php if (isset($success)): ?>
@@ -297,10 +297,10 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
                     </div>
 
                     <!-- Expiry Date -->
-                    <div>
+                    <!-- <div>
                         <label class="block mb-1 font-medium">Expiry Date</label>
                         <input type="date" name="expiry" class="w-full p-2 border border-gray-300 rounded">
-                    </div>
+                    </div> -->
 
                     <!-- Product Image Upload -->
                     <div>

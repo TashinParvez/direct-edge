@@ -1,4 +1,8 @@
 <?php
+
+include '../include/navbar.php';
+$agent_id = isset($user_id) ? $user_id : 45;
+
 // Database connection
 $servername = "localhost";
 $username = "root";
@@ -9,8 +13,6 @@ $conn = mysqli_connect($servername, $username, $password, $databasename);
 if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
-
-$user_id = (int)$_SESSION['user_id'];
 
 // Fetch user data
 $stmt = $conn->prepare("SELECT user_id, full_name, role FROM users WHERE user_id = ? LIMIT 1");
@@ -129,7 +131,6 @@ function sanitize($v)
 </head>
 
 <body class="bg-gray-50">
-    <?php include '../include/navbar.php'; ?>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Page Header -->
@@ -139,9 +140,9 @@ function sanitize($v)
                     <h2 class="text-3xl font-bold text-gray-900">My Farmers</h2>
                     <p class="text-gray-600 mt-1">Manage and track all farmers in your network</p>
                 </div>
-                <a href="add-farmers-info.php" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all">
+                <!-- <a href="add-farmers-info.php" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all">
                     Add New Farmer
-                </a>
+                </a> -->
             </div>
         </div>
 
