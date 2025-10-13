@@ -22,7 +22,7 @@ if (isset($_SESSION['user_id'])) {
     // If role is 'Agent', fetch status
     if ($role === 'Agent') {
         $status = '';
-        $agentStmt = $conn->prepare('SELECT status FROM agent_info WHERE user_id = ? LIMIT 1');
+        $agentStmt = $conn->prepare('SELECT status FROM agent_info WHERE agent_id = ? LIMIT 1');
         $agentStmt->bind_param('i', $user_id);
         $agentStmt->execute();
         $agentStmt->bind_result($status);
