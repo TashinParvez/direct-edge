@@ -166,9 +166,9 @@ $conn->close();
         <section class="home-section pb-4">
             <div class="flex justify-between items-center p-4">
                 <h1 class="text-2xl font-bold">Farmer Information Form</h1>
-                <a href="farmers-list.php" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                <!-- <a href="farmers-list.php" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
                     <i class='bx bx-list-ul'></i> View All Farmers
-                </a>
+                </a> -->
             </div>
 
             <?php if (isset($message)): ?>
