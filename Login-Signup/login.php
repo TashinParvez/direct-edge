@@ -1,6 +1,4 @@
 <?php
-session_start();
-
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -25,23 +23,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user = mysqli_fetch_assoc($result);
 
         if (password_verify($password, $user['password'])) {
+            session_start();
+
             // Store all user info in session
             $_SESSION['user_id'] = $user['user_id'];
-            $_SESSION['full_name'] = $user['full_name'];
-            $_SESSION['email'] = $user['email'];
-            $_SESSION['phone'] = $user['phone'];
-            $_SESSION['role'] = $user['role'];
-            $_SESSION['created_at'] = $user['created_at'];
-            $_SESSION['login_time'] = date('Y-m-d H:i:s');
+            
+            // $_SESSION['full_name'] = $user['full_name'];
+            // $_SESSION['email'] = $user['email'];
+            // $_SESSION['phone'] = $user['phone'];
+            // $_SESSION['role'] = $user['role'];
+            // $_SESSION['created_at'] = $user['created_at'];
+            // $_SESSION['login_time'] = date('Y-m-d H:i:s');
 
             // ✅ Redirect based on user role
-            if ($user['role'] === 'Agent') {
-                header("Location: ../agent-app/agent-profile.php");
-            } else if ($user['role'] === 'Admin') {
-                header("Location: ../warehouse-app/admin-dashboard/admin-agent-management.php");
-            } else {
-                header("Location: profile.php");
-            }
+            // if ($user['role'] === 'Agent') {
+            //     header("Location: ../agent-app/agent-profile.php");
+            // } else if ($user['role'] === 'Admin') {
+            //     header("Location: ../warehouse-app/admin-dashboard/admin-agent-management.php");
+            // } else {
+            //     header("Location: profile.php");
+            // }
+            header("Location: ../Home/landing.php");
             exit();
         } else {
             $error = "Invalid password!";

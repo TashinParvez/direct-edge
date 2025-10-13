@@ -1,6 +1,5 @@
 <?php
-// DirectEdge Agricultural Supply Chain Platform Homepage
-// Integrated B2B platform connecting farmers, distributors, and shop owners
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,31 +12,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/heroicons@1.0.6/outline/index.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/Logo/favicon.png">
 </head>
 
 <body class="bg-white">
     <!-- Navigation Header -->
-    <nav class="bg-white shadow-lg fixed w-full z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <h1 class="text-2xl font-bold text-green-600">DirectEdge</h1>
-                    </div>
-                    <div class="hidden md:ml-10 md:flex md:space-x-8">
-                        <a href="#features" class="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium transition-colors">Features</a>
-                        <a href="#solutions" class="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium transition-colors">Solutions</a>
-                        <a href="#about" class="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium transition-colors">About</a>
-                        <a href="#contact" class="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium transition-colors">Contact</a>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="../Login-Signup/login.php" class="bg-green-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">Get started</a>
-                    <a href="../Login-Signup/login.php" class="text-green-600 border border-green-600 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition-colors">Login</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+
+    <?php include '../include/navbar.php'; ?>
 
     <!-- Hero Section -->
     <section class="pt-20 pb-16 bg-gradient-to-br from-green-50 via-white to-emerald-50">

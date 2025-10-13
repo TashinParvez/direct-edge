@@ -1,12 +1,7 @@
 <?php
-// agent-farmer-dashboard.php - Agent's farmer management dashboard
-session_start();
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../Login-Signup/login.php");
-    // exit();
-}
+include '../include/navbar.php';
+$agent_id = isset($user_id) ? $user_id : 45;
 
 // Database connection
 $servername = "localhost";
@@ -19,20 +14,12 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-$user_id = (int)$_SESSION['user_id'];
-
 // Fetch user data
 $stmt = $conn->prepare("SELECT user_id, full_name, role FROM users WHERE user_id = ? LIMIT 1");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
 $stmt->close();
-
-// ✅ STRICT ROLE CHECK - Only Agents can access
-if (!$user || $user['role'] !== 'Agent') {
-    header("Location: ../Login-Signup/profile.php");
-    exit();
-}
 
 // Get agent_id from agent_info table
 $stmt = $conn->prepare("SELECT agent_info_id FROM agent_info WHERE user_id = ? LIMIT 1");
@@ -135,30 +122,15 @@ function sanitize($v)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Farmer Management - Agent Dashboard</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/Favicon.png">
+    <!-- Favicon -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/Logo/favicon.png">
+
 </head>
 
 <body class="bg-gray-50">
-    <!-- Navigation -->
-    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-green-600 text-white grid place-items-center font-bold text-lg">🌾</div>
-                    <div>
-                        <h1 class="text-lg font-bold text-gray-900">DirectEdge Agent</h1>
-                        <p class="text-xs text-gray-500">Farmer Management</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <span class="text-sm font-medium text-gray-700 hidden sm:block">👤 <?php echo sanitize($user['full_name']); ?></span>
-                    <a href="agent-profile.php" class="text-sm text-blue-600 hover:text-blue-700">Profile</a>
-                    <a href="logout.php" class="text-sm text-red-600 hover:text-red-700 font-medium">Logout</a>
-                </div>
-            </div>
-        </div>
-    </nav>
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Page Header -->
@@ -168,9 +140,9 @@ function sanitize($v)
                     <h2 class="text-3xl font-bold text-gray-900">My Farmers</h2>
                     <p class="text-gray-600 mt-1">Manage and track all farmers in your network</p>
                 </div>
-                <a href="add-farmers-info.php" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all">
-                    ➕ Add New Farmer
-                </a>
+                <!-- <a href="add-farmers-info.php" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all">
+                    Add New Farmer
+                </a> -->
             </div>
         </div>
 
@@ -259,7 +231,7 @@ function sanitize($v)
                 <h3 class="text-xl font-bold text-gray-900 mb-2">No Farmers Found</h3>
                 <p class="text-gray-600 mb-6">Start building your farmer network by adding your first farmer</p>
                 <a href="add-farmer.php" class="inline-block px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
-                    ➕ Add Your First Farmer
+                    Add Your First Farmer
                 </a>
             </div>
         <?php else: ?>
@@ -427,6 +399,9 @@ function sanitize($v)
             }
         });
     </script>
+
+    <?php include '../include/footer.php'; ?>
+
 </body>
 
 </html>
