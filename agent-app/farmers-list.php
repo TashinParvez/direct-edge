@@ -1,76 +1,78 @@
 <?php
-
 include '../include/navbar.php';
 $agent_id = isset($user_id) ? $user_id : 45;
 
 // Connect database
 include '../include/connect-db.php'; // Database connection
 
-
 // Pagination
 $records_per_page = 10;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $records_per_page;
 
-
-// Search functionality
+// Search functionality (updated to match dashboard: include nid_number)
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 $search_condition = '';
 $search_params = [];
 
+// Base WHERE condition for agent
+$where_clause = "WHERE agent_id = ?";
+$base_params = [$agent_id];
 
+// Add search filter if needed
 if (!empty($search)) {
-    $search_condition = "WHERE full_name LIKE ? OR contact_number LIKE ? OR crops_cultivated LIKE ?";
+    $search_condition = " AND (full_name LIKE ? OR contact_number LIKE ? OR nid_number LIKE ? OR crops_cultivated LIKE ?)";
     $search_term = "%$search%";
-    $search_params = [$search_term, $search_term, $search_term];
+    $search_params = [$search_term, $search_term, $search_term, $search_term];
 }
 
+// Combine conditions
+$final_where = $where_clause . $search_condition;
+$final_params = array_merge($base_params, $search_params);
 
 // Get total records for pagination
-$count_sql = "SELECT COUNT(*) as total FROM farmers $search_condition";
+$count_sql = "SELECT COUNT(*) as total FROM farmers $final_where";
 $count_stmt = $conn->prepare($count_sql);
-if (!empty($search_params)) {
-    $count_stmt->bind_param("sss", ...$search_params);
-}
+
+// Bind parameters dynamically
+$count_types = str_repeat('s', count($final_params)); // all strings fine, agent_id will cast automatically
+$count_stmt->bind_param($count_types, ...$final_params);
+
 $count_stmt->execute();
 $total_records = $count_stmt->get_result()->fetch_assoc()['total'];
 $total_pages = ceil($total_records / $records_per_page);
-
+$count_stmt->close();
 
 // Check if created_at column exists
 $columns_query = "SHOW COLUMNS FROM farmers LIKE 'created_at'";
 $has_created_at = $conn->query($columns_query)->num_rows > 0;
 
-
-// Get farmers data - adjust query based on column existence
+// Get farmers data
 $select_columns = "id, full_name, contact_number, farmer_type, crops_cultivated, land_size, profile_picture";
 $order_by = "ORDER BY id DESC"; // Default ordering by id
-
 
 if ($has_created_at) {
     $select_columns .= ", created_at";
     $order_by = "ORDER BY created_at DESC";
 }
 
-
 $sql = "SELECT $select_columns 
-        FROM farmers $search_condition 
+        FROM farmers 
+        $final_where 
         $order_by 
         LIMIT ? OFFSET ?";
+
 $stmt = $conn->prepare($sql);
 
+// Add pagination parameters
+$data_params = array_merge($final_params, [$records_per_page, $offset]);
+$data_types = str_repeat('s', count($final_params)) . 'ii'; // agent_id + search terms + limit + offset
 
-if (!empty($search_params)) {
-    $stmt->bind_param("ssii", ...[...$search_params, $records_per_page, $offset]);
-} else {
-    $stmt->bind_param("ii", $records_per_page, $offset);
-}
-
+$stmt->bind_param($data_types, ...$data_params);
 
 $stmt->execute();
 $result = $stmt->get_result();
 $farmers = $result->fetch_all(MYSQLI_ASSOC);
-
 
 $stmt->close();
 $conn->close();
@@ -82,6 +84,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <title>Farmers Directory - Stock Integrated</title>
+    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -182,7 +185,7 @@ $conn->close();
                         <input type="text"
                             name="search"
                             value="<?php echo htmlspecialchars($search); ?>"
-                            placeholder="Search farmers by name, phone, or crops..."
+                            placeholder="Search farmers by name, phone, NID, or crops..."
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500">
                     </div>
                     <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors">
