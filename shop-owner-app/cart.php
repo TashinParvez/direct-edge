@@ -10,8 +10,8 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Initialize session
-session_start();
+// Initialize sessioninclude
+$user_id = isset($user_id) ? $user_id : 45;
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
@@ -299,67 +299,67 @@ $conn->close();
     <meta charset="UTF-8">
     <title>Generate Receipt - Stock Integrated</title>
     <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
-    <link rel="stylesheet" href="../Include/sidebar.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-    .cart-item {
-        transition: all 0.3s ease;
-    }
+        .cart-item {
+            transition: all 0.3s ease;
+        }
 
-    .cart-item:hover {
-        background-color: #f9fafb;
-    }
+        .cart-item:hover {
+            background-color: #f9fafb;
+        }
 
-    .modal {
-        backdrop-filter: blur(4px);
-    }
+        .modal {
+            backdrop-filter: blur(4px);
+        }
 
-    .search-result:hover {
-        background-color: #f3f4f6;
-    }
+        .search-result:hover {
+            background-color: #f3f4f6;
+        }
 
-    .stock-indicator {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        margin-right: 5px;
-    }
+        .stock-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
 
-    .stock-high {
-        background-color: #10b981;
-    }
+        .stock-high {
+            background-color: #10b981;
+        }
 
-    .stock-medium {
-        background-color: #f59e0b;
-    }
+        .stock-medium {
+            background-color: #f59e0b;
+        }
 
-    .stock-low {
-        background-color: #ef4444;
-    }
-
-    .receipt-container {
-        font-family: 'Courier New', monospace;
-        max-width: 300px;
-        margin: 0 auto;
-    }
-
-    @media print {
-        .no-print {
-            display: none !important;
+        .stock-low {
+            background-color: #ef4444;
         }
 
         .receipt-container {
-            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            max-width: 300px;
+            margin: 0 auto;
         }
-    }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .receipt-container {
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../Include/SidebarAgent.php'; ?>
+    <?php include '../include/navbar.php';
+    ?>
 
     <section class="home-section p-0">
         <div class="flex justify-between items-center p-4">
@@ -371,16 +371,16 @@ $conn->close();
         </div>
 
         <?php if (isset($_SESSION['cart_message'])): ?>
-        <div class="mx-4 mb-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
-            <?php echo $_SESSION['cart_message'];
+            <div class="mx-4 mb-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+                <?php echo $_SESSION['cart_message'];
                 unset($_SESSION['cart_message']); ?>
-        </div>
+            </div>
         <?php endif; ?>
 
         <div class="container mx-auto my-3">
             <!-- Cart Items -->
             <?php if (!empty($_SESSION['cart'])): ?>
-            <?php
+                <?php
                 $total = 0;
                 foreach ($_SESSION['cart'] as $item):
                     $subtotal = $item['price'] * $item['quantity'];
@@ -391,63 +391,63 @@ $conn->close();
                         elseif ($item['available_stock'] <= 30) $stock_class = 'stock-medium';
                     }
                 ?>
-            <div class="bg-white shadow-md rounded-lg mb-3 flex cart-item"
-                data-product="<?php echo $item['product_id']; ?>">
-                <div class="w-1/6 p-2">
-                    <img src="<?php echo htmlspecialchars($item['image_url'] ?: '../assets/products-image/default.jpg'); ?>"
-                        class="w-full h-48 object-cover rounded" alt="<?php echo htmlspecialchars($item['name']); ?>">
-                </div>
-                <div class="w-4/6 flex flex-col justify-center p-4">
-                    <h5 class="text-xl font-semibold">
-                        <span class="stock-indicator <?php echo $stock_class; ?>"></span>
-                        <?php echo htmlspecialchars($item['name']); ?>
-                    </h5>
-                    <p class="text-gray-600">Price: ৳<?php echo number_format($item['price'], 2); ?> per
-                        <?php echo htmlspecialchars($item['unit']); ?></p>
-                    <p class="counter-price font-bold text-lg">৳<?php echo number_format($subtotal, 2); ?></p>
-                    <?php if (isset($item['available_stock'])): ?>
-                    <p class="text-xs text-gray-500">Stock Available: <?php echo $item['available_stock']; ?></p>
-                    <?php endif; ?>
-                </div>
-                <div class="w-1/6 flex flex-col items-center justify-center">
-                    <div class="flex items-center space-x-2 mb-2">
-                        <form method="post" style="display: inline;">
-                            <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
-                            <input type="hidden" name="cart_action" value="remove">
-                            <button type="submit"
-                                class="decrease-btn bg-red-200 hover:bg-red-300 px-3 py-1 rounded">-</button>
-                        </form>
-                        <div class="counter text-lg font-semibold"><?php echo $item['quantity']; ?></div>
-                        <form method="post" style="display: inline;">
-                            <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
-                            <input type="hidden" name="cart_action" value="add">
-                            <button type="submit"
-                                class="increase-btn bg-green-200 hover:bg-green-300 px-3 py-1 rounded">+</button>
-                        </form>
+                    <div class="bg-white shadow-md rounded-lg mb-3 flex cart-item"
+                        data-product="<?php echo $item['product_id']; ?>">
+                        <div class="w-1/6 p-2">
+                            <img src="<?php echo htmlspecialchars($item['image_url'] ?: '../assets/products-image/default.jpg'); ?>"
+                                class="w-full h-48 object-cover rounded" alt="<?php echo htmlspecialchars($item['name']); ?>">
+                        </div>
+                        <div class="w-4/6 flex flex-col justify-center p-4">
+                            <h5 class="text-xl font-semibold">
+                                <span class="stock-indicator <?php echo $stock_class; ?>"></span>
+                                <?php echo htmlspecialchars($item['name']); ?>
+                            </h5>
+                            <p class="text-gray-600">Price: ৳<?php echo number_format($item['price'], 2); ?> per
+                                <?php echo htmlspecialchars($item['unit']); ?></p>
+                            <p class="counter-price font-bold text-lg">৳<?php echo number_format($subtotal, 2); ?></p>
+                            <?php if (isset($item['available_stock'])): ?>
+                                <p class="text-xs text-gray-500">Stock Available: <?php echo $item['available_stock']; ?></p>
+                            <?php endif; ?>
+                        </div>
+                        <div class="w-1/6 flex flex-col items-center justify-center">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <form method="post" style="display: inline;">
+                                    <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
+                                    <input type="hidden" name="cart_action" value="remove">
+                                    <button type="submit"
+                                        class="decrease-btn bg-red-200 hover:bg-red-300 px-3 py-1 rounded">-</button>
+                                </form>
+                                <div class="counter text-lg font-semibold"><?php echo $item['quantity']; ?></div>
+                                <form method="post" style="display: inline;">
+                                    <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
+                                    <input type="hidden" name="cart_action" value="add">
+                                    <button type="submit"
+                                        class="increase-btn bg-green-200 hover:bg-green-300 px-3 py-1 rounded">+</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
 
-            <!-- Total Section -->
-            <div class="bg-white shadow-md rounded-lg mb-3 p-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-bold">Total: ৳<?php echo number_format($total, 2); ?></h3>
-                    <div class="space-x-2">
-                        <form method="post" style="display: inline;">
-                            <input type="hidden" name="cart_action" value="clear">
-                            <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Clear
-                                Cart</button>
-                        </form>
-                        <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                            onclick="generateReceipt()">Generate Receipt & Process Sale</button>
+                <!-- Total Section -->
+                <div class="bg-white shadow-md rounded-lg mb-3 p-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold">Total: ৳<?php echo number_format($total, 2); ?></h3>
+                        <div class="space-x-2">
+                            <form method="post" style="display: inline;">
+                                <input type="hidden" name="cart_action" value="clear">
+                                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Clear
+                                    Cart</button>
+                            </form>
+                            <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                                onclick="generateReceipt()">Generate Receipt & Process Sale</button>
+                        </div>
                     </div>
                 </div>
-            </div>
             <?php else: ?>
-            <div class="bg-white shadow-md rounded-lg p-4 text-center">
-                <p class="text-gray-600">Your cart is empty. Add products using the buttons below.</p>
-            </div>
+                <div class="bg-white shadow-md rounded-lg p-4 text-center">
+                    <p class="text-gray-600">Your cart is empty. Add products using the buttons below.</p>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -525,47 +525,47 @@ $conn->close();
     </div>
 
     <script>
-    // Manual Product Addition
-    function openManualModal() {
-        document.getElementById('manual-modal').classList.remove('hidden');
-        document.getElementById('product-search').focus();
-        searchProducts(''); // Load all products initially
-    }
+        // Manual Product Addition
+        function openManualModal() {
+            document.getElementById('manual-modal').classList.remove('hidden');
+            document.getElementById('product-search').focus();
+            searchProducts(''); // Load all products initially
+        }
 
-    function closeManualModal() {
-        document.getElementById('manual-modal').classList.add('hidden');
-        document.getElementById('search-results').innerHTML = '';
-        document.getElementById('product-search').value = '';
-    }
+        function closeManualModal() {
+            document.getElementById('manual-modal').classList.add('hidden');
+            document.getElementById('search-results').innerHTML = '';
+            document.getElementById('product-search').value = '';
+        }
 
-    function searchProducts(query) {
-        fetch('', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=search_products&search=' + encodeURIComponent(query)
-            })
-            .then(response => response.json())
-            .then(products => {
-                const resultsDiv = document.getElementById('search-results');
-                resultsDiv.innerHTML = '';
+        function searchProducts(query) {
+            fetch('', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=search_products&search=' + encodeURIComponent(query)
+                })
+                .then(response => response.json())
+                .then(products => {
+                    const resultsDiv = document.getElementById('search-results');
+                    resultsDiv.innerHTML = '';
 
-                if (products.length === 0) {
-                    resultsDiv.innerHTML =
-                        '<p class="text-gray-500 text-center">No products found in shop inventory</p>';
-                    return;
-                }
+                    if (products.length === 0) {
+                        resultsDiv.innerHTML =
+                            '<p class="text-gray-500 text-center">No products found in shop inventory</p>';
+                        return;
+                    }
 
-                products.forEach(product => {
-                    let stockClass = 'stock-high';
-                    if (product.current_quantity <= 10) stockClass = 'stock-low';
-                    else if (product.current_quantity <= 30) stockClass = 'stock-medium';
+                    products.forEach(product => {
+                        let stockClass = 'stock-high';
+                        if (product.current_quantity <= 10) stockClass = 'stock-low';
+                        else if (product.current_quantity <= 30) stockClass = 'stock-medium';
 
-                    const productDiv = document.createElement('div');
-                    productDiv.className =
-                        'flex items-center p-3 border-b hover:bg-gray-50 cursor-pointer search-result';
-                    productDiv.innerHTML = `
+                        const productDiv = document.createElement('div');
+                        productDiv.className =
+                            'flex items-center p-3 border-b hover:bg-gray-50 cursor-pointer search-result';
+                        productDiv.innerHTML = `
                     <img src="${product.image_url || '../assets/products-image/default.jpg'}" 
                          class="w-12 h-12 object-cover rounded mr-3" alt="${product.name}">
                     <div class="flex-1">
@@ -579,71 +579,71 @@ $conn->close();
                     <button onclick="addToCart(${product.product_id})" 
                             class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">Add</button>
                 `;
-                    resultsDiv.appendChild(productDiv);
+                        resultsDiv.appendChild(productDiv);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error searching products:', error);
                 });
-            })
-            .catch(error => {
-                console.error('Error searching products:', error);
-            });
-    }
+        }
 
-    function addToCart(productId) {
-        const form = document.createElement('form');
-        form.method = 'post';
-        form.innerHTML = `
+        function addToCart(productId) {
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.innerHTML = `
             <input type="hidden" name="product_id" value="${productId}">
             <input type="hidden" name="cart_action" value="add">
         `;
-        document.body.appendChild(form);
-        form.submit();
-    }
-
-    // Generate Receipt with Stock Deduction
-    function generateReceipt() {
-        if (!confirm('This will process the sale and deduct items from inventory. Continue?')) {
-            return;
+            document.body.appendChild(form);
+            form.submit();
         }
 
-        fetch('', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=generate_receipt'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('receipt-content').innerHTML = data.receipt_html;
-                    document.getElementById('receipt-modal').classList.remove('hidden');
+        // Generate Receipt with Stock Deduction
+        function generateReceipt() {
+            if (!confirm('This will process the sale and deduct items from inventory. Continue?')) {
+                return;
+            }
 
-                    // Show warnings if any
-                    if (data.warnings && data.warnings.length > 0) {
-                        alert('Transaction completed with warnings:\n' + data.warnings.join('\n'));
+            fetch('', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=generate_receipt'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('receipt-content').innerHTML = data.receipt_html;
+                        document.getElementById('receipt-modal').classList.remove('hidden');
+
+                        // Show warnings if any
+                        if (data.warnings && data.warnings.length > 0) {
+                            alert('Transaction completed with warnings:\n' + data.warnings.join('\n'));
+                        }
+
+                        // Reload page to update cart and stock display
+                        setTimeout(() => {
+                            location.reload();
+                        }, 3000);
+                    } else {
+                        alert('Error generating receipt: ' + data.message);
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error generating receipt. Please check the console.');
+                });
+        }
 
-                    // Reload page to update cart and stock display
-                    setTimeout(() => {
-                        location.reload();
-                    }, 3000);
-                } else {
-                    alert('Error generating receipt: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error generating receipt. Please check the console.');
-            });
-    }
+        function closeReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+        }
 
-    function closeReceiptModal() {
-        document.getElementById('receipt-modal').classList.add('hidden');
-    }
-
-    function printReceipt() {
-        const printContent = document.getElementById('receipt-content').innerHTML;
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
+        function printReceipt() {
+            const printContent = document.getElementById('receipt-content').innerHTML;
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
             <html>
                 <head>
                     <title>Receipt</title>
@@ -676,23 +676,23 @@ $conn->close();
                 </body>
             </html>
         `);
-        printWindow.document.close();
-        printWindow.print();
-        printWindow.close();
-    }
+            printWindow.document.close();
+            printWindow.print();
+            printWindow.close();
+        }
 
-    // Inventory Status
-    function showInventoryStatus() {
-        fetch('', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'action=get_inventory_status'
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('inventory-content').innerHTML = `
+        // Inventory Status
+        function showInventoryStatus() {
+            fetch('', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'action=get_inventory_status'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('inventory-content').innerHTML = `
                 <div class="space-y-3">
                     <div class="flex justify-between">
                         <span>Total Products:</span>
@@ -708,147 +708,145 @@ $conn->close();
                     </div>
                 </div>
             `;
-                document.getElementById('inventory-modal').classList.remove('hidden');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-    }
-
-    function closeInventoryModal() {
-        document.getElementById('inventory-modal').classList.add('hidden');
-    }
-
-    // Search input event listener
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('product-search');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                searchProducts(this.value);
-            });
+                    document.getElementById('inventory-modal').classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
         }
-    });
 
-    // Webcam scanning code
-    const scanBtn = document.querySelector('.scan-btn');
-    const modal = document.getElementById('webcam-modal');
-    const video = document.getElementById('webcam-video');
-    const status = document.getElementById('detection-status');
-    const stopBtn = document.getElementById('stop-scan-btn');
-    const API_KEY = 'u64iBlZU98pNf3NhHccg'; // Your Roboflow API Key
+        function closeInventoryModal() {
+            document.getElementById('inventory-modal').classList.add('hidden');
+        }
 
-    let stream = null;
-    let detectionInterval = null;
-    let detected = false;
+        // Search input event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('product-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    searchProducts(this.value);
+                });
+            }
+        });
 
-    // Product mapping for detection - Updated to use actual products from your database
-    const productMappings = {
-        'lays': 1, // Apple - since you mentioned product_id 18 but your database shows products 1-15
-        'chips': 2, // Banana 
-        'snack': 3, // Mango
-        'apple': 1, // Apple
-        'banana': 2, // Banana
-        'orange': 4 // Orange
-    };
+        // Webcam scanning code
+        const scanBtn = document.querySelector('.scan-btn');
+        const modal = document.getElementById('webcam-modal');
+        const video = document.getElementById('webcam-video');
+        const status = document.getElementById('detection-status');
+        const stopBtn = document.getElementById('stop-scan-btn');
+        const API_KEY = 'u64iBlZU98pNf3NhHccg'; // Your Roboflow API Key
 
-    scanBtn.addEventListener('click', async () => {
-        console.log('Starting scan...');
-        try {
-            modal.classList.remove('hidden');
+        let stream = null;
+        let detectionInterval = null;
+        let detected = false;
 
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'environment'
-                }
-            });
-            video.srcObject = stream;
-            await new Promise(resolve => {
-                video.onloadedmetadata = () => {
-                    video.play();
-                    resolve();
-                };
-            });
+        // Product mapping for detection - Updated to use actual products from your database
+        const productMappings = {
+            'lays': 1, // Lays
+            'snack': 3, // Mango
+            'banana': 2, // Banana
+            'orange': 4 // Orange
+        };
 
-            status.textContent = 'Hold a product in view...';
+        scanBtn.addEventListener('click', async () => {
+            console.log('Starting scan...');
+            try {
+                modal.classList.remove('hidden');
 
-            detectionInterval = setInterval(async () => {
-                if (video.readyState === video.HAVE_ENOUGH_DATA && !detected) {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    canvas.getContext('2d').drawImage(video, 0, 0);
-                    const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment'
+                    }
+                });
+                video.srcObject = stream;
+                await new Promise(resolve => {
+                    video.onloadedmetadata = () => {
+                        video.play();
+                        resolve();
+                    };
+                });
 
-                    try {
-                        const response = await fetch(
-                            'https://detect.roboflow.com/lays-txw7q/1?api_key=' + API_KEY, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded'
-                                },
-                                body: imageData
-                            });
-                        const predictions = await response.json();
+                status.textContent = 'Hold a product in view...';
 
-                        if (predictions.predictions && predictions.predictions.length > 0 &&
-                            predictions.predictions[0].confidence > 0.5) {
+                detectionInterval = setInterval(async () => {
+                    if (video.readyState === video.HAVE_ENOUGH_DATA && !detected) {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        canvas.getContext('2d').drawImage(video, 0, 0);
+                        const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
-                            const detectedClass = predictions.predictions[0].class
-                                .toLowerCase();
-                            const productId = productMappings[detectedClass];
+                        try {
+                            const response = await fetch(
+                                'https://detect.roboflow.com/lays-txw7q/1?api_key=' + API_KEY, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/x-www-form-urlencoded'
+                                    },
+                                    body: imageData
+                                });
+                            const predictions = await response.json();
 
-                            if (productId) {
-                                status.textContent =
-                                    `Detected ${predictions.predictions[0].class}! Adding to cart...`;
-                                detected = true;
+                            if (predictions.predictions && predictions.predictions.length > 0 &&
+                                predictions.predictions[0].confidence > 0.5) {
 
-                                // Add to cart
-                                const form = document.createElement('form');
-                                form.method = 'post';
-                                form.innerHTML = `
+                                const detectedClass = predictions.predictions[0].class
+                                    .toLowerCase();
+                                const productId = productMappings[detectedClass];
+
+                                if (productId) {
+                                    status.textContent =
+                                        `Detected ${predictions.predictions[0].class}! Adding to cart...`;
+                                    detected = true;
+
+                                    // Add to cart
+                                    const form = document.createElement('form');
+                                    form.method = 'post';
+                                    form.innerHTML = `
                                     <input type="hidden" name="product_id" value="${productId}">
                                     <input type="hidden" name="cart_action" value="add">
                                 `;
-                                document.body.appendChild(form);
+                                    document.body.appendChild(form);
 
-                                setTimeout(() => {
-                                    form.submit();
-                                }, 1000);
+                                    setTimeout(() => {
+                                        form.submit();
+                                    }, 1000);
+                                } else {
+                                    status.textContent =
+                                        `Detected ${predictions.predictions[0].class} but no matching product found.`;
+                                }
                             } else {
                                 status.textContent =
-                                    `Detected ${predictions.predictions[0].class} but no matching product found.`;
+                                    'No products detected. Try adjusting the angle or lighting.';
                             }
-                        } else {
-                            status.textContent =
-                                'No products detected. Try adjusting the angle or lighting.';
+                        } catch (apiError) {
+                            console.error('API error:', apiError);
+                            status.textContent = 'Error contacting detection API.';
                         }
-                    } catch (apiError) {
-                        console.error('API error:', apiError);
-                        status.textContent = 'Error contacting detection API.';
                     }
-                }
-            }, 1000);
+                }, 1000);
 
-        } catch (error) {
-            console.error('Scan error:', error);
-            alert(`Error starting scan: ${error.message}`);
-            stopScan();
+            } catch (error) {
+                console.error('Scan error:', error);
+                alert(`Error starting scan: ${error.message}`);
+                stopScan();
+            }
+        });
+
+        stopBtn.addEventListener('click', stopScan);
+
+        function stopScan() {
+            if (detectionInterval) clearInterval(detectionInterval);
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            modal.classList.add('hidden');
+            detected = false;
+            status.textContent = 'Hold a product in view...';
         }
-    });
 
-    stopBtn.addEventListener('click', stopScan);
-
-    function stopScan() {
-        if (detectionInterval) clearInterval(detectionInterval);
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
-        modal.classList.add('hidden');
-        detected = false;
-        status.textContent = 'Hold a product in view...';
-    }
-
-    window.addEventListener('beforeunload', stopScan);
+        window.addEventListener('beforeunload', stopScan);
     </script>
 </body>
 
