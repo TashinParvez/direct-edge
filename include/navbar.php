@@ -206,6 +206,18 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                     Add Farmer
                                 </a>
                             </li>
+                            <li>
+                                <a <?php echo $hrefAttr . '../agent-app/inventory-request.php"'; ?>
+                                    class="font-semibold <?php echo ($current_page == 'inventory-request.php') ? 'text-green-700' : $linkClass; ?>">
+                                    Inventory Request
+                                </a>
+                            </li>
+                            <li>
+                                <a <?php echo $hrefAttr . '../agent-app/agent-profile.php"'; ?>
+                                    class="font-semibold <?php echo ($current_page == 'agent-profile.php') ? 'text-green-700' : $linkClass; ?>">
+                                    Profile
+                                </a>
+                            </li>
 
                         <?php elseif ($role === 'Shop-Owner'): ?>
                             <!-- SHOP OWNER NAV -->

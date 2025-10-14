@@ -23,11 +23,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user = mysqli_fetch_assoc($result);
 
         if (password_verify($password, $user['password'])) {
+
             session_start();
+            $_SESSION['user_id'] = $user['user_id'];
+
+            $redirect_page = '';
+            if ($user['role'] == 'Agent') {
+                $redirect_page = "agent-app/agent-farmer-dashboard.php";
+            } elseif ($user['role'] == 'Admin') {
+                $redirect_page = "warehouse-app/admin-dashboard/admin-dashboard.php";
+            } elseif ($user['role'] == 'Shop-Owner') {
+                $redirect_page = "";
+            } else {
+                $redirect_page = "Home/landing.php";
+            }
+
+
+            header("Location: ../" . $redirect_page);
+            exit();
 
             // Store all user info in session
-            $_SESSION['user_id'] = $user['user_id'];
-            
             // $_SESSION['full_name'] = $user['full_name'];
             // $_SESSION['email'] = $user['email'];
             // $_SESSION['phone'] = $user['phone'];
@@ -43,8 +58,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // } else {
             //     header("Location: profile.php");
             // }
-            header("Location: ../Home/landing.php");
-            exit();
         } else {
             $error = "Invalid password!";
         }
