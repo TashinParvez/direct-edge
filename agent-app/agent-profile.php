@@ -36,7 +36,7 @@ if ($user['role'] !== 'Agent') {
 }
 
 // Fetch agent-specific info
-$stmt = $conn->prepare("SELECT * FROM agent_info WHERE user_id = ? LIMIT 1");
+$stmt = $conn->prepare("SELECT * FROM agent_info WHERE agent_id = ? LIMIT 1");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $agent_info = $stmt->get_result()->fetch_assoc();

@@ -22,7 +22,7 @@ $user = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
 // Get agent_id from agent_info table
-$stmt = $conn->prepare("SELECT agent_info_id FROM agent_info WHERE user_id = ? LIMIT 1");
+$stmt = $conn->prepare("SELECT agent_info_id FROM agent_info WHERE agent_id = ? LIMIT 1");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $agent_info = $stmt->get_result()->fetch_assoc();
