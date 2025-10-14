@@ -218,6 +218,8 @@ td:nth-child(8) {
 
 th:nth-child(9),
 td:nth-child(9),
+th:nth-child(10),
+td:nth-child(10),
 th:nth-child(3),
 td:nth-child(3),
 th:nth-child(2),
@@ -283,9 +285,15 @@ td:nth-child(9) {
     width: 10%;
 }
 
-/* Offer Suggestion */
+/* Warehouse Free Space */
 th:nth-child(10),
 td:nth-child(10) {
+    width: 10%;
+}
+
+/* Offer Suggestion */
+th:nth-child(11),
+td:nth-child(11) {
     width: 10%;
 }
 
