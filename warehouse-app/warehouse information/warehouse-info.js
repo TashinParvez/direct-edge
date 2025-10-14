@@ -192,7 +192,7 @@ function collectFiltersFromUI() {
 }
 
 let currentPage = 1;
-let rowsPerPage = 5;
+let rowsPerPage = 10; // default to 10 rows per page
 let lastPagination = { page: 1, pageSize: rowsPerPage, total: 0, totalPages: 1 };
 let lastTotals = { totalItems: 0, totalQuantity: 0 };
 
@@ -208,6 +208,7 @@ function buildRowHtml(row) {
             <td>${row.unit_volume ?? ''}</td>
             <td class="${statusCls}">${row.status}</td>
             <td>${row.warehouse_name}</td>
+            <td>${row.free_space}</td>
             <td>${row.agent_id || '—'}</td>
             <td><button class="offer-suggestion-link" title="View offer suggestion">${row.offer_text || 'No Offer'}</button></td>
             <td>${row.inbound_stock_date || '—'}</td>
@@ -262,7 +263,8 @@ async function loadList(page = 1) {
             warehouses,
             units,
             page,
-            pageSize: rowsPerPage
+            // If rowsPerPage is 0, request 'all' by sending a large pageSize
+            pageSize: rowsPerPage === 0 ? 1000000 : rowsPerPage
         };
         const { rows, pagination, totals } = await api('list', payload);
         // Render rows
@@ -540,17 +542,18 @@ if (editProductForm) {
                 trEl.cells[5].textContent = row.status;
                 trEl.cells[5].className = row.status.toLowerCase() === 'completed' ? 'completed' : 'in-progress';
                 trEl.cells[6].textContent = row.warehouse_name;
-                trEl.cells[7].textContent = row.agent_id || '—';
-                const offerBtn = trEl.cells[8].querySelector('button.offer-suggestion-link');
+                trEl.cells[7].textContent = row.free_space;
+                trEl.cells[8].textContent = row.agent_id || '—';
+                const offerBtn = trEl.cells[9].querySelector('button.offer-suggestion-link');
                 if (offerBtn) {
                     offerBtn.textContent = row.offer_text || 'No Offer';
                 } else {
-                    trEl.cells[8].innerHTML = `<button class="offer-suggestion-link" title="View offer suggestion">${row.offer_text || 'No Offer'}</button>`;
+                    trEl.cells[9].innerHTML = `<button class="offer-suggestion-link" title="View offer suggestion">${row.offer_text || 'No Offer'}</button>`;
                 }
                 trEl.setAttribute('data-offer', row.offer_text || 'No Offer');
-                trEl.cells[9].textContent = row.inbound_stock_date || '—';
-                trEl.cells[10].textContent = row.expiry_date || '—';
-                trEl.cells[11].textContent = row.last_updated || '';
+                trEl.cells[10].textContent = row.inbound_stock_date || '—';
+                trEl.cells[11].textContent = row.expiry_date || '—';
+                trEl.cells[12].textContent = row.last_updated || '';
             }
 
             if (metrics) {
