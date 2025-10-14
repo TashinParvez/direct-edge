@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demand Forecasting - Shop Management</title>
+    <title>Demand Forecasting Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -166,253 +166,228 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            background: #f8f9fc;
-            color: #333;
-            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #1f2a44;
+            line-height: 1.5;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 24px;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            padding: 32px;
+            text-align: left;
+            margin-bottom: 32px;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            font-weight: 300;
-            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 600;
+            color: #1f2a44;
         }
 
         .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+            font-size: 16px;
+            color: #64748b;
+            margin-top: 8px;
         }
 
         .controls-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e3e6f0;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .controls-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
             align-items: end;
-        }
-
-        .form-group {
-            position: relative;
         }
 
         .form-group label {
             display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2a44;
             margin-bottom: 8px;
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.9rem;
         }
 
         .form-group select,
         .form-group input {
             width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e5e7eb;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
-            font-size: 16px;
-            background: white;
-            transition: all 0.3s ease;
+            font-size: 14px;
+            background: #ffffff;
+            transition: border-color 0.2s;
         }
 
         .form-group select:focus,
         .form-group input:focus {
-            border-color: #667eea;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #3b82f6;
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 10px 16px;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            text-align: center;
+            transition: background-color 0.2s, transform 0.1s;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #3b82f6;
+            color: #ffffff;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            background: #2563eb;
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
+            background: #6b7280;
+            color: #ffffff;
         }
 
         .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.3);
+            background: #4b5563;
         }
 
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
         .product-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e3e6f0;
-            transition: all 0.3s ease;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
         }
 
         .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .product-card.active {
-            border: 2px solid #667eea;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border: 1px solid #3b82f6;
         }
 
         .product-header {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .product-image {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            background: #f8f9fc;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            margin-right: 12px;
         }
 
         .product-info h3 {
-            font-size: 1.1rem;
+            font-size: 16px;
             font-weight: 600;
-            color: #374151;
-            margin-bottom: 5px;
+            color: #1f2a44;
         }
 
         .product-info p {
-            font-size: 0.9rem;
-            color: #6b7280;
+            font-size: 14px;
+            color: #64748b;
         }
 
         .product-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 8px;
+            margin-top: 12px;
         }
 
         .stat {
+            padding: 8px;
+            background: #f1f5f9;
+            border-radius: 6px;
             text-align: center;
-            padding: 10px;
-            background: #f8f9fc;
-            border-radius: 8px;
         }
 
         .stat-value {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            color: #3b82f6;
         }
 
         .stat-label {
-            font-size: 0.8rem;
-            color: #6b7280;
+            font-size: 12px;
+            color: #64748b;
         }
 
         .forecast-section {
             display: none;
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e3e6f0;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .forecast-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
+            margin-bottom: 24px;
         }
 
         .forecast-title {
-            font-size: 1.5rem;
+            font-size: 20px;
             font-weight: 600;
-            color: #374151;
+            color: #1f2a44;
         }
 
         .forecast-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
         .forecast-stat {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
+            background: #f1f5f9;
+            padding: 16px;
+            border-radius: 8px;
             text-align: center;
         }
 
         .forecast-stat-value {
-            font-size: 2rem;
-            font-weight: 300;
-            margin-bottom: 5px;
+            font-size: 24px;
+            font-weight: 500;
+            color: #1f2a44;
         }
 
         .forecast-stat-label {
-            font-size: 0.9rem;
-            opacity: 0.9;
+            font-size: 14px;
+            color: #64748b;
         }
 
         .forecast-table {
-            background: white;
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
         .forecast-table table {
@@ -421,66 +396,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
 
         .forecast-table th {
-            background: #f8f9fc;
-            padding: 15px 20px;
+            background: #f1f5f9;
+            padding: 12px;
             text-align: left;
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.9rem;
-            border-bottom: 2px solid #e3e6f0;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2a44;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .forecast-table td {
-            padding: 15px 20px;
-            border-bottom: 1px solid #f1f3f4;
-            font-size: 0.9rem;
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
         }
 
         .forecast-table tbody tr:hover {
-            background: #f8f9fc;
+            background: #f8fafc;
         }
 
         .confidence-high {
-            color: #10b981;
-            font-weight: 600;
-            background: rgba(16, 185, 129, 0.1);
+            color: #15803d;
+            font-weight: 500;
+            background: #dcfce7;
             padding: 4px 8px;
-            border-radius: 6px;
+            border-radius: 4px;
         }
 
         .confidence-medium {
-            color: #f59e0b;
-            font-weight: 600;
-            background: rgba(245, 158, 11, 0.1);
+            color: #b45309;
+            font-weight: 500;
+            background: #fef3c7;
             padding: 4px 8px;
-            border-radius: 6px;
+            border-radius: 4px;
         }
 
         .confidence-low {
-            color: #ef4444;
-            font-weight: 600;
-            background: rgba(239, 68, 68, 0.1);
+            color: #b91c1c;
+            font-weight: 500;
+            background: #fee2e2;
             padding: 4px 8px;
-            border-radius: 6px;
+            border-radius: 4px;
         }
 
         .loading {
             text-align: center;
-            padding: 40px;
-            font-size: 1.1rem;
-            color: #6b7280;
+            padding: 32px;
+            font-size: 14px;
+            color: #64748b;
         }
 
         .loading::after {
             content: '';
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #3b82f6;
             border-radius: 50%;
             display: inline-block;
             animation: spin 1s linear infinite;
-            margin-left: 15px;
+            margin-left: 8px;
         }
 
         @keyframes spin {
@@ -494,34 +469,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
 
         .alert {
-            padding: 15px 20px;
+            padding: 12px 16px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            font-size: 14px;
             font-weight: 500;
         }
 
         .alert-success {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            color: #047857;
+            background: #dcfce7;
+            color: #15803d;
         }
 
         .alert-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #dc2626;
+            background: #fee2e2;
+            color: #b91c1c;
         }
 
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
-            color: #6b7280;
+            padding: 48px;
+            color: #64748b;
         }
 
         .empty-state h3 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            color: #374151;
+            font-size: 18px;
+            color: #1f2a44;
+            margin-bottom: 8px;
         }
 
         @media (max-width: 768px) {
@@ -534,15 +508,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
 
             .forecast-stats {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr;
             }
 
             .header h1 {
-                font-size: 2rem;
+                font-size: 24px;
             }
 
             .container {
-                padding: 15px;
+                padding: 16px;
             }
         }
     </style>
@@ -551,8 +525,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Demand Forecasting Dashboard</h1>
-            <p>AI-powered demand prediction for your shop inventory</p>
+            <h1>Demand Forecasting Dashboard</h1>
+            <p>AI-powered demand prediction for shop inventory</p>
         </div>
 
         <div class="controls-card">
@@ -575,40 +549,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 <div class="form-group">
                     <label>&nbsp;</label>
-                    <button class="btn btn-primary" onclick="loadProducts()">
-                        🔄 Refresh Products
-                    </button>
+                    <button class="btn btn-primary" onclick="loadProducts()">Refresh Products</button>
                 </div>
             </div>
         </div>
 
         <div id="alert-container"></div>
 
-        <!-- Products Grid -->
         <div id="products-container">
             <div class="products-grid" id="products-grid">
                 <div class="loading">Loading products...</div>
             </div>
         </div>
 
-        <!-- Forecast Results Section -->
         <div class="forecast-section" id="forecast-section">
             <div class="forecast-header">
-                <h2 class="forecast-title" id="forecast-title">📈 Demand Forecast</h2>
+                <h2 class="forecast-title" id="forecast-title">Demand Forecast</h2>
                 <div>
                     <button class="btn btn-secondary" onclick="generateNewForecast()"
-                        style="width: auto; margin-right: 10px;">
-                        🚀 Generate New Forecast
-                    </button>
-                    <button class="btn btn-primary" onclick="exportForecast()" style="width: auto;">
-                        📊 Export Data
-                    </button>
+                        style="margin-right: 8px;">Generate New Forecast</button>
+                    <button class="btn btn-primary" onclick="exportForecast()">Export Data</button>
                 </div>
             </div>
 
-            <div class="forecast-stats" id="forecast-stats">
-                <!-- Stats will be populated by JavaScript -->
-            </div>
+            <div class="forecast-stats" id="forecast-stats"></div>
 
             <div class="forecast-table">
                 <table>
@@ -621,9 +585,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             <th>Notes</th>
                         </tr>
                     </thead>
-                    <tbody id="forecast-body">
-                        <!-- Forecast data will be populated by JavaScript -->
-                    </tbody>
+                    <tbody id="forecast-body"></tbody>
                 </table>
             </div>
         </div>
@@ -633,11 +595,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         let selectedProductId = null;
         let selectedProductData = null;
 
-        // Load products when page loads
         document.addEventListener('DOMContentLoaded', function() {
             loadProducts();
-
-            // Reload products when shop changes
             document.getElementById('shop-select').addEventListener('change', loadProducts);
         });
 
@@ -690,58 +649,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             card.onclick = () => selectProduct(product);
 
             const hasForecasts = product.forecast_count > 0;
-            const forecastStatus = hasForecasts ? '✅ Has Forecast' : '❌ No Forecast';
+            const forecastStatus = hasForecasts ? 'Has Forecast' : 'No Forecast';
             const avgDemand = hasForecasts ? Math.round(product.avg_predicted_demand || 0) : 0;
 
             card.innerHTML = `
-                <div class="product-header">
-                    <div class="product-image">
-                        ${getProductEmoji(product.category)}
-                    </div>
-                    <div class="product-info">
-                        <h3>${product.name}</h3>
-                        <p>${product.category}</p>
-                    </div>
+            <div class="product-header">
+                <div class="product-image"></div>
+                <div class="product-info">
+                    <h3>${product.name}</h3>
+                    <p>${product.category}</p>
                 </div>
-                <div class="product-stats">
-                    <div class="stat">
-                        <div class="stat-value">${product.quantity}</div>
-                        <div class="stat-label">Stock</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value">${avgDemand}</div>
-                        <div class="stat-label">Avg Demand</div>
-                    </div>
+            </div>
+            <div class="product-stats">
+                <div class="stat">
+                    <div class="stat-value">${product.quantity}</div>
+                    <div class="stat-label">Stock</div>
                 </div>
-                <div style="margin-top: 15px; font-size: 0.9rem; color: ${hasForecasts ? '#10b981' : '#ef4444'}; font-weight: 600;">
-                    ${forecastStatus}
+                <div class="stat">
+                    <div class="stat-value">${avgDemand}</div>
+                    <div class="stat-label">Avg Demand</div>
                 </div>
-            `;
+            </div>
+            <div style="margin-top: 12px; font-size: 14px; color: ${hasForecasts ? '#15803d' : '#b91c1c'}; font-weight: 500;">
+                ${forecastStatus}
+            </div>
+        `;
 
             return card;
         }
 
-        function getProductEmoji(category) {
-            const emojiMap = {
-                'Fruits': '🍎',
-                'Vegetables': '🥕',
-                'Snacks': '🍿',
-                'Beverages': '🥤',
-                'Dairy': '🥛',
-                'Meat': '🥩',
-                'Bakery': '🍞',
-                'Seafood': '🐟'
-            };
-            return emojiMap[category] || '📦';
-        }
-
         function selectProduct(product) {
-            // Remove active class from all cards
             document.querySelectorAll('.product-card').forEach(card => {
                 card.classList.remove('active');
             });
 
-            // Add active class to selected card
             event.currentTarget.classList.add('active');
 
             selectedProductId = product.product_id;
@@ -763,7 +704,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             forecastSection.style.display = 'block';
             forecastBody.innerHTML = '<tr><td colspan="5" class="loading">Loading forecast data...</td></tr>';
 
-            document.getElementById('forecast-title').textContent = `📈 ${selectedProductData.name} - Demand Forecast`;
+            document.getElementById('forecast-title').textContent = `${selectedProductData.name} - Demand Forecast`;
 
             fetch('', {
                     method: 'POST',
@@ -784,7 +725,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     } else {
                         forecastBody.innerHTML = `
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 40px;">
+                            <td colspan="5" style="text-align: center; padding: 32px;">
                                 <h3>No forecast data available</h3>
                                 <p>Click "Generate New Forecast" to create predictions for this product</p>
                             </td>
@@ -865,22 +806,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     confidence > 0.6 ? 'Medium' : 'Low';
 
                 const notes = dayName.includes('Saturday') || dayName.includes('Sunday') ?
-                    '🎪 Weekend' : index < 7 ? '📅 Week 1' :
-                    index < 14 ? '📅 Week 2' : index < 21 ? '📅 Week 3' : '📅 Week 4';
+                    'Weekend' : index < 7 ? 'Week 1' :
+                    index < 14 ? 'Week 2' : index < 21 ? 'Week 3' : 'Week 4';
 
                 const row = `
-                    <tr>
-                        <td><strong>${pred.date}</strong></td>
-                        <td><strong>${demand}</strong> units</td>
-                        <td><span class="${confidenceClass}">${confidenceText}</span></td>
-                        <td>${dayName}</td>
-                        <td>${notes}</td>
-                    </tr>
-                `;
+                <tr>
+                    <td><strong>${pred.date}</strong></td>
+                    <td><strong>${demand}</strong> units</td>
+                    <td><span class="${confidenceClass}">${confidenceText}</span></td>
+                    <td>${dayName}</td>
+                    <td>${notes}</td>
+                </tr>
+            `;
                 tbody.innerHTML += row;
             });
 
-            // Update stats
             avgConfidence = avgConfidence / predictions.length;
             const avgDailyDemand = Math.round(totalDemand / predictions.length);
 
@@ -895,23 +835,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         function updateForecastStats(stats) {
             const statsContainer = document.getElementById('forecast-stats');
             statsContainer.innerHTML = `
-                <div class="forecast-stat">
-                    <div class="forecast-stat-value">${stats.total_demand}</div>
-                    <div class="forecast-stat-label">Total Predicted Demand</div>
-                </div>
-                <div class="forecast-stat">
-                    <div class="forecast-stat-value">${stats.avg_daily_demand}</div>
-                    <div class="forecast-stat-label">Average Daily Demand</div>
-                </div>
-                <div class="forecast-stat">
-                    <div class="forecast-stat-value">${stats.peak_demand}</div>
-                    <div class="forecast-stat-label">Peak Day Demand</div>
-                </div>
-                <div class="forecast-stat">
-                    <div class="forecast-stat-value">${stats.avg_confidence}%</div>
-                    <div class="forecast-stat-label">Average Confidence</div>
-                </div>
-            `;
+            <div class="forecast-stat">
+                <div class="forecast-stat-value">${stats.total_demand}</div>
+                <div class="forecast-stat-label">Total Predicted Demand</div>
+            </div>
+            <div class="forecast-stat">
+                <div class="forecast-stat-value">${stats.avg_daily_demand}</div>
+                <div class="forecast-stat-label">Average Daily Demand</div>
+            </div>
+            <div class="forecast-stat">
+                <div class="forecast-stat-value">${stats.peak_demand}</div>
+                <div class="forecast-stat-label">Peak Day Demand</div>
+            </div>
+            <div class="forecast-stat">
+                <div class="forecast-stat-value">${stats.avg_confidence}%</div>
+                <div class="forecast-stat-label">Average Confidence</div>
+            </div>
+        `;
         }
 
         function exportForecast() {
@@ -920,7 +860,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 return;
             }
 
-            // Simple CSV export
             const table = document.querySelector('#forecast-section table');
             let csv = [];
             const rows = table.querySelectorAll('tr');
@@ -953,12 +892,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
 
             alertContainer.innerHTML = `
-                <div class="alert ${alertClass}">
-                    ${message}
-                </div>
-            `;
+            <div class="alert ${alertClass}">
+                ${message}
+            </div>
+        `;
 
-            // Auto-hide after 5 seconds
             setTimeout(() => {
                 alertContainer.innerHTML = '';
             }, 5000);

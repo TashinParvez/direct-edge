@@ -1,6 +1,7 @@
 <?php
 // orders.php
 include '../../include/connect-db.php'; // database connection
+include '../../include/navbar.php';
 
 // Get all status options for the dropdown
 $statusOptions = ['Pending', 'Approved', 'Shipped', 'Delivered', 'Cancelled'];
@@ -143,7 +144,6 @@ if (count($ordersArr) > 0) {
     <meta charset="UTF-8">
     <title>All Orders - Stock Integrated</title>
     <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
-    <link rel="stylesheet" href="../../Include/sidebar.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -151,60 +151,100 @@ if (count($ordersArr) > 0) {
         .order-row {
             transition: all 0.3s ease;
         }
+
         .order-row:hover {
             background-color: #f9fafb;
             transform: translateY(-1px);
         }
+
         .filter-container {
             transition: all 0.3s ease;
         }
+
         .filter-container:hover {
             background-color: #f9fafb;
         }
+
         .search-field {
             transition: all 0.3s ease;
         }
+
         .search-field:hover {
             background-color: #f3f4f6;
         }
+
         .search-field:focus {
             background-color: #ffffff;
             border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
+
         .modal {
             animation: fadeIn 0.3s ease-out;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
+
         .modal-content {
             animation: slideIn 0.3s ease-out;
         }
+
         @keyframes slideIn {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
-        .status-pending { color: #d97706; }
-        .status-approved { color: #059669; }
-        .status-shipped { color: #2563eb; }
-        .status-delivered { color: #6b7280; }
-        .status-cancelled { color: #dc2626; }
+
+        .status-pending {
+            color: #d97706;
+        }
+
+        .status-approved {
+            color: #059669;
+        }
+
+        .status-shipped {
+            color: #2563eb;
+        }
+
+        .status-delivered {
+            color: #6b7280;
+        }
+
+        .status-cancelled {
+            color: #dc2626;
+        }
+
         @media print {
-            .no-print { display: none !important; }
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../../include/Sidebar.php'; ?>
-    
+
     <section class="home-section p-0">
         <div class="flex justify-between items-center p-4">
             <h1 class="text-2xl font-bold">All Orders</h1>
             <div class="flex space-x-2 no-print">
-                <button onclick="window.print()" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
+                <button onclick="window.print()"
+                    class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
                     <i class='bx bx-printer'></i> Print
                 </button>
                 <button class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
@@ -222,7 +262,7 @@ if (count($ordersArr) > 0) {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <i class='bx bx-search mr-1'></i>Search Orders
                         </label>
-                        <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" 
+                        <input type="text" name="search" value="<?= htmlspecialchars($search) ?>"
                             placeholder="Search by product name..."
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
                     </div>
@@ -231,10 +271,12 @@ if (count($ordersArr) > 0) {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <i class='bx bx-flag mr-1'></i>Status Filter
                         </label>
-                        <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
+                        <select name="status"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
                             <option value="">All Status</option>
                             <?php foreach ($statusOptions as $opt): ?>
-                                <option value="<?= $opt ?>" <?= ($filterStatus == $opt) ? 'selected' : '' ?>><?= $opt ?></option>
+                                <option value="<?= $opt ?>" <?= ($filterStatus == $opt) ? 'selected' : '' ?>><?= $opt ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -243,11 +285,14 @@ if (count($ordersArr) > 0) {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <i class='bx bx-calendar mr-1'></i>Date Filter
                         </label>
-                        <select name="date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
+                        <select name="date"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
                             <option value="">All Dates</option>
                             <option value="today" <?= ($filterDate == 'today') ? 'selected' : '' ?>>Today</option>
-                            <option value="this_week" <?= ($filterDate == 'this_week') ? 'selected' : '' ?>>This Week</option>
-                            <option value="this_month" <?= ($filterDate == 'this_month') ? 'selected' : '' ?>>This Month</option>
+                            <option value="this_week" <?= ($filterDate == 'this_week') ? 'selected' : '' ?>>This Week
+                            </option>
+                            <option value="this_month" <?= ($filterDate == 'this_month') ? 'selected' : '' ?>>This Month
+                            </option>
                         </select>
                     </div>
                 </form>
@@ -271,28 +316,36 @@ if (count($ordersArr) > 0) {
                     <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <i class='bx bx-hash mr-1'></i>Order ID
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <i class='bx bx-calendar mr-1'></i>Placed
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <i class='bx bx-time mr-1'></i>Updated
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <i class='bx bx-package mr-1'></i>Products
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <i class='bx bx-calculator mr-1'></i>Quantity
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <i class='bx bx-dollar mr-1'></i>Total
                                 </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     <i class='bx bx-flag mr-1'></i>Status
                                 </th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider no-print">
+                                <th
+                                    class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider no-print">
                                     <i class='bx bx-cog'></i>Action
                                 </th>
                             </tr>
@@ -313,24 +366,29 @@ if (count($ordersArr) > 0) {
                                             <div class="text-sm font-medium text-gray-900">#<?= $order['order_id'] ?></div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900"><?= date('d M, Y', strtotime($order['placed_at'])) ?></div>
-                                            <div class="text-xs text-gray-500"><?= date('H:i', strtotime($order['placed_at'])) ?></div>
+                                            <div class="text-sm text-gray-900">
+                                                <?= date('d M, Y', strtotime($order['placed_at'])) ?></div>
+                                            <div class="text-xs text-gray-500">
+                                                <?= date('H:i', strtotime($order['placed_at'])) ?></div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900"><?= date('d M, Y', strtotime($order['updated_at'])) ?></div>
-                                            <div class="text-xs text-gray-500"><?= date('H:i', strtotime($order['updated_at'])) ?></div>
+                                            <div class="text-sm text-gray-900">
+                                                <?= date('d M, Y', strtotime($order['updated_at'])) ?></div>
+                                            <div class="text-xs text-gray-500">
+                                                <?= date('H:i', strtotime($order['updated_at'])) ?></div>
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="text-sm">
                                                 <?php if (isset($orderProducts[$order['order_id']])): ?>
-                                                    <?php 
+                                                    <?php
                                                     $items = $orderProducts[$order['order_id']];
                                                     $displayCount = min(3, count($items));
                                                     for ($i = 0; $i < $displayCount; $i++): ?>
                                                         <div class="mb-1"><?= htmlspecialchars($items[$i]['name']) ?></div>
                                                     <?php endfor; ?>
                                                     <?php if (count($items) > 3): ?>
-                                                        <div class="text-xs text-blue-600 cursor-pointer" onclick="openOrderModal(<?= $order['order_id'] ?>)">
+                                                        <div class="text-xs text-blue-600 cursor-pointer"
+                                                            onclick="openOrderModal(<?= $order['order_id'] ?>)">
                                                             +<?= count($items) - 3 ?> more items
                                                         </div>
                                                     <?php endif; ?>
@@ -340,7 +398,7 @@ if (count($ordersArr) > 0) {
                                         <td class="px-6 py-4">
                                             <div class="text-sm">
                                                 <?php if (isset($orderProducts[$order['order_id']])): ?>
-                                                    <?php 
+                                                    <?php
                                                     $items = $orderProducts[$order['order_id']];
                                                     $displayCount = min(3, count($items));
                                                     for ($i = 0; $i < $displayCount; $i++): ?>
@@ -353,7 +411,8 @@ if (count($ordersArr) > 0) {
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">$<?= number_format($order['total_amount'], 2) ?></div>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                $<?= number_format($order['total_amount'], 2) ?></div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <?php
@@ -372,8 +431,10 @@ if (count($ordersArr) > 0) {
                                                 'Cancelled' => 'bx-x-circle'
                                             ];
                                             ?>
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold <?= $statusClasses[$order['status']] ?>">
-                                                <i class='<?= $statusIcons[$order['status']] ?> mr-1'></i><?= $order['status'] ?>
+                                            <span
+                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold <?= $statusClasses[$order['status']] ?>">
+                                                <i
+                                                    class='<?= $statusIcons[$order['status']] ?> mr-1'></i><?= $order['status'] ?>
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-center no-print">
@@ -402,12 +463,12 @@ if (count($ordersArr) > 0) {
                         <i class='bx bx-chevron-left'></i>
                     </a>
                 <?php endif; ?>
-                
+
                 <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
                     <a href="?page=<?= $i ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($filterStatus) ?>&date=<?= urlencode($filterDate) ?>"
                         class="px-4 py-2 rounded-lg transition-colors <?= ($page == $i) ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300' ?>"><?= $i ?></a>
                 <?php endfor; ?>
-                
+
                 <?php if ($page < $totalPages): ?>
                     <a href="?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($filterStatus) ?>&date=<?= urlencode($filterDate) ?>"
                         class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
@@ -425,15 +486,17 @@ if (count($ordersArr) > 0) {
 
     <!-- Order Detail Modals -->
     <?php foreach ($ordersArr as $order): ?>
-        <div id="order-modal-<?= $order['order_id'] ?>" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
+        <div id="order-modal-<?= $order['order_id'] ?>"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
             <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg m-4 modal-content">
                 <div class="flex justify-between items-center p-6 border-b">
                     <h2 class="text-xl font-bold">Order #<?= $order['order_id'] ?> Details</h2>
-                    <button class="text-gray-400 hover:text-gray-600 text-2xl" onclick="closeOrderModal(<?= $order['order_id'] ?>)">
+                    <button class="text-gray-400 hover:text-gray-600 text-2xl"
+                        onclick="closeOrderModal(<?= $order['order_id'] ?>)">
                         <i class='bx bx-x'></i>
                     </button>
                 </div>
-                
+
                 <div class="p-6">
                     <!-- Order Information -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -456,17 +519,19 @@ if (count($ordersArr) > 0) {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div>
                             <div class="flex items-center space-x-3">
                                 <i class='bx bx-flag mr-2 text-gray-400'></i>
                                 <strong>Status:</strong>
-                                <select id="status-select-<?= $order['order_id'] ?>" class="border border-gray-300 rounded-md py-1 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <select id="status-select-<?= $order['order_id'] ?>"
+                                    class="border border-gray-300 rounded-md py-1 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <?php foreach ($statusOptions as $opt): ?>
-                                        <option value="<?= $opt ?>" <?= ($order['status'] == $opt) ? 'selected' : '' ?>><?= $opt ?></option>
+                                        <option value="<?= $opt ?>" <?= ($order['status'] == $opt) ? 'selected' : '' ?>>
+                                            <?= $opt ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <button onclick="updateStatus(<?= $order['order_id'] ?>)" 
+                                <button onclick="updateStatus(<?= $order['order_id'] ?>)"
                                     class="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors">
                                     <i class='bx bx-save mr-1'></i>Save
                                 </button>
@@ -480,8 +545,10 @@ if (count($ordersArr) > 0) {
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
+                                    <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Quantity
+                                    </th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Price
+                                    </th>
                                     <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
                                 </tr>
                             </thead>
@@ -498,7 +565,8 @@ if (count($ordersArr) > 0) {
                                             </td>
                                             <td class="px-4 py-3 text-center"><?= $item['quantity'] ?></td>
                                             <td class="px-4 py-3 text-right">$<?= number_format($item['unit_price'], 2) ?></td>
-                                            <td class="px-4 py-3 text-right font-medium">$<?= number_format($item['total_price'], 2) ?></td>
+                                            <td class="px-4 py-3 text-right font-medium">
+                                                $<?= number_format($item['total_price'], 2) ?></td>
                                         </tr>
                                 <?php endforeach;
                                 endif; ?>
@@ -506,15 +574,17 @@ if (count($ordersArr) > 0) {
                             <tfoot class="bg-gray-50">
                                 <tr>
                                     <td class="px-4 py-3 font-bold text-gray-900" colspan="3">Total Amount</td>
-                                    <td class="px-4 py-3 text-right font-bold text-lg text-gray-900">$<?= number_format($order['total_amount'], 2) ?></td>
+                                    <td class="px-4 py-3 text-right font-bold text-lg text-gray-900">
+                                        $<?= number_format($order['total_amount'], 2) ?></td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
                 </div>
-                
+
                 <div class="flex justify-end p-6 border-t space-x-3">
-                    <button type="button" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors" 
+                    <button type="button"
+                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
                         onclick="closeOrderModal(<?= $order['order_id'] ?>)">
                         Close
                     </button>

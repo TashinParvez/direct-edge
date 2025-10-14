@@ -1,7 +1,7 @@
 <?php
 
 include '../include/navbar.php';
-$agent_id = isset($user_id) ? $user_id : 45;
+$agent_id = isset($user_id) ? $user_id : 64;
 
 // Database connection
 $servername = "localhost";
@@ -148,7 +148,8 @@ function sanitize($v)
 
         <!-- Alert Message -->
         <?php if ($message): ?>
-            <div class="mb-6 rounded-lg p-4 <?php echo $success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'; ?>">
+            <div
+                class="mb-6 rounded-lg p-4 <?php echo $success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'; ?>">
                 <p class="<?php echo $success ? 'text-green-800' : 'text-red-800'; ?> text-sm font-medium">
                     <?php echo sanitize($message); ?>
                 </p>
@@ -163,7 +164,8 @@ function sanitize($v)
                         <p class="text-sm font-medium text-gray-600">Total Farmers</p>
                         <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo $stats['total'] ?? 0; ?></p>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-xl">👥</div>
+                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-xl">👥
+                    </div>
                 </div>
             </div>
 
@@ -173,7 +175,8 @@ function sanitize($v)
                         <p class="text-sm font-medium text-gray-600">Small Farmers</p>
                         <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo $stats['small'] ?? 0; ?></p>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 grid place-items-center text-xl">🌱</div>
+                    <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 grid place-items-center text-xl">🌱
+                    </div>
                 </div>
             </div>
 
@@ -181,10 +184,12 @@ function sanitize($v)
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">Total Land</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo number_format($stats['total_land'] ?? 0, 1); ?></p>
+                        <p class="text-3xl font-bold text-gray-900 mt-1">
+                            <?php echo number_format($stats['total_land'] ?? 0, 1); ?></p>
                         <p class="text-xs text-gray-500">acres</p>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 grid place-items-center text-xl">📏</div>
+                    <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 grid place-items-center text-xl">📏
+                    </div>
                 </div>
             </div>
 
@@ -192,10 +197,12 @@ function sanitize($v)
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">Avg Land Size</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo number_format($stats['avg_land'] ?? 0, 1); ?></p>
+                        <p class="text-3xl font-bold text-gray-900 mt-1">
+                            <?php echo number_format($stats['avg_land'] ?? 0, 1); ?></p>
                         <p class="text-xs text-gray-500">acres</p>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 grid place-items-center text-xl">📊</div>
+                    <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 grid place-items-center text-xl">📊
+                    </div>
                 </div>
             </div>
         </div>
@@ -208,19 +215,30 @@ function sanitize($v)
                         placeholder="Search by name, phone, NID, or crops..."
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                 </div>
-                <select name="farmer_type" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
-                    <option value="all" <?php echo $farmer_type_filter === 'all' ? 'selected' : ''; ?>>All Farmer Types</option>
-                    <option value="Small" <?php echo $farmer_type_filter === 'Small' ? 'selected' : ''; ?>>Small</option>
-                    <option value="Medium" <?php echo $farmer_type_filter === 'Medium' ? 'selected' : ''; ?>>Medium</option>
-                    <option value="Large" <?php echo $farmer_type_filter === 'Large' ? 'selected' : ''; ?>>Large</option>
+                <select name="farmer_type"
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                    <option value="all" <?php echo $farmer_type_filter === 'all' ? 'selected' : ''; ?>>All Farmer Types
+                    </option>
+                    <option value="Small" <?php echo $farmer_type_filter === 'Small' ? 'selected' : ''; ?>>Small
+                    </option>
+                    <option value="Medium" <?php echo $farmer_type_filter === 'Medium' ? 'selected' : ''; ?>>Medium
+                    </option>
+                    <option value="Large" <?php echo $farmer_type_filter === 'Large' ? 'selected' : ''; ?>>Large
+                    </option>
                 </select>
-                <select name="land_ownership" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
-                    <option value="all" <?php echo $land_ownership_filter === 'all' ? 'selected' : ''; ?>>All Ownership</option>
-                    <option value="Own Land" <?php echo $land_ownership_filter === 'Own Land' ? 'selected' : ''; ?>>Own Land</option>
-                    <option value="Leased Land" <?php echo $land_ownership_filter === 'Leased Land' ? 'selected' : ''; ?>>Leased Land</option>
+                <select name="land_ownership"
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                    <option value="all" <?php echo $land_ownership_filter === 'all' ? 'selected' : ''; ?>>All Ownership
+                    </option>
+                    <option value="Own Land" <?php echo $land_ownership_filter === 'Own Land' ? 'selected' : ''; ?>>Own
+                        Land</option>
+                    <option value="Leased Land"
+                        <?php echo $land_ownership_filter === 'Leased Land' ? 'selected' : ''; ?>>Leased Land</option>
                 </select>
-                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">Filter</button>
-                <a href="agent-farmer-dashboard.php" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-center">Clear</a>
+                <button type="submit"
+                    class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">Filter</button>
+                <a href="agent-farmer-dashboard.php"
+                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-center">Clear</a>
             </form>
         </div>
 
@@ -230,7 +248,8 @@ function sanitize($v)
                 <div class="text-6xl mb-4">🌾</div>
                 <h3 class="text-xl font-bold text-gray-900 mb-2">No Farmers Found</h3>
                 <p class="text-gray-600 mb-6">Start building your farmer network by adding your first farmer</p>
-                <a href="add-farmer.php" class="inline-block px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
+                <a href="add-farmer.php"
+                    class="inline-block px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium">
                     Add Your First Farmer
                 </a>
             </div>
@@ -242,15 +261,18 @@ function sanitize($v)
                         <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-4">
                             <div class="flex items-center gap-3">
                                 <?php if (!empty($farmer['profile_picture'])): ?>
-                                    <img src="<?php echo sanitize($farmer['profile_picture']); ?>" alt="Photo" class="w-16 h-16 rounded-full object-cover border-4 border-white">
+                                    <img src="<?php echo sanitize($farmer['profile_picture']); ?>" alt="Photo"
+                                        class="w-16 h-16 rounded-full object-cover border-4 border-white">
                                 <?php else: ?>
-                                    <div class="w-16 h-16 rounded-full bg-white text-green-600 grid place-items-center font-bold text-xl border-4 border-white">
+                                    <div
+                                        class="w-16 h-16 rounded-full bg-white text-green-600 grid place-items-center font-bold text-xl border-4 border-white">
                                         <?php echo strtoupper(substr($farmer['full_name'], 0, 2)); ?>
                                     </div>
                                 <?php endif; ?>
                                 <div class="flex-1">
                                     <h3 class="text-white font-bold text-lg"><?php echo sanitize($farmer['full_name']); ?></h3>
-                                    <span class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-white text-green-700">
+                                    <span
+                                        class="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-white text-green-700">
                                         <?php echo sanitize($farmer['farmer_type']); ?> Farmer
                                     </span>
                                 </div>
@@ -273,11 +295,13 @@ function sanitize($v)
                             </div>
                             <div class="flex items-center gap-2 text-sm">
                                 <span class="text-gray-500">📏</span>
-                                <span class="text-gray-900 font-medium"><?php echo number_format($farmer['land_size'], 2); ?> acres</span>
+                                <span class="text-gray-900 font-medium"><?php echo number_format($farmer['land_size'], 2); ?>
+                                    acres</span>
                             </div>
                             <div class="pt-2 border-t">
                                 <p class="text-xs text-gray-500 mb-1">Crops:</p>
-                                <p class="text-sm text-gray-900 font-medium line-clamp-2"><?php echo sanitize($farmer['crops_cultivated']); ?></p>
+                                <p class="text-sm text-gray-900 font-medium line-clamp-2">
+                                    <?php echo sanitize($farmer['crops_cultivated']); ?></p>
                             </div>
                         </div>
 
@@ -291,11 +315,13 @@ function sanitize($v)
                                 class="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium text-center">
                                 Edit
                             </a>
-                            <form method="POST" onsubmit="return confirm('Delete this farmer? This action cannot be undone!');" class="flex-1">
+                            <form method="POST" onsubmit="return confirm('Delete this farmer? This action cannot be undone!');"
+                                class="flex-1">
                                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                 <input type="hidden" name="action" value="delete_farmer">
                                 <input type="hidden" name="farmer_id" value="<?php echo $farmer['id']; ?>">
-                                <button type="submit" class="w-full px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">
+                                <button type="submit"
+                                    class="w-full px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">
                                     🗑️
                                 </button>
                             </form>

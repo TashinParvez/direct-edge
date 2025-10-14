@@ -1,4 +1,5 @@
 <?php
+include '../include/navbar.php';
 // Database connection
 $servername = "localhost";
 $username = "root";
@@ -358,9 +359,6 @@ $conn->close();
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../include/navbar.php';
-    ?>
-
     <section class="home-section p-0">
         <div class="flex justify-between items-center p-4">
             <h1 class="text-2xl font-bold">Generate Receipt (Stock Integrated)</h1>

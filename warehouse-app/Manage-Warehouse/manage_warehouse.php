@@ -1,5 +1,6 @@
 <?php
 // manage_warehouse.php
+include '../../include/navbar.php';
 include '../../include/connect-db.php'; // database connection
 
 // Get warehouse id from URL
@@ -98,76 +99,74 @@ while ($row = $result->fetch_assoc()) {
     <meta charset="UTF-8">
     <title>Manage Warehouse - Stock Integrated</title>
     <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
-    <link rel="stylesheet" href="../../Include/sidebar.css">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-    .warehouse-card {
-        transition: all 0.3s ease;
-    }
-
-    .warehouse-card:hover {
-        background-color: #f9fafb;
-    }
-
-    .product-row {
-        transition: all 0.2s ease;
-    }
-
-    .product-row:hover {
-        background-color: #f3f4f6;
-        transform: translateY(-1px);
-    }
-
-    .edit-btn {
-        transition: all 0.2s ease;
-    }
-
-    .edit-btn:hover {
-        transform: scale(1.1);
-    }
-
-    .modal {
-        animation: fadeIn 0.3s ease-out;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
+        .warehouse-card {
+            transition: all 0.3s ease;
         }
 
-        to {
-            opacity: 1;
-        }
-    }
-
-    .modal-content {
-        animation: slideIn 0.3s ease-out;
-    }
-
-    @keyframes slideIn {
-        from {
-            transform: translateY(-20px);
-            opacity: 0;
+        .warehouse-card:hover {
+            background-color: #f9fafb;
         }
 
-        to {
-            transform: translateY(0);
-            opacity: 1;
+        .product-row {
+            transition: all 0.2s ease;
         }
-    }
 
-    @media print {
-        .no-print {
-            display: none !important;
+        .product-row:hover {
+            background-color: #f3f4f6;
+            transform: translateY(-1px);
         }
-    }
+
+        .edit-btn {
+            transition: all 0.2s ease;
+        }
+
+        .edit-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .modal {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
 <body class="bg-gray-100">
-    <?php include '../../include/Sidebar.php'; ?>
 
     <section class="home-section p-0">
         <div class="flex justify-between items-center p-4">
@@ -202,13 +201,13 @@ while ($row = $result->fetch_assoc()) {
                 </div>
 
                 <?php if (!empty($success)): ?>
-                <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
-                    <i class='bx bx-check-circle mr-2'></i><?= $success ?>
-                </div>
+                    <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                        <i class='bx bx-check-circle mr-2'></i><?= $success ?>
+                    </div>
                 <?php elseif (!empty($error)): ?>
-                <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                    <i class='bx bx-error-circle mr-2'></i><?= $error ?>
-                </div>
+                    <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                        <i class='bx bx-error-circle mr-2'></i><?= $error ?>
+                    </div>
                 <?php endif; ?>
 
                 <!-- Warehouse Info Form -->
@@ -357,59 +356,59 @@ while ($row = $result->fetch_assoc()) {
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <?php foreach ($productsArray as $row): ?>
-                            <?php
+                                <?php
                                 $qty = (float)$row['quantity'];
                                 $unitVol = (float)$row['unit_volume'];
                                 $totalVol = $qty * $unitVol; // m³
                                 ?>
-                            <tr class="product-row">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="h-16 w-16 rounded-lg overflow-hidden">
-                                        <?php if ($row['img_url']): ?>
-                                        <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>"
-                                            alt="<?= htmlspecialchars($row['product_name']) ?>"
-                                            class="h-16 w-16 object-cover">
-                                        <?php else: ?>
-                                        <div class="h-16 w-16 bg-gray-100 flex items-center justify-center rounded-lg">
-                                            <i class='bx bx-package text-2xl text-gray-400'></i>
+                                <tr class="product-row">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="h-16 w-16 rounded-lg overflow-hidden">
+                                            <?php if ($row['img_url']): ?>
+                                                <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>"
+                                                    alt="<?= htmlspecialchars($row['product_name']) ?>"
+                                                    class="h-16 w-16 object-cover">
+                                            <?php else: ?>
+                                                <div class="h-16 w-16 bg-gray-100 flex items-center justify-center rounded-lg">
+                                                    <i class='bx bx-package text-2xl text-gray-400'></i>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">
+                                            <?= htmlspecialchars($row['product_name']) ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900"><?= htmlspecialchars($row['quantity']) ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900"><?= number_format($totalVol, 2) ?></div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900"><?= htmlspecialchars($row['expiry_date']) ?>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <?php if ($row['request_status'] == 1): ?>
+                                            <span
+                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                <i class='bx bx-check mr-1'></i>Approved
+                                            </span>
+                                        <?php else: ?>
+                                            <span
+                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                <i class='bx bx-time mr-1'></i>Pending
+                                            </span>
                                         <?php endif; ?>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">
-                                        <?= htmlspecialchars($row['product_name']) ?></div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900"><?= htmlspecialchars($row['quantity']) ?></div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900"><?= number_format($totalVol, 2) ?></div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900"><?= htmlspecialchars($row['expiry_date']) ?>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <?php if ($row['request_status'] == 1): ?>
-                                    <span
-                                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                        <i class='bx bx-check mr-1'></i>Approved
-                                    </span>
-                                    <?php else: ?>
-                                    <span
-                                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                        <i class='bx bx-time mr-1'></i>Pending
-                                    </span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center no-print">
-                                    <button onclick="openModal('modal-<?= $row['wp_id'] ?>')"
-                                        class="text-blue-600 hover:text-blue-900 edit-btn">
-                                        <i class='bx bx-edit text-lg'></i>
-                                    </button>
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center no-print">
+                                        <button onclick="openModal('modal-<?= $row['wp_id'] ?>')"
+                                            class="text-blue-600 hover:text-blue-900 edit-btn">
+                                            <i class='bx bx-edit text-lg'></i>
+                                        </button>
+                                    </td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
@@ -420,159 +419,159 @@ while ($row = $result->fetch_assoc()) {
 
     <!-- Product Edit Modals -->
     <?php foreach ($productsArray as $row): ?>
-    <?php
+        <?php
         $qty = (float)$row['quantity'];
         $unitVol = (float)$row['unit_volume'];
         $totalVol = $qty * $unitVol;
         ?>
-    <div id="modal-<?= $row['wp_id'] ?>"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
-        <div class="bg-white w-11/12 md:w-2/3 lg:w-1/2 rounded-lg shadow-lg overflow-hidden modal-content">
-            <div class="flex">
-                <!-- Left: Product Image -->
-                <div class="w-1/3 bg-gray-100 p-4 flex items-center justify-center">
-                    <?php if ($row['img_url']): ?>
-                    <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>"
-                        alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-32 w-32 object-cover rounded">
-                    <?php else: ?>
-                    <div class="h-32 w-32 bg-gray-200 flex items-center justify-center rounded-lg">
-                        <i class='bx bx-package text-4xl text-gray-400'></i>
+        <div id="modal-<?= $row['wp_id'] ?>"
+            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 modal">
+            <div class="bg-white w-11/12 md:w-2/3 lg:w-1/2 rounded-lg shadow-lg overflow-hidden modal-content">
+                <div class="flex">
+                    <!-- Left: Product Image -->
+                    <div class="w-1/3 bg-gray-100 p-4 flex items-center justify-center">
+                        <?php if ($row['img_url']): ?>
+                            <img src="<?= '../../' . htmlspecialchars($row['img_url']) ?>"
+                                alt="<?= htmlspecialchars($row['product_name']) ?>" class="h-32 w-32 object-cover rounded">
+                        <?php else: ?>
+                            <div class="h-32 w-32 bg-gray-200 flex items-center justify-center rounded-lg">
+                                <i class='bx bx-package text-4xl text-gray-400'></i>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
-                </div>
 
-                <!-- Right: Editable Form -->
-                <div class="w-2/3 p-4">
-                    <h2 class="text-lg font-semibold mb-4">Edit Product</h2>
-                    <form method="POST" action="">
-                        <input type="hidden" name="wp_id" value="<?= $row['wp_id'] ?>">
-                        <input type="hidden" name="product_id" value="<?= $row['product_id'] ?>">
+                    <!-- Right: Editable Form -->
+                    <div class="w-2/3 p-4">
+                        <h2 class="text-lg font-semibold mb-4">Edit Product</h2>
+                        <form method="POST" action="">
+                            <input type="hidden" name="wp_id" value="<?= $row['wp_id'] ?>">
+                            <input type="hidden" name="product_id" value="<?= $row['product_id'] ?>">
 
-                        <div class="mb-2">
-                            <label class="block text-sm font-medium text-gray-700">Product</label>
-                            <input type="text" name="product_name" value="<?= htmlspecialchars($row['product_name']) ?>"
-                                class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                        </div>
-
-                        <div class="mb-2">
-                            <label class="block text-sm font-medium text-gray-700">Quantity</label>
-                            <input type="number" id="qty-<?= $row['wp_id'] ?>" name="quantity"
-                                value="<?= htmlspecialchars($row['quantity']) ?>"
-                                class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                        </div>
-
-                        <div class="mb-2">
-                            <label class="block text-sm font-medium text-gray-700">Unit Volume</label>
-                            <div class="flex items-center">
-                                <input type="number" step="0.01" id="unit-<?= $row['wp_id'] ?>" name="unit_volume"
-                                    value="<?= htmlspecialchars($row['unit_volume']) ?>"
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium text-gray-700">Product</label>
+                                <input type="text" name="product_name" value="<?= htmlspecialchars($row['product_name']) ?>"
                                     class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                                <span class="unit-after">m³</span>
                             </div>
-                        </div>
 
-                        <div class="mb-2">
-                            <label class="block text-sm font-medium text-gray-700">Total Volume</label>
-                            <div class="flex items-center">
-                                <input type="number" step="0.01" id="total-<?= $row['wp_id'] ?>"
-                                    value="<?= number_format($totalVol, 2, '.', '') ?>"
-                                    class="w-full border rounded p-2 mt-1 bg-gray-100" readonly>
-                                <span class="unit-after">m³</span>
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                                <input type="number" id="qty-<?= $row['wp_id'] ?>" name="quantity"
+                                    value="<?= htmlspecialchars($row['quantity']) ?>"
+                                    class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
                             </div>
-                        </div>
 
-                        <div class="mb-2">
-                            <label class="block text-sm font-medium text-gray-700">Expiry Date</label>
-                            <input type="date" name="expiry_date" value="<?= htmlspecialchars($row['expiry_date']) ?>"
-                                class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                        </div>
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium text-gray-700">Unit Volume</label>
+                                <div class="flex items-center">
+                                    <input type="number" step="0.01" id="unit-<?= $row['wp_id'] ?>" name="unit_volume"
+                                        value="<?= htmlspecialchars($row['unit_volume']) ?>"
+                                        class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                                    <span class="unit-after">m³</span>
+                                </div>
+                            </div>
 
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Status</label>
-                            <select name="request_status"
-                                class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
-                                <option value="1" <?= ($row['request_status'] == 1) ? 'selected' : '' ?>>Approved
-                                </option>
-                                <option value="0" <?= ($row['request_status'] == 0) ? 'selected' : '' ?>>Pending
-                                </option>
-                            </select>
-                        </div>
-                        <div class="flex justify-end space-x-2">
-                            <button type="button" onclick="closeModal('modal-<?= $row['wp_id'] ?>')"
-                                class="px-4 py-2 rounded border">Cancel</button>
-                            <button type="submit" name="updateProduct"
-                                class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Update</button>
-                        </div>
-                    </form>
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium text-gray-700">Total Volume</label>
+                                <div class="flex items-center">
+                                    <input type="number" step="0.01" id="total-<?= $row['wp_id'] ?>"
+                                        value="<?= number_format($totalVol, 2, '.', '') ?>"
+                                        class="w-full border rounded p-2 mt-1 bg-gray-100" readonly>
+                                    <span class="unit-after">m³</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium text-gray-700">Expiry Date</label>
+                                <input type="date" name="expiry_date" value="<?= htmlspecialchars($row['expiry_date']) ?>"
+                                    class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700">Status</label>
+                                <select name="request_status"
+                                    class="w-full border rounded p-2 mt-1 focus:ring focus:ring-blue-200">
+                                    <option value="1" <?= ($row['request_status'] == 1) ? 'selected' : '' ?>>Approved
+                                    </option>
+                                    <option value="0" <?= ($row['request_status'] == 0) ? 'selected' : '' ?>>Pending
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="flex justify-end space-x-2">
+                                <button type="button" onclick="closeModal('modal-<?= $row['wp_id'] ?>')"
+                                    class="px-4 py-2 rounded border">Cancel</button>
+                                <button type="submit" name="updateProduct"
+                                    class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Update</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     <?php endforeach; ?>
 
     <script>
-    // Modal handlers for products
-    function openModal(id) {
-        document.getElementById(id).classList.remove('hidden');
-    }
+        // Modal handlers for products
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
 
-    function closeModal(id) {
-        document.getElementById(id).classList.add('hidden');
-    }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
 
-    // Recalculate total volume per modal when qty/unit changes
-    <?php foreach ($productsArray as $row): ?>
-        (function() {
-            const qtyEl = document.getElementById('qty-<?= $row['wp_id'] ?>');
-            const unitEl = document.getElementById('unit-<?= $row['wp_id'] ?>');
-            const totalEl = document.getElementById('total-<?= $row['wp_id'] ?>');
+        // Recalculate total volume per modal when qty/unit changes
+        <?php foreach ($productsArray as $row): ?>
+                (function() {
+                    const qtyEl = document.getElementById('qty-<?= $row['wp_id'] ?>');
+                    const unitEl = document.getElementById('unit-<?= $row['wp_id'] ?>');
+                    const totalEl = document.getElementById('total-<?= $row['wp_id'] ?>');
 
-            function recalc() {
-                const q = parseFloat(qtyEl.value) || 0;
-                const u = parseFloat(unitEl.value) || 0;
-                const t = q * u;
-                totalEl.value = t.toFixed(2);
-            }
-            qtyEl.addEventListener('input', recalc);
-            unitEl.addEventListener('input', recalc);
-        })();
-    <?php endforeach; ?>
+                    function recalc() {
+                        const q = parseFloat(qtyEl.value) || 0;
+                        const u = parseFloat(unitEl.value) || 0;
+                        const t = q * u;
+                        totalEl.value = t.toFixed(2);
+                    }
+                    qtyEl.addEventListener('input', recalc);
+                    unitEl.addEventListener('input', recalc);
+                })();
+        <?php endforeach; ?>
 
-    // Warehouse Info edit handlers
-    function enableWarehouseEdit() {
-        let form = document.getElementById('warehouseForm');
-        Array.from(form.elements).forEach(el => {
-            if (el.name !== "") {
-                if (el.type === 'select-one') el.disabled = false;
-                else el.readOnly = false;
-            }
+        // Warehouse Info edit handlers
+        function enableWarehouseEdit() {
+            let form = document.getElementById('warehouseForm');
+            Array.from(form.elements).forEach(el => {
+                if (el.name !== "") {
+                    if (el.type === 'select-one') el.disabled = false;
+                    else el.readOnly = false;
+                }
+            });
+            // Show button
+            document.getElementById('updateWarehouseBtnDiv').style.display = '';
+            // Hide edit icon, show cancel icon
+            document.getElementById('warehouseEditIcon').style.display = 'none';
+            document.getElementById('warehouseCancelIcon').style.display = '';
+        }
+
+        function disableWarehouseEdit() {
+            let form = document.getElementById('warehouseForm');
+            Array.from(form.elements).forEach(el => {
+                if (el.name !== "") {
+                    if (el.type === 'select-one') el.disabled = true;
+                    else el.readOnly = true;
+                }
+            });
+            // Hide button
+            document.getElementById('updateWarehouseBtnDiv').style.display = 'none';
+            // Show edit icon, hide cancel icon
+            document.getElementById('warehouseEditIcon').style.display = '';
+            document.getElementById('warehouseCancelIcon').style.display = 'none';
+        }
+
+        // Ensure selects stay enabled on submit so values post
+        document.getElementById('warehouseForm').addEventListener('submit', function() {
+            this.querySelectorAll('select').forEach(s => s.disabled = false);
         });
-        // Show button
-        document.getElementById('updateWarehouseBtnDiv').style.display = '';
-        // Hide edit icon, show cancel icon
-        document.getElementById('warehouseEditIcon').style.display = 'none';
-        document.getElementById('warehouseCancelIcon').style.display = '';
-    }
-
-    function disableWarehouseEdit() {
-        let form = document.getElementById('warehouseForm');
-        Array.from(form.elements).forEach(el => {
-            if (el.name !== "") {
-                if (el.type === 'select-one') el.disabled = true;
-                else el.readOnly = true;
-            }
-        });
-        // Hide button
-        document.getElementById('updateWarehouseBtnDiv').style.display = 'none';
-        // Show edit icon, hide cancel icon
-        document.getElementById('warehouseEditIcon').style.display = '';
-        document.getElementById('warehouseCancelIcon').style.display = 'none';
-    }
-
-    // Ensure selects stay enabled on submit so values post
-    document.getElementById('warehouseForm').addEventListener('submit', function() {
-        this.querySelectorAll('select').forEach(s => s.disabled = false);
-    });
     </script>
 </body>
 
