@@ -287,21 +287,21 @@ function sanitize($v)
                 <div class="bg-white rounded-xl shadow p-6">
                     <h3 class="text-base font-bold text-gray-900 mb-4">Quick Actions</h3>
                     <div class="space-y-2">
-                        <a href="manage-deliveries.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
+                        <!-- <a href="manage-deliveries.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
                             🚚 Manage Deliveries
                         </a>
                         <a href="crop-listings.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
                             🌾 View Crop Listings
-                        </a>
-                        <a href="orders.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
+                        </a> -->
+                        <!-- <a href="orders.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
                             📦 Orders
-                        </a>
+                        </a> -->
                         <a href="agent-farmer-dashboard.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border">
                             🌾 Manage Farmers
                         </a>
-                        <a href="support.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
+                        <!-- <a href="support.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
                             📞 Contact Support
-                        </a>
+                        </a> -->
 
                     </div>
                 </div>
