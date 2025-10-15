@@ -5,57 +5,57 @@ $agent_id = isset($user_id) ? $user_id : 64;
 
 include '../include/connect-db.php'; // database connection
 
-    // Handle form submission
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $productId = (int)$_POST['product']; // Now using product_id from dropdown
-        $quantity = (int)$_POST['quantity'];
-        $unit = $_POST['unit'];
-        $unitVolume = (float)$_POST['unitVolume'];
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $productId = (int)$_POST['product']; // Now using product_id from dropdown
+    $quantity = (int)$_POST['quantity'];
+    $unit = $_POST['unit'];
+    $unitVolume = (float)$_POST['unitVolume'];
 
-        // Handle dates properly: only set if valid YYYY-MM-DD format, else NULL
-        $expiry = !empty($_POST['expiry']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_POST['expiry']) ? $_POST['expiry'] : null;
-        $inbound = !empty($_POST['inbound']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_POST['inbound']) ? $_POST['inbound'] : null;
-        $warehouseId = (int)$_POST['warehouse']; // warehouse_id directly from dropdown
+    // Handle dates properly: only set if valid YYYY-MM-DD format, else NULL
+    $expiry = !empty($_POST['expiry']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_POST['expiry']) ? $_POST['expiry'] : null;
+    $inbound = !empty($_POST['inbound']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_POST['inbound']) ? $_POST['inbound'] : null;
+    $warehouseId = (int)$_POST['warehouse']; // warehouse_id directly from dropdown
 
-        // Handle product image upload
-        $imagePath = null;
-        if (isset($_FILES['productFile']) && $_FILES['productFile']['error'] == 0) {
-            $uploadDir = '../assets/products-image/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+    // Handle product image upload
+    $imagePath = null;
+    if (isset($_FILES['productFile']) && $_FILES['productFile']['error'] == 0) {
+        $uploadDir = '../assets/products-image/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
-            // Clean filename and add product name + date
-            $ext = pathinfo($_FILES['productFile']['name'], PATHINFO_EXTENSION);
-            $safeProductName = preg_replace("/[^a-zA-Z0-9_-]/", "_", $productId); // Use ID for safety
-            $filename = $safeProductName . '_' . date('YmdHis') . '.' . $ext;
-            $targetFile = $uploadDir . $filename;
+        // Clean filename and add product name + date
+        $ext = pathinfo($_FILES['productFile']['name'], PATHINFO_EXTENSION);
+        $safeProductName = preg_replace("/[^a-zA-Z0-9_-]/", "_", $productId); // Use ID for safety
+        $filename = $safeProductName . '_' . date('YmdHis') . '.' . $ext;
+        $targetFile = $uploadDir . $filename;
 
-            if (move_uploaded_file($_FILES['productFile']['tmp_name'], $targetFile)) {
-                // Save relative path or full URL
-                $imagePath = 'assets/products-image/' . $filename; // relative path
-            }
+        if (move_uploaded_file($_FILES['productFile']['tmp_name'], $targetFile)) {
+            // Save relative path or full URL
+            $imagePath = 'assets/products-image/' . $filename; // relative path
         }
+    }
 
-        // Insert into warehouse_products table - Fixed binding for dates as NULL-safe
-        $stmt = $conn->prepare("
+    // Insert into warehouse_products table - Fixed binding for dates as NULL-safe
+    $stmt = $conn->prepare("
         INSERT INTO warehouse_products 
             (warehouse_id, product_id, quantity, inbound_stock_date, expiry_date, unit_volume, agent_id)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     ");
 
-        // Use 's' for dates to bind as strings or NULL properly
-        $stmt->bind_param("iiissii", $warehouseId, $productId, $quantity, $inbound, $expiry, $unitVolume, $agent_id);
+    // Use 's' for dates to bind as strings or NULL properly
+    $stmt->bind_param("iiissii", $warehouseId, $productId, $quantity, $inbound, $expiry, $unitVolume, $agent_id);
 
-        if ($stmt->execute()) {
-            $success = "Request submitted successfully!";
-        } else {
-            $error = "Error: " . $stmt->error;
-        }
-        $stmt->close();
+    if ($stmt->execute()) {
+        $success = "Request submitted successfully!";
+    } else {
+        $error = "Error: " . $stmt->error;
     }
+    $stmt->close();
+}
 
 
-    //============================ all products with IDs =======================
-    $sql = "SELECT product_id, name FROM `products` WHERE 1";
+//============================ all products with IDs =======================
+$sql = "SELECT product_id, name FROM `products` WHERE 1";
 $result = mysqli_query($conn, $sql);
 $all_products = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
@@ -174,8 +174,11 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
 <body class="bg-gray-100">
 
     <section class="home-section max-w-6xl mx-auto px-6 md:px-12 pb-4">
-        <div class="flex justify-between items-center p-4">
+        <div class="items-center p-4">
             <h1 class="text-2xl font-bold">Agent Inventory Request</h1>
+            <p class="text-gray-600 text-sm max-w-xl whitespace-nowrap  text-ellipsis">
+                This function processes requests related to inventory management, such as adding, updating, or retrieving inventory items.
+            </p>
             <!-- <button onclick="window.history.back()" class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
                 <i class='bx bx-arrow-back'></i> Back
             </button> -->
