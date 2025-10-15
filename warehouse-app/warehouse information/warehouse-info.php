@@ -1,3 +1,4 @@
+<?php include '../../include/navbar.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -16,6 +17,7 @@
 
         <!-- Metrics Section -->
         <?php
+
         // DB: connect and fetch metrics + inventory rows
         require_once __DIR__ . '/../../include/connect-db.php';
 
