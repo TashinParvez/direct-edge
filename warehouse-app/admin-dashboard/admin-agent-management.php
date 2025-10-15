@@ -1,6 +1,7 @@
 <?php
+include '../../include/navbar.php';
 // admin-agent-management.php - Admin panel to manage all agents (FIXED VERSION)
-session_start();
+
 
 // Check if user is logged in
 // if (!isset($_SESSION['user_id'])) {
@@ -198,7 +199,8 @@ function sanitize($v)
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-sm font-medium text-gray-700">👤 <?php echo sanitize($admin['full_name']); ?></span>
+                    <span class="text-sm font-medium text-gray-700">👤
+                        <?php echo sanitize($admin['full_name']); ?></span>
                     <a href="profile.php" class="text-sm text-blue-600 hover:text-blue-700">Dashboard</a>
                     <a href="logout.php" class="text-sm text-red-600 hover:text-red-700 font-medium">Logout</a>
                 </div>
@@ -215,7 +217,8 @@ function sanitize($v)
 
         <!-- Alert Message -->
         <?php if ($message): ?>
-            <div class="mb-6 rounded-lg p-4 <?php echo $success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'; ?>">
+            <div
+                class="mb-6 rounded-lg p-4 <?php echo $success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'; ?>">
                 <p class="<?php echo $success ? 'text-green-800' : 'text-red-800'; ?> text-sm font-medium">
                     <?php echo sanitize($message); ?>
                 </p>
@@ -230,7 +233,8 @@ function sanitize($v)
                         <p class="text-sm font-medium text-gray-600">Total Agents</p>
                         <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo $stats['total'] ?? 0; ?></p>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-xl">👥</div>
+                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 grid place-items-center text-xl">👥
+                    </div>
                 </div>
             </div>
 
@@ -240,7 +244,8 @@ function sanitize($v)
                         <p class="text-sm font-medium text-gray-600">Pending</p>
                         <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo $stats['pending'] ?? 0; ?></p>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 grid place-items-center text-xl">⏳</div>
+                    <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 grid place-items-center text-xl">⏳
+                    </div>
                 </div>
             </div>
 
@@ -250,7 +255,8 @@ function sanitize($v)
                         <p class="text-sm font-medium text-gray-600">Approved</p>
                         <p class="text-3xl font-bold text-gray-900 mt-1"><?php echo $stats['approved'] ?? 0; ?></p>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 grid place-items-center text-xl">✅</div>
+                    <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 grid place-items-center text-xl">✅
+                    </div>
                 </div>
             </div>
 
@@ -273,14 +279,20 @@ function sanitize($v)
                         placeholder="Search by name, email, phone, or region..."
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
                 </div>
-                <select name="status" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                <select name="status"
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
                     <option value="all" <?php echo $status_filter === 'all' ? 'selected' : ''; ?>>All Status</option>
-                    <option value="Pending" <?php echo $status_filter === 'Pending' ? 'selected' : ''; ?>>Pending</option>
-                    <option value="Approved" <?php echo $status_filter === 'Approved' ? 'selected' : ''; ?>>Approved</option>
-                    <option value="Rejected" <?php echo $status_filter === 'Rejected' ? 'selected' : ''; ?>>Rejected</option>
+                    <option value="Pending" <?php echo $status_filter === 'Pending' ? 'selected' : ''; ?>>Pending
+                    </option>
+                    <option value="Approved" <?php echo $status_filter === 'Approved' ? 'selected' : ''; ?>>Approved
+                    </option>
+                    <option value="Rejected" <?php echo $status_filter === 'Rejected' ? 'selected' : ''; ?>>Rejected
+                    </option>
                 </select>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Filter</button>
-                <a href="admin-agent-management.php" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-center">Clear</a>
+                <button type="submit"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Filter</button>
+                <a href="admin-agent-management.php"
+                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium text-center">Clear</a>
             </form>
         </div>
 
@@ -290,12 +302,18 @@ function sanitize($v)
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Agent</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Details</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -314,14 +332,17 @@ function sanitize($v)
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <?php if (!empty($agent['image_url'])): ?>
-                                                <img src="<?php echo sanitize($agent['image_url']); ?>" alt="Photo" class="w-10 h-10 rounded-full object-cover">
+                                                <img src="<?php echo sanitize($agent['image_url']); ?>" alt="Photo"
+                                                    class="w-10 h-10 rounded-full object-cover">
                                             <?php else: ?>
-                                                <div class="w-10 h-10 rounded-full bg-green-100 text-green-700 grid place-items-center font-bold text-sm">
+                                                <div
+                                                    class="w-10 h-10 rounded-full bg-green-100 text-green-700 grid place-items-center font-bold text-sm">
                                                     <?php echo strtoupper(substr($agent['full_name'], 0, 2)); ?>
                                                 </div>
                                             <?php endif; ?>
                                             <div class="ml-3">
-                                                <p class="text-sm font-medium text-gray-900"><?php echo sanitize($agent['full_name']); ?></p>
+                                                <p class="text-sm font-medium text-gray-900">
+                                                    <?php echo sanitize($agent['full_name']); ?></p>
                                                 <p class="text-xs text-gray-500">ID: <?php echo $agent['user_id']; ?></p>
                                             </div>
                                         </div>
@@ -335,14 +356,18 @@ function sanitize($v)
                                         <p class="text-xs text-gray-500">
                                             <?php if ($agent['district']): ?>
                                                 <?php echo sanitize($agent['district']); ?>
-                                                <?php if ($agent['upazila']): ?>, <?php echo sanitize($agent['upazila']); ?><?php endif; ?>
+                                                <?php if ($agent['upazila']): ?>,
+                                                <?php echo sanitize($agent['upazila']); ?><?php endif; ?>
                                             <?php endif; ?>
                                         </p>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <p class="text-xs text-gray-600">🌾 <?php echo sanitize($agent['crops_expertise']); ?></p>
-                                        <p class="text-xs text-gray-600 mt-1">📏 <?php echo sanitize($agent['coverage_area_km']); ?> km</p>
-                                        <p class="text-xs text-gray-600">⏱️ <?php echo sanitize($agent['experience_years']); ?> yrs</p>
+                                        <p class="text-xs text-gray-600">🌾 <?php echo sanitize($agent['crops_expertise']); ?>
+                                        </p>
+                                        <p class="text-xs text-gray-600 mt-1">📏
+                                            <?php echo sanitize($agent['coverage_area_km']); ?> km</p>
+                                        <p class="text-xs text-gray-600">⏱️ <?php echo sanitize($agent['experience_years']); ?>
+                                            yrs</p>
                                     </td>
                                     <td class="px-6 py-4">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
@@ -357,7 +382,8 @@ function sanitize($v)
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        <button onclick="openModal(<?php echo htmlspecialchars(json_encode($agent), ENT_QUOTES); ?>)"
+                                        <button
+                                            onclick="openModal(<?php echo htmlspecialchars(json_encode($agent), ENT_QUOTES); ?>)"
                                             class="text-blue-600 hover:text-blue-900 font-medium">View/Edit</button>
                                     </td>
                                 </tr>

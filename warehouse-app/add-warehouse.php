@@ -39,7 +39,7 @@ $warehouses_stat = mysqli_fetch_assoc($result);
 
 // Calculate additional metrics
 $available_capacity = $warehouses_stat['Total_Capacity'] - $warehouses_stat['Used_Capacity'];
-$utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ? 
+$utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
     ($warehouses_stat['Used_Capacity'] / $warehouses_stat['Total_Capacity']) * 100 : 0;
 ?>
 
@@ -58,58 +58,94 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
         .form-container {
             transition: all 0.3s ease;
         }
+
         .form-container:hover {
             background-color: #f9fafb;
         }
+
         .form-field {
             transition: all 0.3s ease;
         }
+
         .form-field:hover {
             background-color: #f3f4f6;
         }
+
         .form-field:focus {
             background-color: #ffffff;
             border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
+
         .stat-card {
             transition: all 0.3s ease;
         }
+
         .stat-card:hover {
             background-color: #f9fafb;
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
+
         .page-enter {
             animation: pageEnter 0.6s ease-out;
         }
+
         @keyframes pageEnter {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         .form-animate {
             animation: slideInLeft 0.5s ease-out;
         }
+
         .stats-animate {
             animation: slideInRight 0.5s ease-out 0.2s both;
         }
+
         @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
+
         @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
+
         @media print {
-            .no-print { display: none !important; }
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
 
 <body class="bg-gray-100 page-enter">
     <?php include '../include/Sidebar.php'; ?>
-    
+
     <section class="home-section p-0">
         <div class="flex justify-between items-center p-6 bg-white shadow-sm border-b">
             <div>
@@ -117,10 +153,12 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                 <p class="text-gray-600 mt-1">Create a new warehouse location for inventory management</p>
             </div>
             <div class="flex space-x-3 no-print">
-                <a href="warehouse-status.php" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                <a href="Manage-Warehouse\warehouse-status.php"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">
                     <i class='bx bx-list-ul mr-2'></i>View All Warehouses
                 </a>
-                <button onclick="clearForm()" class="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition-colors">
+                <button onclick="clearForm()"
+                    class="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition-colors">
                     <i class='bx bx-refresh mr-2'></i>Reset Form
                 </button>
             </div>
@@ -128,12 +166,13 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
 
         <div class="container mx-auto px-6 py-6">
             <div class="flex flex-col lg:flex-row gap-8">
-                
+
                 <!-- Left: Add Warehouse Form -->
                 <div class="flex-1 max-w-2xl form-animate">
                     <!-- Success/Error Messages -->
                     <?php if (isset($success)): ?>
-                        <div class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center">
+                        <div
+                            class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center">
                             <i class='bx bx-check-circle text-2xl mr-3'></i>
                             <div>
                                 <div class="font-semibold">Success!</div>
@@ -168,7 +207,7 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     <i class='bx bx-building mr-2'></i>Warehouse Name
                                 </label>
-                                <input type="text" name="name" required 
+                                <input type="text" name="name" required
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 form-field"
                                     placeholder="Enter warehouse name">
                             </div>
@@ -177,7 +216,7 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     <i class='bx bx-map-pin mr-2'></i>Location
                                 </label>
-                                <input type="text" name="location" required 
+                                <input type="text" name="location" required
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 form-field"
                                     placeholder="Enter warehouse location">
                             </div>
@@ -186,7 +225,7 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     <i class='bx bx-cube mr-2'></i>Total Capacity (sq ft)
                                 </label>
-                                <input type="number" name="capacity_total" required min="1" 
+                                <input type="number" name="capacity_total" required min="1"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 form-field"
                                     placeholder="Enter capacity in square feet">
                             </div>
@@ -196,7 +235,8 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
                                         <i class='bx bx-category mr-2'></i>Warehouse Type
                                     </label>
-                                    <select name="type" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
+                                    <select name="type"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
                                         <option value="Normal">Normal Storage</option>
                                         <option value="Cold Storage">Cold Storage</option>
                                         <option value="Hazardous">Hazardous Materials</option>
@@ -207,7 +247,8 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
                                         <i class='bx bx-check-circle mr-2'></i>Initial Status
                                     </label>
-                                    <select name="status" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
+                                    <select name="status"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
                                         <option value="Active">Active</option>
                                         <option value="Inactive">Inactive</option>
                                         <option value="Under Maintenance">Under Maintenance</option>
@@ -216,7 +257,8 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                             </div>
 
                             <div class="pt-6">
-                                <button type="submit" class="w-full bg-green-500 text-white py-4 px-6 rounded-lg hover:bg-green-600 transition-colors font-semibold text-lg">
+                                <button type="submit"
+                                    class="w-full bg-green-500 text-white py-4 px-6 rounded-lg hover:bg-green-600 transition-colors font-semibold text-lg">
                                     <i class='bx bx-plus-circle mr-2'></i>Add Warehouse
                                 </button>
                             </div>
@@ -240,8 +282,10 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                         <div class="bg-white shadow-lg rounded-lg p-6 stat-card border border-gray-100">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="text-sm font-medium text-gray-600 uppercase tracking-wide">Total Warehouses</h3>
-                                    <p class="text-3xl font-bold text-blue-600 mt-2"><?= $warehouses_stat['Total_Warehouses'] ?></p>
+                                    <h3 class="text-sm font-medium text-gray-600 uppercase tracking-wide">Total
+                                        Warehouses</h3>
+                                    <p class="text-3xl font-bold text-blue-600 mt-2">
+                                        <?= $warehouses_stat['Total_Warehouses'] ?></p>
                                 </div>
                                 <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                                     <i class='bx bx-buildings text-2xl text-blue-600'></i>
@@ -253,8 +297,10 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                         <div class="bg-white shadow-lg rounded-lg p-6 stat-card border border-gray-100">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="text-sm font-medium text-gray-600 uppercase tracking-wide">Active Warehouses</h3>
-                                    <p class="text-3xl font-bold text-green-600 mt-2"><?= $warehouses_stat['Active_Warehouses'] ?></p>
+                                    <h3 class="text-sm font-medium text-gray-600 uppercase tracking-wide">Active
+                                        Warehouses</h3>
+                                    <p class="text-3xl font-bold text-green-600 mt-2">
+                                        <?= $warehouses_stat['Active_Warehouses'] ?></p>
                                 </div>
                                 <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                                     <i class='bx bx-check-circle text-2xl text-green-600'></i>
@@ -266,8 +312,10 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                         <div class="bg-white shadow-lg rounded-lg p-6 stat-card border border-gray-100">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="text-sm font-medium text-gray-600 uppercase tracking-wide">Inactive Warehouses</h3>
-                                    <p class="text-3xl font-bold text-red-600 mt-2"><?= $warehouses_stat['Inactive_Warehouses'] ?></p>
+                                    <h3 class="text-sm font-medium text-gray-600 uppercase tracking-wide">Inactive
+                                        Warehouses</h3>
+                                    <p class="text-3xl font-bold text-red-600 mt-2">
+                                        <?= $warehouses_stat['Inactive_Warehouses'] ?></p>
                                 </div>
                                 <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
                                     <i class='bx bx-x-circle text-2xl text-red-600'></i>
@@ -279,8 +327,10 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                         <div class="bg-white shadow-lg rounded-lg p-6 stat-card border border-gray-100">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <h3 class="text-sm font-medium text-gray-600 uppercase tracking-wide">Under Maintenance</h3>
-                                    <p class="text-3xl font-bold text-yellow-600 mt-2"><?= $warehouses_stat['Under_Maintenance'] ?></p>
+                                    <h3 class="text-sm font-medium text-gray-600 uppercase tracking-wide">Under
+                                        Maintenance</h3>
+                                    <p class="text-3xl font-bold text-yellow-600 mt-2">
+                                        <?= $warehouses_stat['Under_Maintenance'] ?></p>
                                 </div>
                                 <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                                     <i class='bx bx-wrench text-2xl text-yellow-600'></i>
@@ -290,19 +340,24 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
 
                         <!-- Capacity Overview -->
                         <div class="bg-white shadow-lg rounded-lg p-6 stat-card border border-gray-100">
-                            <h3 class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-4">Capacity Overview</h3>
+                            <h3 class="text-sm font-medium text-gray-600 uppercase tracking-wide mb-4">Capacity Overview
+                            </h3>
                             <div class="space-y-4">
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-gray-600">Total Capacity:</span>
-                                    <span class="font-semibold"><?= number_format($warehouses_stat['Total_Capacity']) ?> sq ft</span>
+                                    <span class="font-semibold"><?= number_format($warehouses_stat['Total_Capacity']) ?>
+                                        sq ft</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-gray-600">Used Capacity:</span>
-                                    <span class="font-semibold text-red-600"><?= number_format($warehouses_stat['Used_Capacity']) ?> sq ft</span>
+                                    <span
+                                        class="font-semibold text-red-600"><?= number_format($warehouses_stat['Used_Capacity']) ?>
+                                        sq ft</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-gray-600">Available:</span>
-                                    <span class="font-semibold text-green-600"><?= number_format($available_capacity) ?> sq ft</span>
+                                    <span class="font-semibold text-green-600"><?= number_format($available_capacity) ?>
+                                        sq ft</span>
                                 </div>
                                 <div class="pt-2">
                                     <div class="flex justify-between items-center mb-2">
@@ -310,8 +365,8 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                                         <span class="font-semibold"><?= number_format($utilization_rate, 1) ?>%</span>
                                     </div>
                                     <div class="w-full bg-gray-200 rounded-full h-3">
-                                        <div class="bg-gradient-to-r from-green-500 to-blue-600 h-3 rounded-full transition-all duration-500" 
-                                             style="width: <?= min(100, $utilization_rate) ?>%"></div>
+                                        <div class="bg-gradient-to-r from-green-500 to-blue-600 h-3 rounded-full transition-all duration-500"
+                                            style="width: <?= min(100, $utilization_rate) ?>%"></div>
                                     </div>
                                 </div>
                             </div>
@@ -325,14 +380,14 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
     <script>
         function clearForm() {
             document.getElementById('warehouseForm').reset();
-            
+
             // Show confirmation
             const button = event.target;
             const originalText = button.innerHTML;
             button.innerHTML = '<i class="bx bx-check mr-2"></i>Form Cleared!';
             button.classList.remove('bg-gray-500', 'hover:bg-gray-600');
             button.classList.add('bg-green-500');
-            
+
             setTimeout(() => {
                 button.innerHTML = originalText;
                 button.classList.remove('bg-green-500');
@@ -348,7 +403,7 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                 alert('Please enter a valid capacity greater than 0');
                 return;
             }
-            
+
             // Show loading state
             const submitButton = this.querySelector('button[type="submit"]');
             const originalText = submitButton.innerHTML;
@@ -360,14 +415,14 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
         document.addEventListener('DOMContentLoaded', function() {
             const successMsg = document.querySelector('.bg-green-100');
             const errorMsg = document.querySelector('.bg-red-100');
-            
+
             if (successMsg) {
                 setTimeout(() => {
                     successMsg.style.animation = 'fadeOut 0.5s ease-out forwards';
                     setTimeout(() => successMsg.remove(), 500);
                 }, 5000);
             }
-            
+
             if (errorMsg) {
                 setTimeout(() => {
                     errorMsg.style.animation = 'fadeOut 0.5s ease-out forwards';

@@ -48,7 +48,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
     <!-- Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&display=swap" rel="stylesheet">
-
+    <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png">
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -56,6 +56,18 @@ $current_page = basename($_SERVER['PHP_SELF']);
         body,
         * {
             font-family: "Lora", serif;
+        }
+
+        .bg-custom {
+            background-color: #e4e9f7;
+        }
+
+        html,
+        body {
+            height: 100%;
+            /* Ensure the background color covers the entire page */
+            background-color: #e4e9f7;
+            /* Apply the background color */
         }
     </style>
 </head>
