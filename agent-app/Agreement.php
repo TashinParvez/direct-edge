@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-bold">3</div>
                         <div class="flex-1 h-1 bg-gray-300 mx-2"></div>
                     </div>
-                    <p class="text-sm mt-2 text-gray-500">Signature</p>
+                    <p class="text-sm mt-2 text-gray-500">Approve</p>
                 </div>
                 <div class="flex-1">
                     <div class="flex items-center">
@@ -338,7 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <canvas id="agentSignaturePad" class="signature-pad" width="400" height="200"></canvas>
                         <div class="mt-2 flex gap-2">
                             <button type="button" onclick="clearAgentSignature()"
-                                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                class="px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
                                 Clear
                             </button>
                         </div>
@@ -353,7 +353,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <canvas id="farmerSignaturePad" class="signature-pad" width="400" height="200"></canvas>
                         <div class="mt-2 flex gap-2">
                             <button type="button" onclick="clearFarmerSignature()"
-                                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                                class="px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
                                 Clear
                             </button>
                         </div>
@@ -365,7 +365,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- Submit Button -->
             <div class="flex justify-end gap-4">
-                <a href="agent_dashboard.php"
+                <a href="agent-farmer-dashboard.php"
                     class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold">
                     Cancel
                 </a>
