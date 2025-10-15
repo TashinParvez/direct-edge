@@ -23,6 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $image_url = null;
 
     // Allowed ENUM values
+    // $allowed_roles = ['Admin', 'Shop-Owner', 'Agent', 'User'];
     $allowed_roles = ['Admin', 'Shop-Owner', 'Agent', 'User'];
     if (!in_array($role, $allowed_roles)) {
         $message = "Invalid role selected!";
@@ -209,22 +210,22 @@ $conn->close();
                 <div>
                     <label class="block text-sm font-medium">User Type</label>
                     <div class="flex flex-wrap gap-4 mt-2">
-                        <label class="flex items-center gap-2">
+                        <!-- <label class="flex items-center gap-2">
                             <input type="radio" name="usertype" value="User" required class="text-blue-600 focus:ring-blue-500">
                             <span>User</span>
-                        </label>
+                        </label> -->
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="usertype" value="Shop-Owner" required class="text-blue-600 focus:ring-blue-500">
+                            <input type="radio" name="usertype" value="Shop-Owner" required checked class="text-blue-600 focus:ring-blue-500">
                             <span>Shop Owner</span>
                         </label>
-                        <label class="flex items-center gap-2">
+                        <!-- <label class="flex items-center gap-2">
                             <input type="radio" name="usertype" value="Agent" required class="text-blue-600 focus:ring-blue-500">
                             <span>Agent</span>
-                        </label>
-                        <label class="flex items-center gap-2">
+                        </label> -->
+                        <!-- <label class="flex items-center gap-2">
                             <input type="radio" name="usertype" value="Admin" required class="text-blue-600 focus:ring-blue-500">
                             <span>Admin</span>
-                        </label>
+                        </label> -->
                     </div>
                 </div>
 

@@ -1,11 +1,8 @@
 <?php
-// Ensure session is started and output buffering is enabled before including any files
-// that may emit HTML (like the navbar). This lets POST handlers clean the buffer
-// and return pure JSON responses to AJAX callers.
-// if (session_status() === PHP_SESSION_NONE) session_start();
-
-ob_start(); // Start output buffering so we can clear HTML when returning JSON
 include '../include/navbar.php';
+// Prevent any output before JSON response
+// ob_start(); // Start output buffering
+// session_start();
 include '../include/connect-db.php'; // Database connection
 
 $user_id = $_SESSION['user_id'] ?? 2;
@@ -59,7 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         // Validate inputs
         if ($product_id <= 0 || $quantity <= 0) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Invalid product ID or quantity']);
             exit;
         }
@@ -72,13 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 GROUP BY p.product_id, p.price";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Database query preparation failed: ' . $conn->error]);
             exit;
         }
         $stmt->bind_param("i", $product_id);
         if (!$stmt->execute()) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Query execution failed: ' . $stmt->error]);
             $stmt->close();
             exit;
@@ -88,7 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $price = $row['price'];
             $available_quantity = (int)$row['total_quantity'];
         } else {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Product not found']);
             $stmt->close();
             exit;
@@ -97,7 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         // 2. Check if sufficient stock is available
         if ($quantity > $available_quantity) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Requested quantity (' . $quantity . ') exceeds available stock (' . $available_quantity . ')']);
             exit;
         }
@@ -109,13 +101,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $sql = "SELECT cart_item_id, quantity FROM shop_owner_cart_items WHERE cart_id = ? AND product_id = ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Cart query preparation failed: ' . $conn->error]);
             exit;
         }
         $stmt->bind_param("ii", $cart_id, $product_id);
         if (!$stmt->execute()) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Cart query execution failed: ' . $stmt->error]);
             $stmt->close();
             exit;
@@ -125,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             // 5a. Update existing item
             $new_qty = $row['quantity'] + $quantity;
             if ($new_qty > $available_quantity) {
-                ob_end_clean();
                 echo json_encode(['status' => 'error', 'message' => 'Total quantity (' . $new_qty . ') exceeds available stock (' . $available_quantity . ')']);
                 $stmt->close();
                 exit;
@@ -133,13 +122,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $sql = "UPDATE shop_owner_cart_items SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE cart_item_id = ?";
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
-                ob_end_clean();
                 echo json_encode(['status' => 'error', 'message' => 'Update query preparation failed: ' . $conn->error]);
                 exit;
             }
             $stmt->bind_param("ii", $new_qty, $row['cart_item_id']);
             if (!$stmt->execute()) {
-                ob_end_clean();
                 echo json_encode(['status' => 'error', 'message' => 'Update failed: ' . $stmt->error]);
                 $stmt->close();
                 exit;
@@ -149,13 +136,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $sql = "INSERT INTO shop_owner_cart_items (cart_id, product_id, quantity, price_at_time) VALUES (?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
-                ob_end_clean();
                 echo json_encode(['status' => 'error', 'message' => 'Insert query preparation failed: ' . $conn->error]);
                 exit;
             }
             $stmt->bind_param("iiid", $cart_id, $product_id, $quantity, $price);
             if (!$stmt->execute()) {
-                ob_end_clean();
                 echo json_encode(['status' => 'error', 'message' => 'Insert failed: ' . $stmt->error]);
                 $stmt->close();
                 exit;
@@ -177,7 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $cst->close();
         }
 
-        ob_end_clean();
         echo json_encode(['status' => 'success', 'message' => 'Product added to cart', 'cart_count' => $updated_count]);
         exit;
     }
@@ -187,7 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 0;
 
         if ($product_id <= 0 || $quantity <= 0) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Invalid product ID or quantity']);
             exit;
         }
@@ -196,13 +179,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $sql = "INSERT INTO stock_requests (requester_id, status, notes) VALUES (?, 'Pending', 'Stock request from shop owner')";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Stock request query preparation failed: ' . $conn->error]);
             exit;
         }
         $stmt->bind_param("i", $user_id);
         if (!$stmt->execute()) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Stock request insert failed: ' . $stmt->error]);
             $stmt->close();
             exit;
@@ -214,25 +195,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $sql = "INSERT INTO stock_request_items (request_id, product_id, quantity) VALUES (?, ?, ?)";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Stock request item query preparation failed: ' . $conn->error]);
             exit;
         }
         $stmt->bind_param("iii", $request_id, $product_id, $quantity);
         if (!$stmt->execute()) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Stock request item insert failed: ' . $stmt->error]);
             $stmt->close();
             exit;
         }
         $stmt->close();
 
-        ob_end_clean();
         echo json_encode(['status' => 'success', 'message' => 'Stock request submitted']);
         exit;
     }
 
-    ob_end_clean();
     echo json_encode(['status' => 'error', 'message' => 'Invalid action']);
     exit;
 }

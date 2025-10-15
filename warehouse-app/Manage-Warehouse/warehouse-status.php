@@ -1,6 +1,7 @@
 <?php
 include '../../include/connect-db.php'; // database connection
 include '../../include/navbar.php';
+$admin_id = isset($user_id) ? $user_id : 65;
 
 $sql = "SELECT warehouse_id, name, location, capacity_total, capacity_used, status, type
         FROM `warehouses` WHERE 1";

@@ -1,7 +1,10 @@
 <?php
+
+include '../../include/navbar.php';
+$admin_id = isset($user_id) ? $user_id : 65;
+
 // orders.php
 include '../../include/connect-db.php'; // database connection
-include '../../include/navbar.php';
 
 // Get all status options for the dropdown
 $statusOptions = ['Pending', 'Approved', 'Shipped', 'Delivered', 'Cancelled'];

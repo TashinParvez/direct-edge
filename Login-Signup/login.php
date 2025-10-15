@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } elseif ($user['role'] == 'Admin') {
                 $redirect_page = "warehouse-app/admin-dashboard/admin-dashboard.php";
             } elseif ($user['role'] == 'Shop-Owner') {
-                $redirect_page = "";
+                $redirect_page = "shop-owner-app\Profuct-for-buyers-from-shop\Available-Products-List.php";
             } else {
                 $redirect_page = "Home/landing.php";
             }

@@ -1,5 +1,6 @@
 <?php
 include '../../include/navbar.php';
+$admin_id = isset($user_id) ? $user_id : 65;
 // admin-agent-management.php - Admin panel to manage all agents (FIXED VERSION)
 
 
@@ -144,7 +145,7 @@ $sql = "SELECT u.user_id, u.full_name, u.email, u.phone, u.image_url, u.created_
                ai.coverage_area_km, ai.experience_years, ai.crops_expertise, 
                ai.vehicle_types, ai.warehouse_capacity, ai.status
         FROM users u
-        LEFT JOIN agent_info ai ON u.user_id = ai.user_id
+        LEFT JOIN agent_info ai ON u.user_id = ai.agent_id
         WHERE $where_sql
         ORDER BY ai.created_at DESC";
 
@@ -163,7 +164,7 @@ $stats_sql = "SELECT
     SUM(CASE WHEN ai.status = 'Approved' THEN 1 ELSE 0 END) as approved,
     SUM(CASE WHEN ai.status = 'Rejected' THEN 1 ELSE 0 END) as rejected
 FROM users u
-LEFT JOIN agent_info ai ON u.user_id = ai.user_id
+LEFT JOIN agent_info ai ON u.user_id = ai.agent_id
 WHERE u.role = 'Agent'";
 $stats_result = mysqli_query($conn, $stats_sql);
 $stats = mysqli_fetch_assoc($stats_result);
@@ -188,7 +189,7 @@ function sanitize($v)
 
 <body class="bg-gray-50">
     <!-- Navigation -->
-    <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+    <!-- <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center gap-3">
@@ -200,13 +201,13 @@ function sanitize($v)
                 </div>
                 <div class="flex items-center gap-4">
                     <span class="text-sm font-medium text-gray-700">👤
-                        <?php echo sanitize($admin['full_name']); ?></span>
+                        <?php // echo sanitize($admin['full_name']); ?></span>
                     <a href="profile.php" class="text-sm text-blue-600 hover:text-blue-700">Dashboard</a>
                     <a href="logout.php" class="text-sm text-red-600 hover:text-red-700 font-medium">Logout</a>
                 </div>
             </div>
         </div>
-    </nav>
+    </nav> -->
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Page Header -->

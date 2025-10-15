@@ -3,6 +3,7 @@
 
 include '../../include/connect-db.php';
 include '../../include/navbar.php';
+$admin_id = isset($user_id) ? $user_id : 65;
 
 //-------------------------  Segment 1 ------------------------- 
 

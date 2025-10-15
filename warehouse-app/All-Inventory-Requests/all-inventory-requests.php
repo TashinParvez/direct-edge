@@ -1,5 +1,6 @@
 <?php
 include '../../include/connect-db.php'; // database connection
+$admin_id = isset($user_id) ? $user_id : 65;
 
 // Handle status update (Accept/Reject/Toggle Working-Pending)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['request_id'])) {
