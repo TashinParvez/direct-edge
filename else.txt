@@ -19,6 +19,6 @@ shop24@gmail.com
 Number: 987654321
 Pass: 123456
 
---- Agent admin ---
+--- Admin login ---
 Number: 999999999
 Number: 123456
