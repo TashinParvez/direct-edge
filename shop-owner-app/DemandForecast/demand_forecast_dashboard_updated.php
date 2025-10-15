@@ -5,13 +5,17 @@ $username = "root";
 $password = "";
 $dbname = "direct-edge";
 
+// include '../../include/connect-db.php';
+include '../../include/navbar.php';
+// $admin_id = isset($user_id) ? $user_id : 65;
+
 $conn = new mysqli($servername, $username, $password, $dbname);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-session_start();
+// session_start();
 
 // Handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
