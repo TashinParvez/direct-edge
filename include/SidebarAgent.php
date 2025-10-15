@@ -1,5 +1,45 @@
+<!-- SidebarAgent.php (Updated) -->
+<?php
+include __DIR__ . '/../include/connect-db.php'; // Database connection
+session_start();
+
+$name = '';
+$role = ''; // role: admin, agent, shop-owner, user
+$status = '';
+
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+
+    $stmt = $conn->prepare('SELECT full_name, role FROM users WHERE user_id = ? LIMIT 1');
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
+    $stmt->bind_result($name, $role);
+    $stmt->fetch();
+    $stmt->close();
+
+    if (!empty($name)) {
+        $name = explode(' ', trim($name))[0];
+    }
+
+    // If role is 'Agent', fetch status
+    if ($role === 'Agent') {
+        $agentStmt = $conn->prepare('SELECT status FROM agent_info WHERE agent_id = ? LIMIT 1');
+        $agentStmt->bind_param('i', $user_id);
+        $agentStmt->execute();
+        $agentStmt->bind_result($status);
+        $agentStmt->fetch();
+        $agentStmt->close();
+    }
+}
+
+// Get current filename
+$current_page = basename($_SERVER['PHP_SELF']);
+
+$isPending = ($role === 'Agent' && $status === 'Pending');
+$linkClass = $isPending ? 'text-gray-500 cursor-not-allowed pointer-events-none' : '';
+?>
+
 <!DOCTYPE html>
-<!-- Created by CodingLab |www.youtube.com/CodingLabYT-->
 <html lang="en" dir="ltr">
 
 <head>
@@ -11,72 +51,80 @@
 </head>
 
 <body class="bg-custom">
-    <!-- Added 'open' class to make sidebar open by default -->
-    <div class="sidebar open pl-5 m-0">
+    <div class="sidebar open m-0">
         <div class="logo-details">
             <i class='bx bx-menu-alt-right' id="btn"></i>
         </div>
         <ul class="nav-list p-0">
             <li>
-                <a href="..\Dashboard\Dashboard.php">
-                    <i class='bx bx-user'></i>
-                    <span class="links_name">Agent Profile</span>
+                <a href="../agent-app/agent-farmer-dashboard.php"
+                    class="<?php echo ($current_page == 'agent-farmer-dashboard.php') ? 'text-white bg-white' : $linkClass; ?>">
+                    <i class='bx bx-grid-alt'></i>
+                    <span class="links_name">Dashboard</span>
                 </a>
-                <span class="tooltip">Agent Profile</span>
+                <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="..\Investment Page\Investment.php">
-                    <i class='bx bx-user-check'></i>
-                    <span class="links_name">Farmer under Agent</span>
+                <a href="../agent-app/farmers-list.php"
+                    class="<?php echo ($current_page == 'farmers-list.php') ? 'text-white bg-white' : $linkClass; ?>">
+                    <i class='bx bx-group'></i>
+                    <span class="links_name">Farmers Under Agent</span>
                 </a>
-                <span class="tooltip">Farmer under Agent</span>
+                <span class="tooltip">Farmers Under Agent</span>
             </li>
             <li>
-                <a href="#">
-                    <i class='bx bx-wallet'></i>
-                    <span class="links_name">Payment info</span>
-                </a>
-                <span class="tooltip">Payment info</span>
-            </li>
-            <li>
-                <a href="..\Receipt Page\RPage.php">
+                <a href="../agent-app/add-farmers-info.php"
+                    class="<?php echo ($current_page == 'add-farmers-info.php') ? 'text-white bg-white' : $linkClass; ?>">
                     <i class='bx bx-user-plus'></i>
                     <span class="links_name">Add Farmer</span>
                 </a>
                 <span class="tooltip">Add Farmer</span>
             </li>
-
+            <li>
+                <a href="../agent-app/payment-details.php"
+                    class="<?php echo ($current_page == 'payment-details.php') ? 'text-white bg-white' : $linkClass; ?>">
+                    <i class='bx bx-credit-card'></i>
+                    <span class="links_name">Payment info</span>
+                </a>
+                <span class="tooltip">Payment info</span>
+            </li>
+            <li>
+                <a href="../agent-app/inventory-request.php"
+                    class="<?php echo ($current_page == 'inventory-request.php') ? 'text-white bg-white' : $linkClass; ?>">
+                    <i class='bx bx-package'></i>
+                    <span class="links_name">Inventory Request</span>
+                </a>
+                <span class="tooltip">Inventory Request</span>
+            </li>
             <!-- Profile Info -->
             <li class="profile">
-                <div class="profile-details">
+                <a href="../agent-app/agent-profile.php" class="profile-details <?php echo $linkClass; ?>">
                     <img src="https://www.svgrepo.com/show/23012/profile-user.svg" alt="profileImg">
                     <div class="name_job">
-                        <div class="name">Aranya</div>
+                        <div class="name"><?php echo htmlspecialchars($name); ?></div>
+                        <div class="job">Agent</div>
                     </div>
-                </div>
-                <i class='bx bx-log-out' id="log_out"></i>
+                </a>
+                <a href="../Login-Signup/logout.php">
+                    <i class='bx bx-log-out' id="log_out"></i>
+                </a>
             </li>
         </ul>
     </div>
-    </section>
     <script>
     let sidebar = document.querySelector(".sidebar");
     let closeBtn = document.querySelector("#btn");
-    // Removed searchBtn variable since search bar is removed
 
     closeBtn.addEventListener("click", () => {
         sidebar.classList.toggle("open");
-        menuBtnChange(); //calling the function(optional)
+        menuBtnChange();
     });
 
-    // Removed search button event listener since search bar is removed
-
-    // following are the code to change sidebar button(optional)
     function menuBtnChange() {
         if (sidebar.classList.contains("open")) {
-            closeBtn.classList.replace("bx-menu", "bx-menu-alt-right"); //replacing the iocns class
+            closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
         } else {
-            closeBtn.classList.replace("bx-menu-alt-right", "bx-menu"); //replacing the iocns class
+            closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
         }
     }
     </script>

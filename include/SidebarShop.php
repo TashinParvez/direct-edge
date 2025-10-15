@@ -1,5 +1,31 @@
+<!-- SidebarShop.php -->
+<?php
+include __DIR__ . '/../include/connect-db.php'; // Database connection
+session_start();
+
+$name = '';
+$role = ''; // role: admin, agent, shop-owner, user
+
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+
+    $stmt = $conn->prepare('SELECT full_name, role FROM users WHERE user_id = ? LIMIT 1');
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
+    $stmt->bind_result($name, $role);
+    $stmt->fetch();
+    $stmt->close();
+
+    if (!empty($name)) {
+        $name = explode(' ', trim($name))[0];
+    }
+}
+
+// Get current filename
+$current_page = basename($_SERVER['PHP_SELF']);
+?>
+
 <!DOCTYPE html>
-<!-- Created by CodingLab |www.youtube.com/CodingLabYT-->
 <html lang="en" dir="ltr">
 
 <head>
@@ -11,99 +37,88 @@
 </head>
 
 <body class="bg-custom">
-    <!-- Added 'open' class to make sidebar open by default -->
-    <div class="sidebar open pl-5 m-0">
+    <div class="sidebar open m-0">
         <div class="logo-details">
             <i class='bx bx-menu-alt-right' id="btn"></i>
         </div>
         <ul class="nav-list p-0">
-            <!-- Search bar removed completely -->
             <li>
-                <a href="..\Dashboard\Dashboard.php">
-                    <i class='bx bx-grid-alt'></i>
+                <a href="../shop-owner-app\buy-products-from-warehouse.php"
+                    class="<?php echo ($current_page == 'buy-products.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-shopping-bag'></i>
+                    <span class="links_name">Buy Products</span>
+                </a>
+                <span class="tooltip">Buy Products</span>
+            </li>
+            <li>
+                <a href="../shop-owner-app\Self-Service-Orders\Self-Service-Orders.php"
+                    class="<?php echo ($current_page == 'self-service-orders.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-store'></i>
+                    <span class="links_name">Self-Service Orders</span>
+                </a>
+                <span class="tooltip">Self-Service Orders</span>
+            </li>
+            <li>
+                <a href="../shop-owner-app\DemandForecast\demand_forecast_dashboard_updated.php"
+                    class="<?php echo ($current_page == 'dashboard.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-bar-chart'></i>
                     <span class="links_name">Dashboard</span>
                 </a>
                 <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="..\Investment Page\Investment.php">
-                    <i class='bx bx-store-alt'></i>
-                    <span class="links_name">Invest in Store</span>
+                <a href="../shop-owner-app\DemandForecast\demand_forecast_dashboard_updated.php"
+                    class="<?php echo ($current_page == 'demand-forecasting.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-line-chart'></i>
+                    <span class="links_name">Demand Forecasting</span>
                 </a>
-                <span class="tooltip">Invest in Store</span>
+                <span class="tooltip">Demand Forecasting</span>
             </li>
             <li>
-                <a href="#">
-                    <i class='bx bx-target-lock'></i>
-                    <span class="links_name">Projection</span>
+                <a href="../shop-owner-app\Profuct-for-buyers-from-shop\Available-Products-List.php"
+                    class="<?php echo ($current_page == 'home.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-list-ul'></i>
+                    <span class="links_name">Available Products</span>
                 </a>
-                <span class="tooltip">Projection</span>
+                <span class="tooltip">Available Products</span>
             </li>
-            <li>
-                <a href="..\Receipt Page\RPage.php">
-                    <i class='bx bx-receipt'></i>
-                    <span class="links_name">Receipt</span>
+            <!-- <li>
+                <a href="../Buyer/request-products.php"
+                    class="<?php echo ($current_page == 'request-products.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-package'></i>
+                    <span class="links_name">Request Products</span>
                 </a>
-                <span class="tooltip">Receipt</span>
-            </li>
-            <li>
-                <a href="..\Stock and Storage\Stock.php">
-                    <i class='bx bx-archive'></i>
-                    <span class="links_name">Track Storage</span>
-                </a>
-                <span class="tooltip">Track Storage</span>
-            </li>
-            <li>
-                <a href="#">
-                    <i class='bx bx-cart-alt'></i>
-                    <span class="links_name">Order</span>
-                </a>
-                <span class="tooltip">Order</span>
-            </li>
-            <li>
-                <a href="#">
-                    <i class='bx bx-heart'></i>
-                    <span class="links_name">Saved</span>
-                </a>
-                <span class="tooltip">Saved</span>
-            </li>
-            <li>
-                <a href="..\User Settings\Settings.php">
-                    <i class='bx bx-cog'></i>
-                    <span class="links_name">Setting</span>
-                </a>
-                <span class="tooltip">Setting</span>
-            </li>
+                <span class="tooltip">Request Products</span>
+            </li> -->
+            <!-- Profile Info -->
             <li class="profile">
-                <div class="profile-details">
-                    <img src="https://www.svgrepo.com/show/23012/profile-user.svg" alt="profileImg">
+                <a href="../Login-Signup/profile.php" class="profile-details">
+                    <i class='bx bx-user-circle profile-icon' style="font-size:28px"></i>
                     <div class="name_job">
-                        <div class="name">Aranya</div>
+                        <div class="name"><?php echo htmlspecialchars($name); ?></div>
+                        <div class="job">Shop Owner</div>
                     </div>
-                </div>
-                <i class='bx bx-log-out' id="log_out"></i>
+                </a>
+                <a href="../Login-Signup/logout.php">
+                    <i class='bx bx-log-out' id="log_out"></i>
+                </a>
             </li>
         </ul>
     </div>
-    </section>
     <script>
     let sidebar = document.querySelector(".sidebar");
     let closeBtn = document.querySelector("#btn");
-    // Removed searchBtn variable since search bar is removed
 
     closeBtn.addEventListener("click", () => {
         sidebar.classList.toggle("open");
-        menuBtnChange(); //calling the function(optional)
+        menuBtnChange();
     });
 
-    // Removed search button event listener since search bar is removed
-
-    // following are the code to change sidebar button(optional)
     function menuBtnChange() {
         if (sidebar.classList.contains("open")) {
-            closeBtn.classList.replace("bx-menu", "bx-menu-alt-right"); //replacing the iocns class
+            closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
         } else {
-            closeBtn.classList.replace("bx-menu-alt-right", "bx-menu"); //replacing the iocns class
+            closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
         }
     }
     </script>
