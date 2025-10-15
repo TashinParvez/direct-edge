@@ -2,6 +2,7 @@
 
 
 include '../../include/connect-db.php';
+include '../../include/navbar.php';
 
 //-------------------------  Segment 1 ------------------------- 
 
@@ -340,20 +341,17 @@ $activity_logs = [
             </div>
             <div class="flex items-center gap-3">
 
-                <button
-                    class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
+                <button class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
                     onclick="window.location.href='../add-warehouse.php'">
                     Add Warehouse
                 </button>
 
-                <button
-                    class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
+                <button class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
                     onclick="window.location.href='../Manage-Warehouse/warehouse-status.php'">
                     Warehouse Status
                 </button>
 
-                <button
-                    class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
+                <button class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
                     onclick="window.location.href='admin-agent-management.php'">
                     Agent Management
                 </button>
@@ -379,9 +377,12 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="text-sm text-gray-500">Total Warehouses</div>
                     <div class="mt-2 flex items-baseline gap-3">
-                        <div class="text-2xl font-bold"><?= $total_warehouses_active + $total_warehouses_inactive ?></div>
-                        <div class="text-sm text-gray-600">Active: <span class="font-semibold text-green-600"><?= $total_warehouses_active ?></span></div>
-                        <div class="text-sm text-gray-600">Inactive: <span class="font-semibold text-red-600"><?= $total_warehouses_inactive ?></span></div>
+                        <div class="text-2xl font-bold"><?= $total_warehouses_active + $total_warehouses_inactive ?>
+                        </div>
+                        <div class="text-sm text-gray-600">Active: <span
+                                class="font-semibold text-green-600"><?= $total_warehouses_active ?></span></div>
+                        <div class="text-sm text-gray-600">Inactive: <span
+                                class="font-semibold text-red-600"><?= $total_warehouses_inactive ?></span></div>
                     </div>
                 </div>
 
@@ -474,9 +475,12 @@ $activity_logs = [
                             <div class="text-2xl font-bold"><?= array_sum($order_counts) ?></div>
                         </div>
                         <div class="space-y-1 text-sm text-gray-600 text-right">
-                            <div>Pending: <span class="font-semibold text-yellow-600"><?= $order_counts['Pending'] ?></span></div>
-                            <div>Completed: <span class="font-semibold text-green-600"><?= $order_counts['Completed'] ?></span></div>
-                            <div>Rejected: <span class="font-semibold text-red-600"><?= $order_counts['Rejected'] ?></span></div>
+                            <div>Pending: <span
+                                    class="font-semibold text-yellow-600"><?= $order_counts['Pending'] ?></span></div>
+                            <div>Completed: <span
+                                    class="font-semibold text-green-600"><?= $order_counts['Completed'] ?></span></div>
+                            <div>Rejected: <span
+                                    class="font-semibold text-red-600"><?= $order_counts['Rejected'] ?></span></div>
                         </div>
                     </div>
                     <div>
@@ -510,7 +514,8 @@ $activity_logs = [
                                         <td class="py-2"><?= date('d M, Y', strtotime($ro['placed_at'])) ?></td>
                                         <td class="py-2"><?= number_format($ro['total'], 2) ?></td>
                                         <td class="py-2">
-                                            <span class="<?= $ro['status'] == 'Pending' ? 'text-yellow-600' : ($ro['status'] == 'Completed' ? 'text-green-600' : 'text-gray-600') ?> font-semibold"><?= $ro['status'] ?></span>
+                                            <span
+                                                class="<?= $ro['status'] == 'Pending' ? 'text-yellow-600' : ($ro['status'] == 'Completed' ? 'text-green-600' : 'text-gray-600') ?> font-semibold"><?= $ro['status'] ?></span>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -541,7 +546,8 @@ $activity_logs = [
                         ?>
                             <div class="flex justify-between">
                                 <div><?= htmlspecialchars($w['name']) ?></div>
-                                <div>Used: <?= number_format($w['capacity_used']) ?> / Free: <?= number_format($free) ?></div>
+                                <div>Used: <?= number_format($w['capacity_used']) ?> / Free: <?= number_format($free) ?>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
