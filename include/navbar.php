@@ -62,11 +62,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
             background-color: #e4e9f7;
         }
 
-        html,
+        /* html, */
         body {
             height: 100%;
             /* Ensure the background color covers the entire page */
-            background-color: #e4e9f7;
+            /* background-color: #e4e9f7; */
             /* Apply the background color */
         }
     </style>
@@ -79,7 +79,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <!-- Logo -->
                 <a class="flex items-center flex-shrink-0" href="../Home/landing.php">
                     <img src="../assets/Logo/LogoBG.png" alt="Logo" class="h-14 w-14 object-contain">
- 
+
 
                 </a>
 
