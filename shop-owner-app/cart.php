@@ -358,29 +358,27 @@ $conn->close();
     </style>
 </head>
 
-<body class="bg-gray-100">
-    <?php include '../Include/Sidebar.php'; ?>
+<body>
+    <?php include '../Include/SidebarAgent.php'; ?>
+    <div class="flex justify-between items-center p-4">
+        <h1 class="text-2xl font-bold">Generate Receipt (Stock Integrated)</h1>
+        <button onclick="showInventoryStatus()"
+            class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+            <i class='bx bx-package'></i> Stock Status
+        </button>
+    </div>
 
-    <section class="home-section p-0">
-        <div class="flex justify-between items-center p-4">
-            <h1 class="text-2xl font-bold">Generate Receipt (Stock Integrated)</h1>
-            <button onclick="showInventoryStatus()"
-                class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                <i class='bx bx-package'></i> Stock Status
-            </button>
-        </div>
-
-        <?php if (isset($_SESSION['cart_message'])): ?>
-        <div class="mx-4 mb-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
-            <?php echo $_SESSION['cart_message'];
+    <?php if (isset($_SESSION['cart_message'])): ?>
+    <div class="mx-4 mb-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+        <?php echo $_SESSION['cart_message'];
                 unset($_SESSION['cart_message']); ?>
-        </div>
-        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
-        <div class="container mx-auto my-3">
-            <!-- Cart Items -->
-            <?php if (!empty($_SESSION['cart'])): ?>
-            <?php
+    <div class="container mx-auto my-3">
+        <!-- Cart Items -->
+        <?php if (!empty($_SESSION['cart'])): ?>
+        <?php
                 $total = 0;
                 foreach ($_SESSION['cart'] as $item):
                     $subtotal = $item['price'] * $item['quantity'];
@@ -391,75 +389,74 @@ $conn->close();
                         elseif ($item['available_stock'] <= 30) $stock_class = 'stock-medium';
                     }
                 ?>
-            <div class="bg-white shadow-md rounded-lg mb-3 flex cart-item"
-                data-product="<?php echo $item['product_id']; ?>">
-                <div class="w-1/6 p-2">
-                    <img src="<?php echo htmlspecialchars($item['image_url'] ?: '../assets/products-image/default.jpg'); ?>"
-                        class="w-full h-48 object-cover rounded" alt="<?php echo htmlspecialchars($item['name']); ?>">
-                </div>
-                <div class="w-4/6 flex flex-col justify-center p-4">
-                    <h5 class="text-xl font-semibold">
-                        <span class="stock-indicator <?php echo $stock_class; ?>"></span>
-                        <?php echo htmlspecialchars($item['name']); ?>
-                    </h5>
-                    <p class="text-gray-600">Price: ৳<?php echo number_format($item['price'], 2); ?> per
-                        <?php echo htmlspecialchars($item['unit']); ?></p>
-                    <p class="counter-price font-bold text-lg">৳<?php echo number_format($subtotal, 2); ?></p>
-                    <?php if (isset($item['available_stock'])): ?>
-                    <p class="text-xs text-gray-500">Stock Available: <?php echo $item['available_stock']; ?></p>
-                    <?php endif; ?>
-                </div>
-                <div class="w-1/6 flex flex-col items-center justify-center">
-                    <div class="flex items-center space-x-2 mb-2">
-                        <form method="post" style="display: inline;">
-                            <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
-                            <input type="hidden" name="cart_action" value="remove">
-                            <button type="submit"
-                                class="decrease-btn bg-red-200 hover:bg-red-300 px-3 py-1 rounded">-</button>
-                        </form>
-                        <div class="counter text-lg font-semibold"><?php echo $item['quantity']; ?></div>
-                        <form method="post" style="display: inline;">
-                            <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
-                            <input type="hidden" name="cart_action" value="add">
-                            <button type="submit"
-                                class="increase-btn bg-green-200 hover:bg-green-300 px-3 py-1 rounded">+</button>
-                        </form>
-                    </div>
+        <div class="bg-white shadow-md rounded-lg mb-3 flex cart-item"
+            data-product="<?php echo $item['product_id']; ?>">
+            <div class="w-1/6 p-2">
+                <img src="<?php echo htmlspecialchars($item['image_url'] ?: '../assets/products-image/default.jpg'); ?>"
+                    class="w-full h-48 object-cover rounded" alt="<?php echo htmlspecialchars($item['name']); ?>">
+            </div>
+            <div class="w-4/6 flex flex-col justify-center p-4">
+                <h5 class="text-xl font-semibold">
+                    <span class="stock-indicator <?php echo $stock_class; ?>"></span>
+                    <?php echo htmlspecialchars($item['name']); ?>
+                </h5>
+                <p class="text-gray-600">Price: ৳<?php echo number_format($item['price'], 2); ?> per
+                    <?php echo htmlspecialchars($item['unit']); ?></p>
+                <p class="counter-price font-bold text-lg">৳<?php echo number_format($subtotal, 2); ?></p>
+                <?php if (isset($item['available_stock'])): ?>
+                <p class="text-xs text-gray-500">Stock Available: <?php echo $item['available_stock']; ?></p>
+                <?php endif; ?>
+            </div>
+            <div class="w-1/6 flex flex-col items-center justify-center">
+                <div class="flex items-center space-x-2 mb-2">
+                    <form method="post" style="display: inline;">
+                        <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
+                        <input type="hidden" name="cart_action" value="remove">
+                        <button type="submit"
+                            class="decrease-btn bg-red-200 hover:bg-red-300 px-3 py-1 rounded">-</button>
+                    </form>
+                    <div class="counter text-lg font-semibold"><?php echo $item['quantity']; ?></div>
+                    <form method="post" style="display: inline;">
+                        <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
+                        <input type="hidden" name="cart_action" value="add">
+                        <button type="submit"
+                            class="increase-btn bg-green-200 hover:bg-green-300 px-3 py-1 rounded">+</button>
+                    </form>
                 </div>
             </div>
-            <?php endforeach; ?>
-
-            <!-- Total Section -->
-            <div class="bg-white shadow-md rounded-lg mb-3 p-4">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-bold">Total: ৳<?php echo number_format($total, 2); ?></h3>
-                    <div class="space-x-2">
-                        <form method="post" style="display: inline;">
-                            <input type="hidden" name="cart_action" value="clear">
-                            <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Clear
-                                Cart</button>
-                        </form>
-                        <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                            onclick="generateReceipt()">Generate Receipt & Process Sale</button>
-                    </div>
-                </div>
-            </div>
-            <?php else: ?>
-            <div class="bg-white shadow-md rounded-lg p-4 text-center">
-                <p class="text-gray-600">Your cart is empty. Add products using the buttons below.</p>
-            </div>
-            <?php endif; ?>
         </div>
+        <?php endforeach; ?>
 
-        <div class="container mx-auto my-3 flex space-x-4">
-            <button type="button" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300" onclick="openManualModal()">
-                <i class='bx bx-search'></i> Add Product Manually
-            </button>
-            <button type="button" class="scan-btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                <i class='bx bx-scan'></i> Scan to Add Product
-            </button>
+        <!-- Total Section -->
+        <div class="bg-white shadow-md rounded-lg mb-3 p-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold">Total: ৳<?php echo number_format($total, 2); ?></h3>
+                <div class="space-x-2">
+                    <form method="post" style="display: inline;">
+                        <input type="hidden" name="cart_action" value="clear">
+                        <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Clear
+                            Cart</button>
+                    </form>
+                    <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                        onclick="generateReceipt()">Generate Receipt & Process Sale</button>
+                </div>
+            </div>
         </div>
-    </section>
+        <?php else: ?>
+        <div class="bg-white shadow-md rounded-lg p-4 text-center">
+            <p class="text-gray-600">Your cart is empty. Add products using the buttons below.</p>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <div class="container mx-auto my-3 flex space-x-4">
+        <button type="button" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300" onclick="openManualModal()">
+            <i class='bx bx-search'></i> Add Product Manually
+        </button>
+        <button type="button" class="scan-btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            <i class='bx bx-scan'></i> Scan to Add Product
+        </button>
+    </div>
 
     <!-- Manual Product Addition Modal -->
     <div id="manual-modal"
@@ -781,7 +778,8 @@ $conn->close();
 
                     try {
                         const response = await fetch(
-                            'https://detect.roboflow.com/lays-txw7q/1?api_key=' + API_KEY, {
+                            'https://detect.roboflow.com/lays-txw7q/1?api_key=' +
+                            API_KEY, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/x-www-form-urlencoded'

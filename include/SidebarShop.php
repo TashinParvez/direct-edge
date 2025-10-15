@@ -1,35 +1,36 @@
-<?php
-// session_start();
-?>
 <!DOCTYPE html>
 <!-- Created by CodingLab |www.youtube.com/CodingLabYT-->
 <html lang="en" dir="ltr">
 
 <head>
     <meta charset="UTF-8">
-    <title>Sidebar</title>
     <link rel="stylesheet" href="sidebar.css">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png">
 </head>
 
 <body class="bg-custom">
-    <div class="sidebar pl-3 m-0">
+    <!-- Added 'open' class to make sidebar open by default -->
+    <div class="sidebar open pl-5 m-0">
         <div class="logo-details">
-            <i class='bx bx-menu' id="btn"></i>
+            <i class='bx bx-menu-alt-right' id="btn"></i>
         </div>
         <ul class="nav-list p-0">
-            <li>
-                <i class='bx bx-search'></i>
-                <input type="text" placeholder="Search...">
-                <span class="tooltip">Search</span>
-            </li>
+            <!-- Search bar removed completely -->
             <li>
                 <a href="..\Dashboard\Dashboard.php">
                     <i class='bx bx-grid-alt'></i>
                     <span class="links_name">Dashboard</span>
                 </a>
                 <span class="tooltip">Dashboard</span>
+            </li>
+            <li>
+                <a href="..\Investment Page\Investment.php">
+                    <i class='bx bx-store-alt'></i>
+                    <span class="links_name">Invest in Store</span>
+                </a>
+                <span class="tooltip">Invest in Store</span>
             </li>
             <li>
                 <a href="#">
@@ -84,22 +85,18 @@
             </li>
         </ul>
     </div>
-    <section class="home-section">
     </section>
     <script>
     let sidebar = document.querySelector(".sidebar");
     let closeBtn = document.querySelector("#btn");
-    let searchBtn = document.querySelector(".bx-search");
+    // Removed searchBtn variable since search bar is removed
 
     closeBtn.addEventListener("click", () => {
         sidebar.classList.toggle("open");
         menuBtnChange(); //calling the function(optional)
     });
 
-    searchBtn.addEventListener("click", () => { // Sidebar open when you click on the search iocn
-        sidebar.classList.toggle("open");
-        menuBtnChange(); //calling the function(optional)
-    });
+    // Removed search button event listener since search bar is removed
 
     // following are the code to change sidebar button(optional)
     function menuBtnChange() {

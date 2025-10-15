@@ -1,16 +1,13 @@
-<?php
-// session_start();
-?>
 <!DOCTYPE html>
 <!-- Created by CodingLab |www.youtube.com/CodingLabYT-->
 <html lang="en" dir="ltr">
 
 <head>
     <meta charset="UTF-8">
-    <title>Sidebar</title>
     <link rel="stylesheet" href="sidebar.css">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png">
 </head>
 
 <body class="bg-custom">
@@ -20,63 +17,36 @@
             <i class='bx bx-menu-alt-right' id="btn"></i>
         </div>
         <ul class="nav-list p-0">
-            <!-- Search bar removed completely -->
             <li>
                 <a href="..\Dashboard\Dashboard.php">
-                    <i class='bx bx-grid-alt'></i>
-                    <span class="links_name">Dashboard</span>
+                    <i class='bx bx-user'></i>
+                    <span class="links_name">Agent Profile</span>
                 </a>
-                <span class="tooltip">Dashboard</span>
+                <span class="tooltip">Agent Profile</span>
             </li>
             <li>
                 <a href="..\Investment Page\Investment.php">
-                    <i class='bx bx-store-alt'></i>
-                    <span class="links_name">Invest in Store</span>
+                    <i class='bx bx-user-check'></i>
+                    <span class="links_name">Farmer under Agent</span>
                 </a>
-                <span class="tooltip">Invest in Store</span>
+                <span class="tooltip">Farmer under Agent</span>
             </li>
             <li>
                 <a href="#">
-                    <i class='bx bx-target-lock'></i>
-                    <span class="links_name">Projection</span>
+                    <i class='bx bx-wallet'></i>
+                    <span class="links_name">Payment info</span>
                 </a>
-                <span class="tooltip">Projection</span>
+                <span class="tooltip">Payment info</span>
             </li>
             <li>
                 <a href="..\Receipt Page\RPage.php">
-                    <i class='bx bx-receipt'></i>
-                    <span class="links_name">Receipt</span>
+                    <i class='bx bx-user-plus'></i>
+                    <span class="links_name">Add Farmer</span>
                 </a>
-                <span class="tooltip">Receipt</span>
+                <span class="tooltip">Add Farmer</span>
             </li>
-            <li>
-                <a href="..\Stock and Storage\Stock.php">
-                    <i class='bx bx-archive'></i>
-                    <span class="links_name">Track Storage</span>
-                </a>
-                <span class="tooltip">Track Storage</span>
-            </li>
-            <li>
-                <a href="#">
-                    <i class='bx bx-cart-alt'></i>
-                    <span class="links_name">Order</span>
-                </a>
-                <span class="tooltip">Order</span>
-            </li>
-            <li>
-                <a href="#">
-                    <i class='bx bx-heart'></i>
-                    <span class="links_name">Saved</span>
-                </a>
-                <span class="tooltip">Saved</span>
-            </li>
-            <li>
-                <a href="..\User Settings\Settings.php">
-                    <i class='bx bx-cog'></i>
-                    <span class="links_name">Setting</span>
-                </a>
-                <span class="tooltip">Setting</span>
-            </li>
+
+            <!-- Profile Info -->
             <li class="profile">
                 <div class="profile-details">
                     <img src="https://www.svgrepo.com/show/23012/profile-user.svg" alt="profileImg">
@@ -88,28 +58,27 @@
             </li>
         </ul>
     </div>
-    <section class="home-section">
     </section>
     <script>
-        let sidebar = document.querySelector(".sidebar");
-        let closeBtn = document.querySelector("#btn");
-        // Removed searchBtn variable since search bar is removed
+    let sidebar = document.querySelector(".sidebar");
+    let closeBtn = document.querySelector("#btn");
+    // Removed searchBtn variable since search bar is removed
 
-        closeBtn.addEventListener("click", () => {
-            sidebar.classList.toggle("open");
-            menuBtnChange(); //calling the function(optional)
-        });
+    closeBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+        menuBtnChange(); //calling the function(optional)
+    });
 
-        // Removed search button event listener since search bar is removed
+    // Removed search button event listener since search bar is removed
 
-        // following are the code to change sidebar button(optional)
-        function menuBtnChange() {
-            if (sidebar.classList.contains("open")) {
-                closeBtn.classList.replace("bx-menu", "bx-menu-alt-right"); //replacing the iocns class
-            } else {
-                closeBtn.classList.replace("bx-menu-alt-right", "bx-menu"); //replacing the iocns class
-            }
+    // following are the code to change sidebar button(optional)
+    function menuBtnChange() {
+        if (sidebar.classList.contains("open")) {
+            closeBtn.classList.replace("bx-menu", "bx-menu-alt-right"); //replacing the iocns class
+        } else {
+            closeBtn.classList.replace("bx-menu-alt-right", "bx-menu"); //replacing the iocns class
         }
+    }
     </script>
 </body>
 
