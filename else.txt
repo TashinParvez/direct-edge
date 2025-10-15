@@ -11,3 +11,14 @@ shop24
 shop24@gmail.com
 147
 147258
+
+
+
+----------------- Mahbub only ----------------
+--- Agent login ---
+Number: 987654321
+Pass: 123456
+
+--- Agent admin ---
+Number: 999999999
+Number: 123456
