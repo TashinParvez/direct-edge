@@ -1,5 +1,5 @@
-<?php include '../Include/SidebarAgent.php'; ?>
-<link rel="stylesheet" href="../Include/sidebar.css">
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarAgent.php'; ?>
 <?php
 // Ensure session is started and output buffering is enabled before including any files
 // that may emit HTML (like the navbar). This lets POST handlers clean the buffer

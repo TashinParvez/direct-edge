@@ -22,3 +22,6 @@ Pass: 123456
 --- Admin login ---
 Number: 999999999
 Number: 123456
+
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarAgent.php'; ?>
