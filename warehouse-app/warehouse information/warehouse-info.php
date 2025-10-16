@@ -1,4 +1,94 @@
-<?php include '../../include/navbar.php'; ?>
+<?php
+// DB: connect and fetch metrics + inventory rows
+require_once __DIR__ . '/../../include/connect-db.php';
+
+
+                                include '../../include/navbar.php';
+                                $admin_id = isset($user_id) ? $user_id : 65;
+
+// Metrics
+$totalCapacity = 0;
+$usedCapacity = 0;
+$itemCount = 0;
+
+$resCap = mysqli_query($conn, "SELECT SUM(capacity_total) AS total_capacity, SUM(capacity_used) AS used_capacity FROM warehouses");
+if ($resCap) {
+    $capRow = mysqli_fetch_assoc($resCap);
+    $totalCapacity = (int)($capRow['total_capacity'] ?? 0);
+    $usedCapacity = (int)($capRow['used_capacity'] ?? 0);
+}
+$freeCapacity = $totalCapacity - $usedCapacity;
+if ($freeCapacity < 0) {
+    $freeCapacity = 0;
+}
+
+$resCount = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM warehouse_products");
+if ($resCount) {
+    $cntRow = mysqli_fetch_assoc($resCount);
+    $itemCount = (int)($cntRow['cnt'] ?? 0);
+}
+
+// Inventory rows
+$inventoryRows = [];
+$sql = "SELECT
+            wp.id,
+            wp.product_id,
+            p.name AS product_name,
+            p.special_instructions AS product_instructions,
+            p.unit AS product_unit,
+            wp.quantity,
+            wp.unit_volume,
+            CASE WHEN wp.request_status = 1 THEN 'In progress' ELSE 'Completed' END AS status,
+            w.warehouse_id,
+            w.name AS warehouse_name,
+            wp.agent_id,
+            wp.offer_percentage,
+            wp.offer_start,
+            wp.offer_end,
+            wp.inbound_stock_date,
+            wp.expiry_date,
+            wp.last_updated
+        FROM warehouse_products wp
+        JOIN products p ON p.product_id = wp.product_id
+        JOIN warehouses w ON w.warehouse_id = wp.warehouse_id
+        ORDER BY wp.last_updated DESC";
+$resInv = mysqli_query($conn, $sql);
+if ($resInv) {
+    while ($row = mysqli_fetch_assoc($resInv)) {
+        $inventoryRows[] = $row;
+    }
+}
+
+$currentDate = new DateTime();
+
+// Load warehouses for selects
+$warehouses = [];
+$resWh = mysqli_query($conn, "SELECT warehouse_id, name FROM warehouses ORDER BY name");
+if ($resWh) {
+    while ($w = mysqli_fetch_assoc($resWh)) {
+        $warehouses[] = $w;
+    }
+}
+
+// Load products for selects (product code implied as PRD-<id>)
+$products = [];
+$resPr = mysqli_query($conn, "SELECT product_id, name, unit, special_instructions FROM products ORDER BY name");
+if ($resPr) {
+    while ($p = mysqli_fetch_assoc($resPr)) {
+        $products[] = $p;
+    }
+}
+
+// Load agents (users with role = 'Agent') for selects
+$agents = [];
+$resAg = mysqli_query($conn, "SELECT user_id, full_name FROM users WHERE role = 'Agent' ORDER BY full_name");
+if ($resAg) {
+    while ($a = mysqli_fetch_assoc($resAg)) {
+        $agents[] = $a;
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 

@@ -5,6 +5,10 @@ $username = "root";
 $password = "";
 $dbname = "direct-edge";
 
+// include '../../include/connect-db.php';
+include '../../include/navbar.php';
+// $admin_id = isset($user_id) ? $user_id : 65;
+
 $conn = new mysqli($servername, $username, $password, $dbname);
 
 if ($conn->connect_error) {

@@ -1,4 +1,8 @@
 <?php
+
+include '../../include/navbar.php';
+$admin_id = isset($user_id) ? $user_id : 65;
+
 include '../../include/connect-db.php'; // database connection
 
 // Preserve current filters across actions

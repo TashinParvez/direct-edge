@@ -1,7 +1,7 @@
 <?php
 include '../../include/connect-db.php';
 include '../../include/navbar.php';
-
+$admin_id = isset($user_id) ? $user_id : 65;
 // ----------- Placeholder sample data -----------
 $search = $_GET['search'] ?? '';
 $area_filter = $_GET['area'] ?? '';

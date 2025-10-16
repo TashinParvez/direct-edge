@@ -81,7 +81,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <!-- Logo -->
                 <a class="flex items-center flex-shrink-0" href="../Home/landing.php">
                     <img src="../assets/Logo/LogoBG.png" alt="Logo" class="h-14 w-14 object-contain">
+
+
                 </a>
+
+                <!-- D:\All UIU Materials\11th Trimester\SE Lab\Project\direct-edge\assets\Logo\LogoBG.png -->
 
                 <!-- Navigation Links -->
                 <div class="flex-1 flex justify-center">

@@ -1,6 +1,7 @@
 <?php
 
 include '../../include/connect-db.php';
+include '../../include/navbar.php';
 
 $shop_id = 6;
 
@@ -25,29 +26,184 @@ $sql = "SELECT
         WHERE `shop_id` = 6
         ORDER BY o.order_id;";
 
+$sql = "SELECT 
+            combined.order_id,
+            combined.user_name,
+            combined.total_amount,
+            combined.status,
+            combined.product_id,
+            p.name AS product_name,        -- optional
+            p.img_url,                     -- image from products table
+            combined.quantity as quantity,
+            combined.price as unit_price,
+            combined.shop_id
+            FROM (
+                SELECT
+                o.order_id,
+                o.user_name,
+                o.total_amount,
+                o.status,
+                JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[0].product_id'))) AS product_id,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[0].quantity'))) AS UNSIGNED) AS quantity,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[0].price'))) AS DECIMAL(10,2)) AS price,
+                o.shop_id
+                FROM self_service_orders o
+                WHERE o.shop_id = 6
+
+                UNION ALL
+
+                SELECT
+                o.order_id,
+                o.user_name,
+                o.total_amount,
+                o.status,
+                JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[1].product_id'))) AS product_id,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[1].quantity'))) AS UNSIGNED) AS quantity,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[1].price'))) AS DECIMAL(10,2)) AS price,
+                o.shop_id
+                FROM self_service_orders o
+                WHERE o.shop_id = 6
+
+                UNION ALL
+
+                SELECT
+                o.order_id,
+                o.user_name,
+                o.total_amount,
+                o.status,
+                JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[2].product_id'))) AS product_id,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[2].quantity'))) AS UNSIGNED) AS quantity,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[2].price'))) AS DECIMAL(10,2)) AS price,
+                o.shop_id
+                FROM self_service_orders o
+                WHERE o.shop_id = 6
+            ) AS combined
+            LEFT JOIN products p 
+            ON p.product_id = combined.product_id       
+            WHERE combined.product_id IS NOT NULL
+            ORDER BY combined.order_id, combined.product_id;";
+
+$result = $conn->query($sql);
+
+$orders = [];
+
+// while ($row = $result->fetch_assoc()) {
+//     $id = $row['order_id'];
+
+//     if (!isset($orders[$id])) {
+//         $orders[$id] = [
+//             'id' => $id,
+//             'buyer' => $row['user_name'],
+//             'amount' => (float)$row['total_amount'],
+//             'status' => $row['status'],
+//             'products' => []
+//         ];
+//     }
+
+//     $orders[$id]['products'][] = [
+//         'name' => $row['product_name'],
+//         'qty' => (int)$row['quantity'],
+//         'unit_price' => (float)$row['unit_price']
+//     ];
+// }
+
+
+// new// new
+
+$sql = "SELECT 
+            combined.order_id,
+            combined.user_name,
+            combined.total_amount,
+            combined.status,
+            combined.product_id,
+            p.name AS product_name,
+            p.img_url,
+            combined.quantity AS quantity,
+            combined.price AS unit_price,
+            combined.shop_id
+        FROM (
+            SELECT
+                o.order_id,
+                o.user_name,
+                o.total_amount,
+                o.status,
+                JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[0].product_id'))) AS product_id,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[0].quantity'))) AS UNSIGNED) AS quantity,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[0].price'))) AS DECIMAL(10,2)) AS price,
+                o.shop_id
+            FROM self_service_orders o
+            WHERE o.shop_id = 6
+
+            UNION ALL
+
+            SELECT
+                o.order_id,
+                o.user_name,
+                o.total_amount,
+                o.status,
+                JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[1].product_id'))) AS product_id,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[1].quantity'))) AS UNSIGNED) AS quantity,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[1].price'))) AS DECIMAL(10,2)) AS price,
+                o.shop_id
+            FROM self_service_orders o
+            WHERE o.shop_id = 6
+
+            UNION ALL
+
+            SELECT
+                o.order_id,
+                o.user_name,
+                o.total_amount,
+                o.status,
+                JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[2].product_id'))) AS product_id,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[2].quantity'))) AS UNSIGNED) AS quantity,
+                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[2].price'))) AS DECIMAL(10,2)) AS price,
+                o.shop_id
+            FROM self_service_orders o
+            WHERE o.shop_id = 6
+        ) AS combined
+        LEFT JOIN products p 
+            ON p.product_id = combined.product_id       
+        WHERE combined.product_id IS NOT NULL
+        ORDER BY combined.order_id, combined.product_id;";
+
 $result = $conn->query($sql);
 
 $orders = [];
 
 while ($row = $result->fetch_assoc()) {
-    $id = $row['order_id'];
+    $orderId = $row['order_id'];
 
-    if (!isset($orders[$id])) {
-        $orders[$id] = [
-            'id' => $id,
-            'buyer' => $row['user_name'],
-            'amount' => (float)$row['total_amount'],
-            'status' => $row['status'],
-            'products' => []
+    // Create the order array if not yet initialized
+    if (!isset($orders[$orderId])) {
+        $orders[$orderId] = [
+            'order_id'   => (int)$orderId,
+            'buyer'      => $row['user_name'],
+            'total_amount' => (float)$row['total_amount'],
+            'status'     => $row['status'],
+            'shop_id'    => (int)$row['shop_id'],
+            'products'   => []
         ];
     }
 
-    $orders[$id]['products'][] = [
-        'name' => $row['product_name'],
-        'qty' => (int)$row['quantity'],
-        'unit_price' => (float)$row['unit_price']
+    // Append each product under this order
+    $orders[$orderId]['products'][] = [
+        'product_id' => (int)$row['product_id'],
+        'name'       => $row['product_name'],
+        'img_url'    => $row['img_url'],
+        'quantity'   => (int)$row['quantity'],
+        'unit_price' => (float)$row['unit_price'],
+        'total_price' => (float)$row['quantity'] * (float)$row['unit_price']
     ];
 }
+
+// Reindex to numeric array (optional) 
+
+// Example: output as JSON
+// echo json_encode($orders, JSON_PRETTY_PRINT);
+
+
+// new// new
 
 // Reset keys to 0,1,2...
 $orders = array_values($orders);

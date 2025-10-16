@@ -1,3 +1,24 @@
 agent id 64
 number 789
 pass 456789
+
+admin id
+number 369
+pass 258369
+
+
+shop24
+shop24@gmail.com
+147
+147258
+
+
+
+----------------- Mahbub only ----------------
+--- Agent login ---
+Number: 987654321
+Pass: 123456
+
+--- Admin login ---
+Number: 999999999
+Number: 123456

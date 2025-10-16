@@ -1,6 +1,11 @@
 <?php
 include '../include/connect-db.php'; // database connection
 
+include_once __DIR__ . '/../include/navbar.php';
+
+// include '../include/navbar.php';
+$admin_id = isset($user_id) ? $user_id : 65;
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = $_POST['name'];
@@ -144,7 +149,9 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
 </head>
 
 <body class="bg-gray-100 page-enter">
-    <?php include '../include/Sidebar.php'; ?>
+    <?php
+    //  include '../include/Sidebar.php';
+    ?>
 
     <section class="home-section p-0">
         <div class="flex justify-between items-center p-6 bg-white shadow-sm border-b">

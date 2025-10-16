@@ -1,7 +1,7 @@
 <?php
 
 include '../include/navbar.php';
-$agent_id = isset($user_id) ? $user_id : 45;
+// $agent_id = isset($user_id) ? $user_id : 45;
 
 $servername = "localhost";
 $username = "root";
@@ -155,7 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 // 2. Insert into agent_info table
                 $status = 'Pending'; // Start as pending for admin approval
-                $stmt = $conn->prepare("INSERT INTO agent_info (user_id, nid_number, region, district, upazila, coverage_area_km, experience_years, crops_expertise, vehicle_types, warehouse_capacity, reference_name, reference_phone, statement, id_doc_url, photo_url, trade_license_url, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                $stmt = $conn->prepare("INSERT INTO agent_info (agent_id, nid_number, region, district, upazila, coverage_area_km, experience_years, crops_expertise, vehicle_types, warehouse_capacity, reference_name, reference_phone, statement, id_doc_url, photo_url, trade_license_url, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
                 $stmt->bind_param("issssiissssssssss", $user_id, $nid_number, $region, $district, $upazila, $coverage_area_km, $experience_years, $crops_expertise, $vehicle_types, $warehouse_capacity, $reference_name, $reference_phone, $statement, $id_doc_url, $photo_url, $trade_license_url, $status);
                 $stmt->execute();
                 $stmt->close();

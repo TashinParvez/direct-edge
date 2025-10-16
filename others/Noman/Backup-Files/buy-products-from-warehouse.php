@@ -1,13 +1,8 @@
-<?php include '../Include/SidebarAgent.php'; ?>
-<link rel="stylesheet" href="../Include/sidebar.css">
 <?php
-// Ensure session is started and output buffering is enabled before including any files
-// that may emit HTML (like the navbar). This lets POST handlers clean the buffer
-// and return pure JSON responses to AJAX callers.
-// if (session_status() === PHP_SESSION_NONE) session_start();
-
-ob_start(); // Start output buffering so we can clear HTML when returning JSON
 include '../include/navbar.php';
+// Prevent any output before JSON response
+// ob_start(); // Start output buffering
+// session_start();
 include '../include/connect-db.php'; // Database connection
 
 $user_id = $_SESSION['user_id'] ?? 2;
@@ -61,7 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         // Validate inputs
         if ($product_id <= 0 || $quantity <= 0) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Invalid product ID or quantity']);
             exit;
         }
@@ -74,13 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 GROUP BY p.product_id, p.price";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Database query preparation failed: ' . $conn->error]);
             exit;
         }
         $stmt->bind_param("i", $product_id);
         if (!$stmt->execute()) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Query execution failed: ' . $stmt->error]);
             $stmt->close();
             exit;
@@ -90,7 +82,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $price = $row['price'];
             $available_quantity = (int)$row['total_quantity'];
         } else {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Product not found']);
             $stmt->close();
             exit;
@@ -99,7 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         // 2. Check if sufficient stock is available
         if ($quantity > $available_quantity) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Requested quantity (' . $quantity . ') exceeds available stock (' . $available_quantity . ')']);
             exit;
         }
@@ -111,13 +101,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $sql = "SELECT cart_item_id, quantity FROM shop_owner_cart_items WHERE cart_id = ? AND product_id = ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Cart query preparation failed: ' . $conn->error]);
             exit;
         }
         $stmt->bind_param("ii", $cart_id, $product_id);
         if (!$stmt->execute()) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Cart query execution failed: ' . $stmt->error]);
             $stmt->close();
             exit;
@@ -127,7 +115,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             // 5a. Update existing item
             $new_qty = $row['quantity'] + $quantity;
             if ($new_qty > $available_quantity) {
-                ob_end_clean();
                 echo json_encode(['status' => 'error', 'message' => 'Total quantity (' . $new_qty . ') exceeds available stock (' . $available_quantity . ')']);
                 $stmt->close();
                 exit;
@@ -135,13 +122,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $sql = "UPDATE shop_owner_cart_items SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE cart_item_id = ?";
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
-                ob_end_clean();
                 echo json_encode(['status' => 'error', 'message' => 'Update query preparation failed: ' . $conn->error]);
                 exit;
             }
             $stmt->bind_param("ii", $new_qty, $row['cart_item_id']);
             if (!$stmt->execute()) {
-                ob_end_clean();
                 echo json_encode(['status' => 'error', 'message' => 'Update failed: ' . $stmt->error]);
                 $stmt->close();
                 exit;
@@ -151,13 +136,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $sql = "INSERT INTO shop_owner_cart_items (cart_id, product_id, quantity, price_at_time) VALUES (?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
-                ob_end_clean();
                 echo json_encode(['status' => 'error', 'message' => 'Insert query preparation failed: ' . $conn->error]);
                 exit;
             }
             $stmt->bind_param("iiid", $cart_id, $product_id, $quantity, $price);
             if (!$stmt->execute()) {
-                ob_end_clean();
                 echo json_encode(['status' => 'error', 'message' => 'Insert failed: ' . $stmt->error]);
                 $stmt->close();
                 exit;
@@ -179,7 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $cst->close();
         }
 
-        ob_end_clean();
         echo json_encode(['status' => 'success', 'message' => 'Product added to cart', 'cart_count' => $updated_count]);
         exit;
     }
@@ -189,7 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $quantity = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 0;
 
         if ($product_id <= 0 || $quantity <= 0) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Invalid product ID or quantity']);
             exit;
         }
@@ -198,13 +179,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $sql = "INSERT INTO stock_requests (requester_id, status, notes) VALUES (?, 'Pending', 'Stock request from shop owner')";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Stock request query preparation failed: ' . $conn->error]);
             exit;
         }
         $stmt->bind_param("i", $user_id);
         if (!$stmt->execute()) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Stock request insert failed: ' . $stmt->error]);
             $stmt->close();
             exit;
@@ -216,25 +195,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $sql = "INSERT INTO stock_request_items (request_id, product_id, quantity) VALUES (?, ?, ?)";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Stock request item query preparation failed: ' . $conn->error]);
             exit;
         }
         $stmt->bind_param("iii", $request_id, $product_id, $quantity);
         if (!$stmt->execute()) {
-            ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Stock request item insert failed: ' . $stmt->error]);
             $stmt->close();
             exit;
         }
         $stmt->close();
 
-        ob_end_clean();
         echo json_encode(['status' => 'success', 'message' => 'Stock request submitted']);
         exit;
     }
 
-    ob_end_clean();
     echo json_encode(['status' => 'error', 'message' => 'Invalid action']);
     exit;
 }
@@ -279,99 +254,99 @@ mysqli_free_result($result);
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <style>
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    }
-
-    .product-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .product-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    }
-
-    .modal {
-        animation: fadeIn 0.2s ease-out;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: scale(0.98);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
         }
 
-        to {
-            opacity: 1;
-            transform: scale(1);
-        }
-    }
-
-    .input-field,
-    .select-field {
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .input-field:focus,
-    .select-field:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-
-    .btn {
-        transition: background-color 0.2s ease, transform 0.2s ease;
-    }
-
-    .btn:hover {
-        transform: translateY(-1px);
-    }
-
-    .loading::after {
-        content: '';
-        display: inline-block;
-        width: 14px;
-        height: 14px;
-        border: 2px solid #fff;
-        border-radius: 50%;
-        border-top-color: transparent;
-        animation: spin 0.8s linear infinite;
-        margin-left: 8px;
-    }
-
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    @media (max-width: 1280px) {
-        .grid-cols-5 {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 1024px) {
-        .grid-cols-5 {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 768px) {
-        .grid-cols-5 {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 640px) {
-        .grid-cols-5 {
-            grid-template-columns: 1fr;
+        .product-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .modal-content {
-            flex-direction: column;
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         }
-    }
+
+        .modal {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .input-field,
+        .select-field {
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .input-field:focus,
+        .select-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn {
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 1280px) {
+            .grid-cols-5 {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .grid-cols-5 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .grid-cols-5 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .grid-cols-5 {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 
@@ -434,22 +409,23 @@ mysqli_free_result($result);
         <!-- Products Grid -->
         <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             <?php foreach ($available_products as $product): ?>
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col product-card">
-                <img src="../<?php echo htmlspecialchars($product['img_url']); ?>"
-                    alt="<?php echo htmlspecialchars($product['product_name']); ?>"
-                    class="w-full h-48 object-cover rounded-t-xl">
-                <div class="p-5 flex-1 flex flex-col">
-                    <h3 class="font-semibold text-lg text-gray-900 mb-2">
-                        <?php echo htmlspecialchars($product['product_name']); ?></h3>
-                    <p class="text-sm text-gray-500 mb-1">Category:
-                        <?php echo htmlspecialchars($product['category']); ?></p>
-                    <p class="text-sm text-gray-900 font-medium mb-1">
-                        ৳<?php echo htmlspecialchars($product['price']); ?>/unit</p>
-                    <p class="text-sm text-gray-500 mb-4">Available:
-                        <?php echo htmlspecialchars($product['total_quantity']); ?>
-                        <?php echo htmlspecialchars($product['unit']); ?></p>
-                    <?php if ($product['total_quantity'] > 0): ?>
-                    <button class="mt-auto bg-blue-600 text-white px-4 py-2 rounded-lg btn" onclick='openAddCartModal(<?php echo json_encode([
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col product-card">
+                    <img src="../<?php echo htmlspecialchars($product['img_url']); ?>"
+                        alt="<?php echo htmlspecialchars($product['product_name']); ?>"
+                        class="w-full h-48 object-cover rounded-t-xl">
+                    <div class="p-5 flex-1 flex flex-col">
+                        <h3 class="font-semibold text-lg text-gray-900 mb-2">
+                            <?php echo htmlspecialchars($product['product_name']); ?></h3>
+                        <p class="text-sm text-gray-500 mb-1">Category:
+                            <?php echo htmlspecialchars($product['category']); ?></p>
+                        <p class="text-sm text-gray-900 font-medium mb-1">
+                            ৳<?php echo htmlspecialchars($product['price']); ?>/unit</p>
+                        <p class="text-sm text-gray-500 mb-4">Available:
+                            <?php echo htmlspecialchars($product['total_quantity']); ?>
+                            <?php echo htmlspecialchars($product['unit']); ?></p>
+                        <?php if ($product['total_quantity'] > 0): ?>
+                            <button class="mt-auto bg-blue-600 text-white px-4 py-2 rounded-lg btn"
+                                onclick='openAddCartModal(<?php echo json_encode([
                                                                 'product_id' => $product['product_id'],
                                                                 'name' => $product['product_name'],
                                                                 'category' => $product['category'],
@@ -458,20 +434,21 @@ mysqli_free_result($result);
                                                                 'total_quantity' => $product['total_quantity'],
                                                                 'img_url' => $product['img_url']
                                                             ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
-                        Add to Cart
-                    </button>
-                    <?php else: ?>
-                    <button class="mt-auto bg-gray-600 text-white px-4 py-2 rounded-lg btn" onclick='openRequestStockModal(<?php echo json_encode([
+                                Add to Cart
+                            </button>
+                        <?php else: ?>
+                            <button class="mt-auto bg-gray-600 text-white px-4 py-2 rounded-lg btn"
+                                onclick='openRequestStockModal(<?php echo json_encode([
                                                                     'product_id' => $product['product_id'],
                                                                     'name' => $product['product_name'],
                                                                     'price' => $product['price'],
                                                                     'img_url' => $product['img_url']
                                                                 ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT); ?>)'>
-                        Request Stock
-                    </button>
-                    <?php endif; ?>
+                                Request Stock
+                            </button>
+                        <?php endif; ?>
+                    </div>
                 </div>
-            </div>
             <?php endforeach; ?>
         </div>
 
@@ -545,174 +522,174 @@ mysqli_free_result($result);
 
         <!-- JavaScript -->
         <script>
-        const USER_ID = <?php echo json_encode($user_id); ?>;
-        let currentProduct = null;
+            const USER_ID = <?php echo json_encode($user_id); ?>;
+            let currentProduct = null;
 
-        function openAddCartModal(product) {
-            currentProduct = product;
-            document.getElementById('cartProductImg').src = '../' + product.img_url;
-            document.getElementById('cartProductName').textContent = product.name;
-            document.getElementById('cartProductCategory').textContent = "Category: " + product.category;
-            document.getElementById('cartProductAvailable').textContent = product.total_quantity + " " + product.unit;
-            document.getElementById('cartProductPrice').textContent = product.price;
-            document.getElementById('cartProductQty').value = 1;
-            document.getElementById('cartTotalPrice').textContent = product.price;
+            function openAddCartModal(product) {
+                currentProduct = product;
+                document.getElementById('cartProductImg').src = '../' + product.img_url;
+                document.getElementById('cartProductName').textContent = product.name;
+                document.getElementById('cartProductCategory').textContent = "Category: " + product.category;
+                document.getElementById('cartProductAvailable').textContent = product.total_quantity + " " + product.unit;
+                document.getElementById('cartProductPrice').textContent = product.price;
+                document.getElementById('cartProductQty').value = 1;
+                document.getElementById('cartTotalPrice').textContent = product.price;
 
-            document.getElementById('addCartModal').classList.remove('hidden');
+                document.getElementById('addCartModal').classList.remove('hidden');
 
-            document.getElementById('cartProductQty').oninput = function() {
-                let qty = Math.max(1, Math.min(this.value, product.total_quantity));
-                this.value = qty;
-                document.getElementById('cartTotalPrice').textContent = (qty * product.price).toFixed(2);
+                document.getElementById('cartProductQty').oninput = function() {
+                    let qty = Math.max(1, Math.min(this.value, product.total_quantity));
+                    this.value = qty;
+                    document.getElementById('cartTotalPrice').textContent = (qty * product.price).toFixed(2);
+                };
+            }
+
+            function openRequestStockModal(product) {
+                currentProduct = product;
+                document.getElementById('requestProductImg').src = '../' + product.img_url;
+                document.getElementById('requestProductName').textContent = product.name;
+                document.getElementById('requestProductPrice').textContent = product.price;
+                document.getElementById('requestProductQty').value = 1;
+
+                document.getElementById('requestStockModal').classList.remove('hidden');
+            }
+
+            function closeModal(modalId) {
+                document.getElementById(modalId).classList.add('hidden');
+                currentProduct = null;
+            }
+
+            window.onclick = function(event) {
+                const addCartModal = document.getElementById('addCartModal');
+                const requestStockModal = document.getElementById('requestStockModal');
+                if (event.target === addCartModal) closeModal('addCartModal');
+                if (event.target === requestStockModal) closeModal('requestStockModal');
             };
-        }
 
-        function openRequestStockModal(product) {
-            currentProduct = product;
-            document.getElementById('requestProductImg').src = '../' + product.img_url;
-            document.getElementById('requestProductName').textContent = product.name;
-            document.getElementById('requestProductPrice').textContent = product.price;
-            document.getElementById('requestProductQty').value = 1;
+            document.getElementById('confirmAddCart').onclick = function() {
+                if (!currentProduct) {
+                    alert('No product selected');
+                    return;
+                }
 
-            document.getElementById('requestStockModal').classList.remove('hidden');
-        }
+                const button = this;
+                button.disabled = true;
+                button.classList.add('loading');
+                button.textContent = 'Adding...';
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-            currentProduct = null;
-        }
+                const quantity = parseInt(document.getElementById('cartProductQty').value);
 
-        window.onclick = function(event) {
-            const addCartModal = document.getElementById('addCartModal');
-            const requestStockModal = document.getElementById('requestStockModal');
-            if (event.target === addCartModal) closeModal('addCartModal');
-            if (event.target === requestStockModal) closeModal('requestStockModal');
-        };
-
-        document.getElementById('confirmAddCart').onclick = function() {
-            if (!currentProduct) {
-                alert('No product selected');
-                return;
-            }
-
-            const button = this;
-            button.disabled = true;
-            button.classList.add('loading');
-            button.textContent = 'Adding...';
-
-            const quantity = parseInt(document.getElementById('cartProductQty').value);
-
-            fetch('', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `action=add_to_cart&user_id=${USER_ID}&product_id=${currentProduct.product_id}&quantity=${quantity}`
-                })
-                .then(res => {
-                    if (!res.ok) {
-                        return res.text().then(text => {
-                            throw new Error(`HTTP error! Status: ${res.status}, Response: ${text}`);
-                        });
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    button.disabled = false;
-                    button.classList.remove('loading');
-                    button.textContent = 'Add to Cart';
-
-                    if (data.status === 'success') {
-                        closeModal('addCartModal');
-                        if (typeof data.cart_count !== 'undefined') {
-                            const cc = document.getElementById('cart-count');
-                            if (cc) cc.textContent = String(data.cart_count);
+                fetch('', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `action=add_to_cart&user_id=${USER_ID}&product_id=${currentProduct.product_id}&quantity=${quantity}`
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            return res.text().then(text => {
+                                throw new Error(`HTTP error! Status: ${res.status}, Response: ${text}`);
+                            });
                         }
-                    } else {
-                        alert(data.message || 'Failed to add to cart');
-                    }
-                })
-                .catch(err => {
-                    button.disabled = false;
-                    button.classList.remove('loading');
-                    button.textContent = 'Add to Cart';
-                    console.error('Error adding to cart:', err);
-                    alert('Error adding to cart: ' + err.message);
-                });
-        };
+                        return res.json();
+                    })
+                    .then(data => {
+                        button.disabled = false;
+                        button.classList.remove('loading');
+                        button.textContent = 'Add to Cart';
 
-        document.getElementById('confirmRequestStock').onclick = function() {
-            if (!currentProduct) {
-                alert('No product selected');
-                return;
-            }
+                        if (data.status === 'success') {
+                            closeModal('addCartModal');
+                            if (typeof data.cart_count !== 'undefined') {
+                                const cc = document.getElementById('cart-count');
+                                if (cc) cc.textContent = String(data.cart_count);
+                            }
+                        } else {
+                            alert(data.message || 'Failed to add to cart');
+                        }
+                    })
+                    .catch(err => {
+                        button.disabled = false;
+                        button.classList.remove('loading');
+                        button.textContent = 'Add to Cart';
+                        console.error('Error adding to cart:', err);
+                        alert('Error adding to cart: ' + err.message);
+                    });
+            };
 
-            const button = this;
-            button.disabled = true;
-            button.classList.add('loading');
-            button.textContent = 'Requesting...';
+            document.getElementById('confirmRequestStock').onclick = function() {
+                if (!currentProduct) {
+                    alert('No product selected');
+                    return;
+                }
 
-            const quantity = parseInt(document.getElementById('requestProductQty').value);
+                const button = this;
+                button.disabled = true;
+                button.classList.add('loading');
+                button.textContent = 'Requesting...';
 
-            fetch('', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `action=request_stock&user_id=${USER_ID}&product_id=${currentProduct.product_id}&quantity=${quantity}`
-                })
-                .then(res => {
-                    if (!res.ok) {
-                        return res.text().then(text => {
-                            throw new Error(`HTTP error! Status: ${res.status}, Response: ${text}`);
-                        });
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    button.disabled = false;
-                    button.classList.remove('loading');
-                    button.textContent = 'Request Stock';
+                const quantity = parseInt(document.getElementById('requestProductQty').value);
 
-                    if (data.status === 'success') {
-                        closeModal('requestStockModal');
-                    } else {
-                        alert(data.message || 'Failed to submit stock request');
-                    }
-                })
-                .catch(err => {
-                    button.disabled = false;
-                    button.classList.remove('loading');
-                    button.textContent = 'Request Stock';
-                    console.error('Error requesting stock:', err);
-                    alert('Error requesting stock: ' + err.message);
-                });
-        };
+                fetch('', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: `action=request_stock&user_id=${USER_ID}&product_id=${currentProduct.product_id}&quantity=${quantity}`
+                    })
+                    .then(res => {
+                        if (!res.ok) {
+                            return res.text().then(text => {
+                                throw new Error(`HTTP error! Status: ${res.status}, Response: ${text}`);
+                            });
+                        }
+                        return res.json();
+                    })
+                    .then(data => {
+                        button.disabled = false;
+                        button.classList.remove('loading');
+                        button.textContent = 'Request Stock';
 
-        function filterProducts() {
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const category = document.getElementById('categoryFilter').value;
-            const warehouse = document.getElementById('warehouseFilter').value;
-            const availability = document.getElementById('availabilityFilter').value;
+                        if (data.status === 'success') {
+                            closeModal('requestStockModal');
+                        } else {
+                            alert(data.message || 'Failed to submit stock request');
+                        }
+                    })
+                    .catch(err => {
+                        button.disabled = false;
+                        button.classList.remove('loading');
+                        button.textContent = 'Request Stock';
+                        console.error('Error requesting stock:', err);
+                        alert('Error requesting stock: ' + err.message);
+                    });
+            };
 
-            const products = <?php echo json_encode($available_products); ?>;
-            const grid = document.getElementById('productsGrid');
-            grid.innerHTML = '';
+            function filterProducts() {
+                const search = document.getElementById('searchInput').value.toLowerCase();
+                const category = document.getElementById('categoryFilter').value;
+                const warehouse = document.getElementById('warehouseFilter').value;
+                const availability = document.getElementById('availabilityFilter').value;
 
-            products.forEach(product => {
-                const matchesSearch = product.product_name.toLowerCase().includes(search);
-                const matchesCategory = !category || product.category === category;
-                const matchesWarehouse = !warehouse || (product.warehouses && product.warehouses.includes(
-                    warehouse));
-                const matchesAvailability = !availability ||
-                    (availability === 'in_stock' && product.total_quantity > 0) ||
-                    (availability === 'out_of_stock' && product.total_quantity === 0);
+                const products = <?php echo json_encode($available_products); ?>;
+                const grid = document.getElementById('productsGrid');
+                grid.innerHTML = '';
 
-                if (matchesSearch && matchesCategory && matchesWarehouse && matchesAvailability) {
-                    const div = document.createElement('div');
-                    div.className =
-                        'bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col product-card';
-                    div.innerHTML = `
+                products.forEach(product => {
+                    const matchesSearch = product.product_name.toLowerCase().includes(search);
+                    const matchesCategory = !category || product.category === category;
+                    const matchesWarehouse = !warehouse || (product.warehouses && product.warehouses.includes(
+                        warehouse));
+                    const matchesAvailability = !availability ||
+                        (availability === 'in_stock' && product.total_quantity > 0) ||
+                        (availability === 'out_of_stock' && product.total_quantity === 0);
+
+                    if (matchesSearch && matchesCategory && matchesWarehouse && matchesAvailability) {
+                        const div = document.createElement('div');
+                        div.className =
+                            'bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col product-card';
+                        div.innerHTML = `
                             <img src="../${product.img_url}" alt="${product.product_name}" class="w-full h-48 object-cover rounded-t-xl">
                             <div class="p-5 flex-1 flex flex-col">
                                 <h3 class="font-semibold text-lg text-gray-900 mb-2">${product.product_name}</h3>
@@ -728,10 +705,10 @@ mysqli_free_result($result);
                                         img_url: product.img_url
                                     })})'>Request Stock</button>`}
                             </div>`;
-                    grid.appendChild(div);
-                }
-            });
-        }
+                        grid.appendChild(div);
+                    }
+                });
+            }
         </script>
     </div>
 </body>
