@@ -40,9 +40,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 <body class="bg-custom">
     <div class="sidebar open m-0">
-        <div class="logo-details">
+        <!-- <div class="logo-details">
             <i class='bx bx-menu-alt-right' id="btn"></i>
-        </div>
+        </div> -->
         <ul class="nav-list p-0">
             <li>
                 <a href="../warehouse-app/admin-dashboard/admin-dashboard.php"
@@ -72,7 +72,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <li x-data="{ open: <?php echo in_array($current_page, ['agents.php', 'agents-requests.php']) ? 'true' : 'false'; ?> }"
                 x-cloak>
                 <div class="flex items-center justify-between cursor-pointer">
-                    <a href="../Admin/agents.php"
+                    <a href="../warehouse-app\agent\all-agents.php"
                         class="<?php echo in_array($current_page, ['agents.php', 'agents-requests.php']) ? 'text-white bg-white' : ''; ?> flex items-center w-full text-left">
                         <i class='bx bx-user'></i>
                         <span class="links_name">Agents</span>
@@ -83,12 +83,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     </button>
                 </div>
                 <ul x-show="open" x-transition class="pl-6">
-                    <li>
-                        <a href="../Admin/agents.php"
-                            class="<?php echo ($current_page == 'agents.php') ? 'text-white bg-white' : ''; ?>">
-                            <span class="links_name">Agents</span>
-                        </a>
-                    </li>
                     <li>
                         <a href="../Admin/agents-requests.php"
                             class="<?php echo ($current_page == 'agents-requests.php') ? 'text-white bg-white' : ''; ?>">
@@ -144,13 +138,13 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         </a>
                     </li>
                     <li>
-                        <a href="../Admin/add-warehouse.php"
+                        <a href="../warehouse-app\add-warehouse.php"
                             class="<?php echo ($current_page == 'add-warehouse.php') ? 'text-white bg-white' : ''; ?>">
                             <span class="links_name">Add New Warehouse</span>
                         </a>
                     </li>
                     <li>
-                        <a href="../Admin/warehouse-products.php"
+                        <a href="../warehouse-app\warehouse information\warehouse-info.php"
                             class="<?php echo ($current_page == 'warehouse-products.php') ? 'text-white bg-white' : ''; ?>">
                             <span class="links_name">Warehouse Products</span>
                         </a>

@@ -52,9 +52,9 @@ $linkClass = $isPending ? 'text-gray-500 cursor-not-allowed pointer-events-none'
 
 <body class="bg-custom">
     <div class="sidebar open m-0">
-        <div class="logo-details">
+        <!-- <div class="logo-details">
             <i class='bx bx-menu-alt-right' id="btn"></i>
-        </div>
+        </div> -->
         <ul class="nav-list p-0">
             <li>
                 <a href="../agent-app/agent-farmer-dashboard.php"

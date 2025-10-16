@@ -38,9 +38,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 <body class="bg-custom">
     <div class="sidebar open m-0">
-        <div class="logo-details">
+        <!-- <div class="logo-details">
             <i class='bx bx-menu-alt-right' id="btn"></i>
-        </div>
+        </div> -->
         <ul class="nav-list p-0">
             <li>
                 <a href="../shop-owner-app\buy-products-from-warehouse.php"
