@@ -52,9 +52,9 @@ $linkClass = $isPending ? 'text-gray-500 cursor-not-allowed pointer-events-none'
 
 <body class="bg-custom">
     <div class="sidebar open m-0">
-        <div class="logo-details">
+        <!-- <div class="logo-details">
             <i class='bx bx-menu-alt-right' id="btn"></i>
-        </div>
+        </div> -->
         <ul class="nav-list p-0">
             <li>
                 <a href="../agent-app/agent-farmer-dashboard.php"
@@ -98,16 +98,23 @@ $linkClass = $isPending ? 'text-gray-500 cursor-not-allowed pointer-events-none'
             </li>
             <!-- Profile Info -->
             <li class="profile">
-                <a href="../agent-app/agent-profile.php" class="profile-details <?php echo $linkClass; ?>">
+                <?php $profileHref = isset($_SESSION['user_id']) ? '../agent-app/agent-profile.php' : '../Login-Signup/login.php'; ?>
+                <a href="<?php echo $profileHref; ?>" class="profile-details <?php echo $linkClass; ?>">
                     <img src="https://www.svgrepo.com/show/23012/profile-user.svg" alt="profileImg">
                     <div class="name_job">
-                        <div class="name"><?php echo htmlspecialchars($name); ?></div>
-                        <div class="job">Agent</div>
+                        <div class="name"><?php echo htmlspecialchars($name ?: 'Guest'); ?></div>
+                        <div class="job"><?php echo ($role === 'Agent') ? 'Agent' : ''; ?></div>
                     </div>
                 </a>
+                <?php if (isset($_SESSION['user_id'])): ?>
                 <a href="../Login-Signup/logout.php">
                     <i class='bx bx-log-out' id="log_out"></i>
                 </a>
+                <?php else: ?>
+                <a href="../Login-Signup/login.php">
+                    <i class='bx bx-log-in' id="log_in"></i>
+                </a>
+                <?php endif; ?>
             </li>
         </ul>
     </div>
