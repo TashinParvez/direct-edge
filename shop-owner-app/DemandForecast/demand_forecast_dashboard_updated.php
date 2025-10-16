@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarAgent.php'; ?>
 <?php
 // Database connection
 $servername = "localhost";
@@ -5,8 +7,8 @@ $username = "root";
 $password = "";
 $dbname = "direct-edge";
 
-// include '../../include/connect-db.php';
-include '../../include/navbar.php';
+include '../../include/connect-db.php';
+// include '../../include/navbar.php';
 // $admin_id = isset($user_id) ? $user_id : 65;
 
 $conn = new mysqli($servername, $username, $password, $dbname);
