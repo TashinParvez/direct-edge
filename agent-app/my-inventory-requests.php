@@ -1,5 +1,7 @@
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
 <?php
-include '../include/navbar.php';
+
 
 // Database connection
 include '../include/connect-db.php';

@@ -1,7 +1,7 @@
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
 <?php
-// agent-profile.php - Dedicated profile page for agents only
 
-include '../include/navbar.php';
 $user_id = isset($user_id) ? $user_id : 51;
 
 

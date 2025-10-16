@@ -1,8 +1,10 @@
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
+
 <?php
 // Start output buffering BEFORE any includes
 ob_start();
 
-include '../include/navbar.php';
 $agent_id = isset($user_id);
 
 // connect database

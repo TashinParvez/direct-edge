@@ -1,6 +1,7 @@
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
 <?php
 ob_start();
-include '../include/navbar.php';
 include '../include/connect-db.php';
 
 $admin_id = $_SESSION['user_id'];
@@ -22,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $stmt->bind_param("si", $new_status, $agreement_id);
 
     if ($stmt->execute()) {
-        // Log the action
         $log_query = "INSERT INTO activity_logs (admin_id, action, description, created_at) 
                       VALUES (?, 'Agreement Status Update', ?, NOW())";
         $log_stmt = $conn->prepare($log_query);
@@ -45,11 +45,9 @@ $query = "SELECT afa.*,
           f.full_name as farmer_name, 
           f.contact_number as farmer_contact,
           f.land_size as farmer_land_size,
-          f.crops_cultivated as farmer_crops,
           u.full_name as agent_name,
           u.phone as agent_phone,
-          ai.district as agent_district,
-          ai.region as agent_region
+          ai.district as agent_district
           FROM agent_farmer_agreements afa
           JOIN farmers f ON afa.farmer_id = f.id
           JOIN users u ON afa.agent_id = u.user_id
@@ -74,7 +72,6 @@ $query .= " ORDER BY
 
 $stmt = $conn->prepare($query);
 
-// Bind parameters
 if ($status_filter && $search) {
     $search_param = "%{$search}%";
     $stmt->bind_param("ssss", $status_filter, $search_param, $search_param, $search_param);
@@ -109,255 +106,196 @@ while ($row = $status_result->fetch_assoc()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agreement Review - Admin Panel</title>
+    <title>Agreement Management - Admin Panel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body class="bg-gray-100">
 
-    <div class="flex h-screen overflow-hidden">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-        <!-- Sidebar -->
-        <div class="w-64 bg-white shadow-lg flex-shrink-0">
-            <div class="p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700">
-                <h2 class="text-white font-bold text-lg flex items-center">
-                    <i class="fas fa-handshake mr-2"></i>
-                    Agreements
-                </h2>
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl shadow-lg p-5 mb-5 text-white">
+            <h1 class="text-2xl font-bold">Agreement Management</h1>
+            <p class="text-green-100 text-sm mt-1">Review and manage all partnership agreements</p>
+        </div>
+
+        <!-- Success Message -->
+        <?php if ($success_message): ?>
+            <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-5 rounded flex items-center justify-between">
+                <span class="text-green-800 font-medium text-sm"><i class="fas fa-check-circle mr-2"></i><?php echo htmlspecialchars($success_message); ?></span>
+                <button onclick="this.parentElement.remove()" class="text-green-600 hover:text-green-800">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+        <?php endif; ?>
 
-            <!-- Stats in Sidebar -->
-            <div class="p-4 space-y-3">
-                <a href="?status=" class="block p-3 rounded-lg hover:bg-blue-50 transition <?php echo $status_filter === '' ? 'bg-blue-50 border-l-4 border-blue-600' : 'bg-gray-50'; ?>">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">All Agreements</p>
-                            <p class="text-2xl font-bold text-gray-800"><?php echo array_sum($status_counts); ?></p>
-                        </div>
-                        <i class="fas fa-list text-gray-400"></i>
+        <!-- HORIZONTAL Status Bar -->
+        <div class="bg-white rounded-xl shadow-lg p-5 mb-5">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+                <!-- All Agreements -->
+                <a href="?" class="flex items-center gap-4 p-4 rounded-lg transition-all <?php echo $status_filter === '' ? 'bg-blue-50 ring-2 ring-blue-500' : 'hover:bg-gray-50'; ?>">
+                    <div class="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-clipboard-list text-blue-600 text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs font-semibold text-gray-600 uppercase mb-1">All Agreements</p>
+                        <p class="text-3xl font-extrabold text-blue-600"><?php echo array_sum($status_counts); ?></p>
                     </div>
                 </a>
 
-                <a href="?status=Pending" class="block p-3 rounded-lg hover:bg-yellow-50 transition <?php echo $status_filter === 'Pending' ? 'bg-yellow-50 border-l-4 border-yellow-500' : 'bg-gray-50'; ?>">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Pending Review</p>
-                            <p class="text-2xl font-bold text-yellow-600"><?php echo $status_counts['Pending']; ?></p>
+                <!-- Pending -->
+                <a href="?status=Pending" class="flex items-center gap-4 p-4 rounded-lg transition-all <?php echo $status_filter === 'Pending' ? 'bg-yellow-50 ring-2 ring-yellow-500' : 'hover:bg-gray-50'; ?>">
+                    <div class="w-14 h-14 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-hourglass-half text-yellow-600 text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs font-semibold text-gray-600 uppercase mb-1">Pending</p>
+                        <div class="flex items-center gap-2">
+                            <p class="text-3xl font-extrabold text-yellow-600"><?php echo $status_counts['Pending']; ?></p>
+                            <?php if ($status_counts['Pending'] > 0): ?>
+                                <span class="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-bold rounded-full">Action</span>
+                            <?php endif; ?>
                         </div>
-                        <i class="fas fa-clock text-yellow-400"></i>
                     </div>
                 </a>
 
-                <a href="?status=Active" class="block p-3 rounded-lg hover:bg-green-50 transition <?php echo $status_filter === 'Active' ? 'bg-green-50 border-l-4 border-green-500' : 'bg-gray-50'; ?>">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Active</p>
-                            <p class="text-2xl font-bold text-green-600"><?php echo $status_counts['Active']; ?></p>
-                        </div>
-                        <i class="fas fa-check-circle text-green-400"></i>
+                <!-- Active -->
+                <a href="?status=Active" class="flex items-center gap-4 p-4 rounded-lg transition-all <?php echo $status_filter === 'Active' ? 'bg-green-50 ring-2 ring-green-500' : 'hover:bg-gray-50'; ?>">
+                    <div class="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-check-double text-green-600 text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs font-semibold text-gray-600 uppercase mb-1">Active</p>
+                        <p class="text-3xl font-extrabold text-green-600"><?php echo $status_counts['Active']; ?></p>
                     </div>
                 </a>
 
-                <a href="?status=Terminated" class="block p-3 rounded-lg hover:bg-red-50 transition <?php echo $status_filter === 'Terminated' ? 'bg-red-50 border-l-4 border-red-500' : 'bg-gray-50'; ?>">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-xs text-gray-600 mb-1">Terminated</p>
-                            <p class="text-2xl font-bold text-red-600"><?php echo $status_counts['Terminated']; ?></p>
-                        </div>
-                        <i class="fas fa-ban text-red-400"></i>
+                <!-- Terminated -->
+                <a href="?status=Terminated" class="flex items-center gap-4 p-4 rounded-lg transition-all <?php echo $status_filter === 'Terminated' ? 'bg-red-50 ring-2 ring-red-500' : 'hover:bg-gray-50'; ?>">
+                    <div class="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-ban text-red-600 text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-xs font-semibold text-gray-600 uppercase mb-1">Terminated</p>
+                        <p class="text-3xl font-extrabold text-red-600"><?php echo $status_counts['Terminated']; ?></p>
                     </div>
                 </a>
-            </div>
 
-            <div class="absolute bottom-0 w-64 p-4 border-t">
-                <a href="admin_dashboard.php" class="block w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-center text-sm font-medium">
-                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
-                </a>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-
-            <!-- Top Bar -->
-            <div class="bg-white shadow-sm border-b px-6 py-4">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-800">Agreement Management</h1>
-                        <p class="text-sm text-gray-600">
-                            <?php
-                            if ($status_filter) {
-                                echo ucfirst($status_filter) . ' Agreements';
-                            } else {
-                                echo 'All Agreements';
-                            }
-                            ?>
-                            <span class="text-gray-400 mx-2">•</span>
-                            <?php echo count($agreements); ?> results
-                        </p>
-                    </div>
-
-                    <!-- Search Bar -->
-                    <form method="GET" class="flex gap-2">
-                        <?php if ($status_filter): ?>
-                            <input type="hidden" name="status" value="<?php echo htmlspecialchars($status_filter); ?>">
-                        <?php endif; ?>
-                        <div class="relative">
-                            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>"
-                                placeholder="Search agreements..."
-                                class="w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
-                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                        </div>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
-                            Search
-                        </button>
-                        <?php if ($search): ?>
-                            <a href="?status=<?php echo $status_filter; ?>" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium">
-                                Clear
-                            </a>
-                        <?php endif; ?>
-                    </form>
-                </div>
-
-                <!-- Success/Error Messages -->
-                <?php if ($success_message): ?>
-                    <div class="mt-4 bg-green-50 border-l-4 border-green-500 px-4 py-3 flex items-center justify-between rounded">
-                        <div class="flex items-center">
-                            <i class="fas fa-check-circle text-green-600 mr-2"></i>
-                            <span class="text-green-800 text-sm font-medium"><?php echo htmlspecialchars($success_message); ?></span>
-                        </div>
-                        <button onclick="this.parentElement.remove()" class="text-green-600 hover:text-green-800">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
+        <!-- Search Bar -->
+        <div class="bg-white rounded-lg shadow p-4 mb-5">
+            <form method="GET" class="flex gap-3">
+                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>"
+                    placeholder="Search agreements..."
+                    class="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                <?php if ($status_filter): ?>
+                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($status_filter); ?>">
                 <?php endif; ?>
-            </div>
+                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold text-sm">
+                    Search
+                </button>
+                <?php if ($search): ?>
+                    <a href="?<?php echo $status_filter ? 'status=' . $status_filter : ''; ?>" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-semibold text-sm">
+                        Clear
+                    </a>
+                <?php endif; ?>
+            </form>
+        </div>
 
-            <!-- Agreements List -->
-            <div class="flex-1 overflow-y-auto p-6">
-                <?php if (count($agreements) > 0): ?>
-                    <div class="space-y-3">
+        <!-- Table -->
+        <?php if (count($agreements) > 0): ?>
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b-2 border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Reference</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Agent</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Farmer</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Commission</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Duration</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Status</th>
+                            <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
                         <?php foreach ($agreements as $agreement): ?>
-                            <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition border border-gray-200">
-                                <div class="p-4">
-                                    <div class="flex items-center justify-between">
-
-                                        <!-- Left Section: Agreement Info -->
-                                        <div class="flex items-center space-x-4 flex-1">
-                                            <!-- Status Icon -->
-                                            <div class="flex-shrink-0">
-                                                <?php
-                                                $status_icons = [
-                                                    'Pending' => ['icon' => 'fa-clock', 'bg' => 'bg-yellow-100', 'text' => 'text-yellow-600'],
-                                                    'Active' => ['icon' => 'fa-check-circle', 'bg' => 'bg-green-100', 'text' => 'text-green-600'],
-                                                    'Expired' => ['icon' => 'fa-calendar-times', 'bg' => 'bg-gray-100', 'text' => 'text-gray-600'],
-                                                    'Terminated' => ['icon' => 'fa-ban', 'bg' => 'bg-red-100', 'text' => 'text-red-600']
-                                                ];
-                                                $icon_data = $status_icons[$agreement['agreement_status']] ?? ['icon' => 'fa-circle', 'bg' => 'bg-gray-100', 'text' => 'text-gray-600'];
-                                                ?>
-                                                <div class="w-12 h-12 <?php echo $icon_data['bg']; ?> rounded-lg flex items-center justify-center">
-                                                    <i class="fas <?php echo $icon_data['icon'] . ' ' . $icon_data['text']; ?> text-lg"></i>
-                                                </div>
-                                            </div>
-
-                                            <!-- Agreement Details -->
-                                            <div class="flex-1 min-w-0">
-                                                <div class="flex items-center gap-3 mb-1">
-                                                    <h3 class="font-bold text-gray-800"><?php echo htmlspecialchars($agreement['agreement_reference']); ?></h3>
-                                                    <?php
-                                                    $status_badges = [
-                                                        'Pending' => 'bg-yellow-100 text-yellow-800',
-                                                        'Active' => 'bg-green-100 text-green-800',
-                                                        'Expired' => 'bg-gray-100 text-gray-800',
-                                                        'Terminated' => 'bg-red-100 text-red-800'
-                                                    ];
-                                                    $badge_class = $status_badges[$agreement['agreement_status']] ?? 'bg-gray-100 text-gray-800';
-                                                    ?>
-                                                    <span class="px-2 py-0.5 <?php echo $badge_class; ?> rounded text-xs font-semibold">
-                                                        <?php echo htmlspecialchars($agreement['agreement_status']); ?>
-                                                    </span>
-                                                </div>
-                                                <div class="flex items-center text-sm text-gray-600 space-x-4">
-                                                    <span>
-                                                        <i class="fas fa-user-tie text-blue-600 mr-1"></i>
-                                                        <?php echo htmlspecialchars($agreement['agent_name']); ?>
-                                                    </span>
-                                                    <span class="text-gray-300">•</span>
-                                                    <span>
-                                                        <i class="fas fa-seedling text-green-600 mr-1"></i>
-                                                        <?php echo htmlspecialchars($agreement['farmer_name']); ?>
-                                                    </span>
-                                                    <span class="text-gray-300">•</span>
-                                                    <span>
-                                                        <i class="fas fa-calendar text-gray-400 mr-1"></i>
-                                                        <?php echo date('M d, Y', strtotime($agreement['created_at'])); ?>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Middle Section: Terms -->
-                                        <div class="hidden lg:flex items-center space-x-6 px-6">
-                                            <div class="text-center">
-                                                <p class="text-xs text-gray-500 mb-1">Commission</p>
-                                                <p class="text-lg font-bold text-purple-600"><?php echo number_format($agreement['commission_percentage'], 1); ?>%</p>
-                                            </div>
-                                            <div class="text-center">
-                                                <p class="text-xs text-gray-500 mb-1">Land</p>
-                                                <p class="text-lg font-bold text-green-600"><?php echo $agreement['farmer_land_size']; ?> ac</p>
-                                            </div>
-                                            <div class="text-center">
-                                                <p class="text-xs text-gray-500 mb-1">Duration</p>
-                                                <p class="text-sm font-bold text-indigo-600">
-                                                    <?php
-                                                    $start = new DateTime($agreement['start_date']);
-                                                    $end = new DateTime($agreement['end_date']);
-                                                    $diff = $start->diff($end);
-                                                    echo $diff->y > 0 ? $diff->y . 'y' : $diff->m . 'm';
-                                                    ?>
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <!-- Right Section: Actions -->
-                                        <div class="flex items-center space-x-2 flex-shrink-0">
-                                            <button onclick="viewDetails('<?php echo htmlspecialchars($agreement['agreement_reference']); ?>')"
-                                                class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
-                                                title="View Details">
-                                                <i class="fas fa-eye mr-1"></i>
-                                                View
-                                            </button>
-                                            <button onclick="openStatusModal(<?php echo $agreement['agreement_id']; ?>, '<?php echo htmlspecialchars($agreement['agreement_reference']); ?>', '<?php echo $agreement['agreement_status']; ?>')"
-                                                class="px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition text-sm font-medium"
-                                                title="Update Status">
-                                                <i class="fas fa-edit mr-1"></i>
-                                                Update
-                                            </button>
-                                        </div>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-3">
+                                    <p class="font-semibold text-sm text-gray-900"><?php echo htmlspecialchars($agreement['agreement_reference']); ?></p>
+                                    <p class="text-xs text-gray-500"><?php echo date('M d, Y', strtotime($agreement['created_at'])); ?></p>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <p class="font-medium text-sm text-gray-900"><?php echo htmlspecialchars($agreement['agent_name']); ?></p>
+                                    <p class="text-xs text-gray-500"><?php echo htmlspecialchars($agreement['agent_district']); ?></p>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <p class="font-medium text-sm text-gray-900"><?php echo htmlspecialchars($agreement['farmer_name']); ?></p>
+                                    <p class="text-xs text-gray-500"><?php echo $agreement['farmer_land_size']; ?> acres</p>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <p class="text-sm font-bold text-purple-600"><?php echo number_format($agreement['commission_percentage'], 1); ?>%</p>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <p class="text-sm font-semibold text-gray-700">
+                                        <?php
+                                        $start = new DateTime($agreement['start_date']);
+                                        $end = new DateTime($agreement['end_date']);
+                                        $diff = $start->diff($end);
+                                        echo $diff->y > 0 ? $diff->y . ' year' : $diff->m . ' month';
+                                        ?>
+                                    </p>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <?php
+                                    $status_badges = [
+                                        'Pending' => 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                                        'Active' => 'bg-green-100 text-green-800 border-green-300',
+                                        'Expired' => 'bg-gray-100 text-gray-800 border-gray-300',
+                                        'Terminated' => 'bg-red-100 text-red-800 border-red-300'
+                                    ];
+                                    $badge_class = $status_badges[$agreement['agreement_status']] ?? 'bg-gray-100 text-gray-800 border-gray-300';
+                                    ?>
+                                    <span class="px-3 py-1 <?php echo $badge_class; ?> border rounded-full text-xs font-bold inline-block">
+                                        <?php echo $agreement['agreement_status']; ?>
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div class="flex justify-center gap-2">
+                                        <button onclick="viewDetails('<?php echo htmlspecialchars($agreement['agreement_reference']); ?>')"
+                                            class="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button onclick="openStatusModal(<?php echo $agreement['agreement_id']; ?>, '<?php echo htmlspecialchars($agreement['agreement_reference']); ?>', '<?php echo $agreement['agreement_status']; ?>')"
+                                            class="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition" title="Update">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
                                     </div>
-                                </div>
-                            </div>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
-                    </div>
-                <?php else: ?>
-                    <!-- Empty State -->
-                    <div class="bg-white rounded-lg shadow-sm p-16 text-center">
-                        <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
-                        <h3 class="text-xl font-bold text-gray-700 mb-2">No Agreements Found</h3>
-                        <p class="text-gray-500">Try adjusting your search or filter criteria</p>
-                    </div>
-                <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
-        </div>
-    </div>
+        <?php else: ?>
+            <div class="bg-white rounded-lg shadow p-16 text-center">
+                <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-700 mb-2">No Agreements Found</h3>
+                <p class="text-gray-500">Try adjusting your search or filter</p>
+            </div>
+        <?php endif; ?>
+    </main>
 
-    <!-- Status Update Modal -->
+    <!-- Modal -->
     <div id="statusModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
-            <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 rounded-t-xl">
+            <div class="bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-4 rounded-t-xl">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-bold text-white">Update Agreement Status</h3>
+                    <h3 class="text-lg font-bold text-white">Update Status</h3>
                     <button onclick="closeStatusModal()" class="text-white hover:text-gray-200">
                         <i class="fas fa-times text-xl"></i>
                     </button>
@@ -369,23 +307,19 @@ while ($row = $status_result->fetch_assoc()) {
                 <input type="hidden" name="agreement_id" id="modal_agreement_id">
 
                 <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-600 mb-2">Agreement Reference</label>
-                    <div class="bg-gray-50 rounded-lg p-3 border">
-                        <p class="font-mono font-bold text-gray-800" id="modal_agreement_ref"></p>
-                    </div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-2">Agreement</label>
+                    <p class="font-mono font-bold text-sm text-gray-800 bg-gray-50 p-3 rounded border" id="modal_agreement_ref"></p>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-xs font-semibold text-gray-600 mb-2">Current Status</label>
-                    <div class="bg-gray-50 rounded-lg p-3 border">
-                        <p class="font-semibold" id="modal_current_status"></p>
-                    </div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-2">Current</label>
+                    <p class="font-semibold text-sm bg-gray-50 p-3 rounded border" id="modal_current_status"></p>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">New Status</label>
-                    <select name="new_status" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        <option value="">-- Select Status --</option>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">New Status</label>
+                    <select name="new_status" required class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-semibold">
+                        <option value="">Select Status</option>
                         <option value="Pending">Pending</option>
                         <option value="Active">Active</option>
                         <option value="Expired">Expired</option>
@@ -394,20 +328,16 @@ while ($row = $status_result->fetch_assoc()) {
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Admin Notes (Optional)</label>
-                    <textarea name="admin_notes" rows="3"
-                        class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
-                        placeholder="Add notes about this change..."></textarea>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Notes</label>
+                    <textarea name="admin_notes" rows="3" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm" placeholder="Optional notes..."></textarea>
                 </div>
 
                 <div class="flex gap-3">
-                    <button type="button" onclick="closeStatusModal()"
-                        class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold">
+                    <button type="button" onclick="closeStatusModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-bold">
                         Cancel
                     </button>
-                    <button type="submit"
-                        class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition font-semibold">
-                        <i class="fas fa-check mr-1"></i>Update
+                    <button type="submit" class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 font-bold">
+                        Update
                     </button>
                 </div>
             </form>
@@ -426,7 +356,7 @@ while ($row = $status_result->fetch_assoc()) {
                 'Expired': 'text-gray-600',
                 'Terminated': 'text-red-600'
             };
-            document.getElementById('modal_current_status').className = 'font-semibold ' + (statusColors[currentStatus] || 'text-gray-800');
+            document.getElementById('modal_current_status').className = 'font-semibold text-sm bg-gray-50 p-3 rounded border ' + (statusColors[currentStatus] || 'text-gray-800');
 
             document.getElementById('statusModal').classList.remove('hidden');
         }
@@ -441,14 +371,10 @@ while ($row = $status_result->fetch_assoc()) {
         }
 
         document.getElementById('statusModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeStatusModal();
-            }
+            if (e.target === this) closeStatusModal();
         });
     </script>
 </body>
 
 </html>
-<?php
-ob_end_flush();
-?>
+<?php ob_end_flush(); ?>
