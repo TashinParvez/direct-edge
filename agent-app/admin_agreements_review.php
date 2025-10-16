@@ -116,9 +116,9 @@ while ($row = $status_result->fetch_assoc()) {
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl shadow-lg p-5 mb-5 text-white">
+        <div class="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl shadow-lg p-5 mb-5 text-white">
             <h1 class="text-2xl font-bold">Agreement Management</h1>
-            <p class="text-blue-100 text-sm mt-1">Review and manage all partnership agreements</p>
+            <p class="text-green-100 text-sm mt-1">Review and manage all partnership agreements</p>
         </div>
 
         <!-- Success Message -->
@@ -196,7 +196,7 @@ while ($row = $status_result->fetch_assoc()) {
                 <?php if ($status_filter): ?>
                     <input type="hidden" name="status" value="<?php echo htmlspecialchars($status_filter); ?>">
                 <?php endif; ?>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-sm">
+                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold text-sm">
                     Search
                 </button>
                 <?php if ($search): ?>
