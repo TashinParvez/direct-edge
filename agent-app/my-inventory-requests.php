@@ -74,257 +74,235 @@ mysqli_close($conn);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Inventory Requests - Agent Dashboard</title>
+    <title>Inventory Requests - Agent Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="../assets/Logo/favicon.png">
 </head>
 
-<body class="bg-gray-50">
+<body class="bg-gray-100">
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Page Header -->
-        <div class="mb-6">
-            <div class="flex justify-between items-center">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- Hero Section -->
+        <div class="bg-gradient-to-r from-green-600 via-green-500 to-emerald-600 rounded-2xl shadow-xl p-6 mb-6 text-white">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-900">My Inventory Requests</h2>
-                    <p class="text-sm text-gray-600 mt-1">Track and manage your warehouse inventory requests</p>
+                    <h1 class="text-3xl font-bold mb-2">📦 Inventory Requests</h1>
+                    <p class="text-green-100">Manage and track your warehouse product requests</p>
                 </div>
-                <a href="inventory-request.php" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-sm shadow transition">
-                    <i class="fas fa-plus mr-1"></i>New Request
+                <a href="inventory-request.php" class="px-6 py-3 bg-white text-green-600 rounded-xl hover:bg-green-50 font-bold shadow-lg transition-all hover:scale-105">
+                    <i class="fas fa-plus-circle mr-2"></i>Submit New Request
                 </a>
             </div>
         </div>
 
-        <!-- Statistics Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-                <p class="text-xs text-gray-600 mb-1">Total Requests</p>
-                <p class="text-2xl font-bold text-gray-900"><?php echo $stats['total'] ?? 0; ?></p>
+        <!-- Statistics Bar -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div class="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition border-t-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-gray-600 font-medium mb-1">Total Requests</p>
+                        <p class="text-3xl font-extrabold text-green-600"><?php echo $stats['total'] ?? 0; ?></p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-clipboard-list text-green-600 text-xl"></i>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500">
-                <p class="text-xs text-gray-600 mb-1">Pending</p>
-                <p class="text-2xl font-bold text-yellow-600"><?php echo $stats['pending'] ?? 0; ?></p>
+
+            <div class="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition border-t-4 border-yellow-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-gray-600 font-medium mb-1">Pending</p>
+                        <p class="text-3xl font-extrabold text-yellow-600"><?php echo $stats['pending'] ?? 0; ?></p>
+                    </div>
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <i class="fas fa-hourglass-half text-yellow-600 text-xl"></i>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
-                <p class="text-xs text-gray-600 mb-1">Approved</p>
-                <p class="text-2xl font-bold text-green-600"><?php echo $stats['approved'] ?? 0; ?></p>
+
+            <div class="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition border-t-4 border-emerald-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-gray-600 font-medium mb-1">Approved</p>
+                        <p class="text-3xl font-extrabold text-emerald-600"><?php echo $stats['approved'] ?? 0; ?></p>
+                    </div>
+                    <div class="bg-emerald-100 p-3 rounded-full">
+                        <i class="fas fa-check-double text-emerald-600 text-xl"></i>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-lg shadow p-4 border-l-4 border-purple-500">
-                <p class="text-xs text-gray-600 mb-1">Total Quantity</p>
-                <p class="text-2xl font-bold text-gray-900"><?php echo $stats['total_quantity'] ?? 0; ?></p>
+
+            <div class="bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition border-t-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs text-gray-600 font-medium mb-1">Total Items</p>
+                        <p class="text-3xl font-extrabold text-blue-600"><?php echo $stats['total_quantity'] ?? 0; ?></p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-boxes text-blue-600 text-xl"></i>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="bg-white rounded-lg shadow p-4 mb-6">
-            <form method="GET" class="flex flex-col md:flex-row gap-3">
-                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>"
-                    placeholder="Search by product or warehouse..."
-                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
-                <select name="status" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none">
-                    <option value="">All Status</option>
-                    <option value="0" <?php echo $status_filter === '0' ? 'selected' : ''; ?>>Pending</option>
-                    <option value="1" <?php echo $status_filter === '1' ? 'selected' : ''; ?>>Approved</option>
-                </select>
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
-                    <i class="fas fa-search mr-1"></i>Filter
-                </button>
-                <a href="my-inventory-requests.php" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium text-center">
-                    <i class="fas fa-redo mr-1"></i>Clear
-                </a>
+        <!-- Filter & Search Section -->
+        <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+            <form method="GET" class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1 relative">
+                    <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>"
+                        placeholder="Search products, warehouses..."
+                        class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-sm">
+                    <i class="fas fa-search absolute left-3 top-4 text-gray-400"></i>
+                </div>
+                <div class="flex gap-3">
+                    <select name="status" class="px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 text-sm font-medium">
+                        <option value="">All Status</option>
+                        <option value="0" <?php echo $status_filter === '0' ? 'selected' : ''; ?>>Pending</option>
+                        <option value="1" <?php echo $status_filter === '1' ? 'selected' : ''; ?>>Approved</option>
+                    </select>
+                    <button type="submit" class="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold transition">
+                        Apply
+                    </button>
+                    <?php if ($search || $status_filter): ?>
+                        <a href="my-inventory-requests.php" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 font-bold transition">
+                            Reset
+                        </a>
+                    <?php endif; ?>
+                </div>
             </form>
         </div>
 
-        <!-- Requests Table -->
+        <!-- Requests List -->
         <?php if (empty($requests)): ?>
-            <div class="bg-white rounded-lg shadow p-12 text-center">
-                <div class="text-5xl mb-3">📦</div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2">No Inventory Requests Found</h3>
-                <p class="text-sm text-gray-600 mb-4">Start by submitting your first inventory request</p>
-                <a href="inventory-request.php" class="inline-block px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
-                    <i class="fas fa-plus mr-1"></i>Create Request
+            <div class="bg-white rounded-2xl shadow-lg p-16 text-center">
+                <div class="text-8xl mb-6">📭</div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">No Requests Found</h3>
+                <p class="text-gray-600 mb-6">You haven't submitted any inventory requests yet</p>
+                <a href="inventory-request.php" class="inline-block px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 font-bold shadow-lg transition">
+                    <i class="fas fa-plus mr-2"></i>Create Your First Request
                 </a>
             </div>
         <?php else: ?>
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 border-b">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Product</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Warehouse</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Quantity</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Volume</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Dates</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            <?php foreach ($requests as $request): ?>
-                                <tr class="hover:bg-gray-50 transition">
-                                    <!-- Product -->
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm">
-                                            <p class="font-medium text-gray-900"><?php echo htmlspecialchars($request['product_name']); ?></p>
-                                            <p class="text-gray-500 text-xs"><?php echo htmlspecialchars($request['product_category']); ?></p>
+            <div class="space-y-3">
+                <?php foreach ($requests as $index => $request): ?>
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="flex flex-col md:flex-row">
+                            <!-- Left: Status Indicator -->
+                            <div class="w-full md:w-2 <?php echo $request['request_status'] == 1 ? 'bg-gradient-to-b from-green-500 to-emerald-500' : 'bg-gradient-to-b from-yellow-500 to-orange-500'; ?>"></div>
+
+                            <!-- Content -->
+                            <div class="flex-1 p-4">
+                                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+
+                                    <!-- Product Info -->
+                                    <div class="flex items-start gap-3 flex-1">
+                                        <div class="flex-shrink-0 w-12 h-12 rounded-lg <?php echo $request['request_status'] == 1 ? 'bg-green-100' : 'bg-yellow-100'; ?> flex items-center justify-center">
+                                            <i class="fas fa-box-open text-xl <?php echo $request['request_status'] == 1 ? 'text-green-600' : 'text-yellow-600'; ?>"></i>
                                         </div>
-                                    </td>
 
-                                    <!-- Warehouse -->
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm">
-                                            <p class="font-medium text-gray-900"><?php echo htmlspecialchars($request['warehouse_name']); ?></p>
-                                            <p class="text-gray-500 text-xs"><?php echo htmlspecialchars($request['warehouse_location']); ?></p>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-0.5">
+                                                <h3 class="text-base font-bold text-gray-900 truncate"><?php echo htmlspecialchars($request['product_name']); ?></h3>
+                                                <?php if ($request['request_status'] == 1): ?>
+                                                    <span class="px-2 py-0.5 bg-green-500 text-white rounded text-xs font-bold">Approved</span>
+                                                <?php else: ?>
+                                                    <span class="px-2 py-0.5 bg-yellow-500 text-white rounded text-xs font-bold">Pending</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mb-1"><?php echo htmlspecialchars($request['product_category']); ?></p>
+
+                                            <div class="flex flex-wrap items-center gap-2 text-xs">
+                                                <span class="flex items-center text-gray-700">
+                                                    <i class="fas fa-warehouse text-green-600 mr-1 text-xs"></i>
+                                                    <strong><?php echo htmlspecialchars($request['warehouse_name']); ?></strong>
+                                                </span>
+                                                <span class="text-gray-300">•</span>
+                                                <span class="text-gray-600 truncate max-w-xs">
+                                                    <i class="fas fa-map-marker-alt text-red-500 mr-1 text-xs"></i>
+                                                    <?php echo htmlspecialchars($request['warehouse_location']); ?>
+                                                </span>
+                                            </div>
                                         </div>
-                                    </td>
+                                    </div>
 
-                                    <!-- Quantity -->
-                                    <td class="px-6 py-4">
-                                        <span class="text-sm font-semibold text-gray-900"><?php echo $request['quantity']; ?> <?php echo $request['product_unit']; ?></span>
-                                    </td>
+                                    <!-- Metrics -->
+                                    <div class="flex items-center gap-3">
+                                        <div class="text-center px-3 py-2 bg-green-50 rounded-lg border border-green-200">
+                                            <p class="text-xs text-green-600 font-semibold">Quantity</p>
+                                            <p class="text-lg font-bold text-green-700"><?php echo $request['quantity']; ?></p>
+                                            <p class="text-xs text-gray-600"><?php echo $request['product_unit']; ?></p>
+                                        </div>
 
-                                    <!-- Volume -->
-                                    <td class="px-6 py-4">
-                                        <span class="text-sm text-gray-700"><?php echo number_format($request['unit_volume'], 2); ?> m³</span>
-                                    </td>
+                                        <div class="text-center px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                                            <p class="text-xs text-blue-600 font-semibold">Volume</p>
+                                            <p class="text-lg font-bold text-blue-700"><?php echo number_format($request['unit_volume'], 1); ?></p>
+                                            <p class="text-xs text-gray-600">m³</p>
+                                        </div>
 
-                                    <!-- Dates -->
-                                    <td class="px-6 py-4">
-                                        <div class="text-xs">
+                                        <button onclick="toggleDetails('request-<?php echo $index; ?>')"
+                                            class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Expandable Details -->
+                                <div id="request-<?php echo $index; ?>" class="hidden mt-3 pt-3 border-t border-gray-200">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div class="bg-gray-50 rounded-lg p-3">
+                                            <p class="text-xs text-gray-600 font-semibold mb-2">📅 Important Dates</p>
                                             <?php if ($request['inbound_stock_date']): ?>
-                                                <p class="text-gray-600"><i class="fas fa-arrow-down text-blue-500 mr-1"></i><?php echo date('M d, Y', strtotime($request['inbound_stock_date'])); ?></p>
+                                                <p class="text-xs text-gray-700 mb-1">
+                                                    <i class="fas fa-arrow-down text-blue-500 mr-1"></i>
+                                                    Inbound: <strong><?php echo date('M d, Y', strtotime($request['inbound_stock_date'])); ?></strong>
+                                                </p>
                                             <?php endif; ?>
                                             <?php if ($request['expiry_date']): ?>
-                                                <p class="text-gray-600"><i class="fas fa-calendar-times text-red-500 mr-1"></i><?php echo date('M d, Y', strtotime($request['expiry_date'])); ?></p>
+                                                <p class="text-xs text-gray-700">
+                                                    <i class="fas fa-calendar-times text-red-500 mr-1"></i>
+                                                    Expires: <strong><?php echo date('M d, Y', strtotime($request['expiry_date'])); ?></strong>
+                                                </p>
                                             <?php endif; ?>
                                         </div>
-                                    </td>
 
-                                    <!-- Status -->
-                                    <td class="px-6 py-4">
-                                        <?php if ($request['request_status'] == 1): ?>
-                                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
-                                                <i class="fas fa-check-circle mr-1"></i>Approved
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                                                <i class="fas fa-clock mr-1"></i>Pending
-                                            </span>
-                                        <?php endif; ?>
-                                    </td>
+                                        <div class="bg-gray-50 rounded-lg p-3">
+                                            <p class="text-xs text-gray-600 font-semibold mb-2">📊 Volume Details</p>
+                                            <p class="text-xs text-gray-700 mb-1">Unit Volume: <strong><?php echo number_format($request['unit_volume'], 2); ?> m³</strong></p>
+                                            <p class="text-xs text-gray-700">Total: <strong><?php echo number_format($request['quantity'] * $request['unit_volume'], 2); ?> m³</strong></p>
+                                        </div>
 
-                                    <!-- Actions -->
-                                    <td class="px-6 py-4">
-                                        <button onclick="viewDetails(<?php echo htmlspecialchars(json_encode($request), ENT_QUOTES); ?>)"
-                                            class="text-blue-600 hover:text-blue-800 transition" title="View Details">
-                                            <i class="fas fa-eye text-lg"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                                        <div class="bg-gray-50 rounded-lg p-3">
+                                            <p class="text-xs text-gray-600 font-semibold mb-2">🕒 Last Updated</p>
+                                            <p class="text-xs text-gray-700"><?php echo date('M d, Y g:i A', strtotime($request['last_updated'])); ?></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         <?php endif; ?>
     </main>
 
-    <!-- Request Details Modal -->
-    <div id="detailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-3xl shadow-lg rounded-lg bg-white">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-gray-900">Request Details</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-            </div>
-            <div id="modalContent" class="space-y-4">
-                <!-- Content will be populated by JavaScript -->
-            </div>
-        </div>
-    </div>
-
     <script>
-        function viewDetails(request) {
-            const modal = document.getElementById('detailsModal');
-            const content = document.getElementById('modalContent');
+        function toggleDetails(id) {
+            const element = document.getElementById(id);
+            const button = event.currentTarget.querySelector('i');
 
-            const statusBadge = request.request_status == 1 ?
-                '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold"><i class="fas fa-check-circle mr-1"></i>Approved</span>' :
-                '<span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold"><i class="fas fa-clock mr-1"></i>Pending</span>';
-
-            content.innerHTML = `
-                <div class="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg mb-4">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h4 class="text-lg font-bold text-gray-800">${request.product_name}</h4>
-                            <p class="text-sm text-gray-600">${request.product_category || 'N/A'}</p>
-                        </div>
-                        ${statusBadge}
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <h5 class="font-semibold text-gray-900 mb-3 border-b pb-2">Product Information</h5>
-                        <dl class="space-y-2 text-sm">
-                            <div class="flex justify-between"><dt class="text-gray-600">Quantity:</dt><dd class="font-medium">${request.quantity} ${request.product_unit}</dd></div>
-                            <div class="flex justify-between"><dt class="text-gray-600">Unit Volume:</dt><dd class="font-medium">${parseFloat(request.unit_volume).toFixed(2)} m³</dd></div>
-                            <div class="flex justify-between"><dt class="text-gray-600">Total Volume:</dt><dd class="font-medium">${(request.quantity * parseFloat(request.unit_volume)).toFixed(2)} m³</dd></div>
-                            ${request.offer_percentage ? `<div class="flex justify-between"><dt class="text-gray-600">Offer:</dt><dd class="font-medium text-green-600">${request.offer_percentage}% OFF</dd></div>` : ''}
-                        </dl>
-                    </div>
-
-                    <div>
-                        <h5 class="font-semibold text-gray-900 mb-3 border-b pb-2">Warehouse Details</h5>
-                        <dl class="space-y-2 text-sm">
-                            <div class="flex justify-between"><dt class="text-gray-600">Warehouse:</dt><dd class="font-medium">${request.warehouse_name}</dd></div>
-                            <div class="flex justify-between"><dt class="text-gray-600">Location:</dt><dd class="font-medium">${request.warehouse_location}</dd></div>
-                        </dl>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t mt-4">
-                    <div>
-                        <h5 class="font-semibold text-gray-900 mb-3">Important Dates</h5>
-                        <dl class="space-y-2 text-sm">
-                            ${request.inbound_stock_date ? `<div class="flex justify-between"><dt class="text-gray-600">Inbound Date:</dt><dd class="font-medium">${new Date(request.inbound_stock_date).toLocaleDateString()}</dd></div>` : ''}
-                            ${request.expiry_date ? `<div class="flex justify-between"><dt class="text-gray-600">Expiry Date:</dt><dd class="font-medium text-red-600">${new Date(request.expiry_date).toLocaleDateString()}</dd></div>` : ''}
-                            <div class="flex justify-between"><dt class="text-gray-600">Last Updated:</dt><dd class="font-medium">${new Date(request.last_updated).toLocaleString()}</dd></div>
-                        </dl>
-                    </div>
-
-                    ${request.offer_start || request.offer_end ? `
-                    <div>
-                        <h5 class="font-semibold text-gray-900 mb-3">Offer Period</h5>
-                        <dl class="space-y-2 text-sm">
-                            ${request.offer_start ? `<div class="flex justify-between"><dt class="text-gray-600">Start:</dt><dd class="font-medium">${new Date(request.offer_start).toLocaleDateString()}</dd></div>` : ''}
-                            ${request.offer_end ? `<div class="flex justify-between"><dt class="text-gray-600">End:</dt><dd class="font-medium">${new Date(request.offer_end).toLocaleDateString()}</dd></div>` : ''}
-                        </dl>
-                    </div>
-                    ` : ''}
-                </div>
-
-                <div class="pt-4 border-t mt-4 flex gap-3">
-                    <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
-                        Close
-                    </button>
-                </div>
-            `;
-
-            modal.classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('detailsModal').classList.add('hidden');
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('detailsModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
+            if (element.classList.contains('hidden')) {
+                element.classList.remove('hidden');
+                button.classList.remove('fa-chevron-down');
+                button.classList.add('fa-chevron-up');
+            } else {
+                element.classList.add('hidden');
+                button.classList.remove('fa-chevron-up');
+                button.classList.add('fa-chevron-down');
             }
-        });
+        }
     </script>
 
     <?php include '../include/footer.php'; ?>
