@@ -1,7 +1,14 @@
 <?php
+// Start output buffering to prevent header issues
+ob_start();
+?>
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../Include/SidebarWarehouse.php'; ?>
+
+<?php
 include '../include/connect-db.php'; // database connection
 
-include_once __DIR__ . '/../include/navbar.php';
+// include_once __DIR__ . '/../include/navbar.php';
 
 // include '../include/navbar.php';
 $admin_id = isset($user_id) ? $user_id : 65;
@@ -9,7 +16,7 @@ $admin_id = isset($user_id) ? $user_id : 65;
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = $_POST['name'];
-    $location = $_POST['location'];
+    $location = $_POST['location']; // This will be the city name from the dropdown value
     $capacity_total = $_POST['capacity_total'];
     $type = $_POST['type'];
     $status = $_POST['status'];
@@ -19,7 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             VALUES (?, ?, ?, 0, ?, ?)");
 
     // Bind parameters: s = string, i = integer
-    $stmt->bind_param("sisss", $name, $location, $capacity_total, $type, $status);
+    // name(s), location(s), capacity_total(i), type(s), status(s)
+    $stmt->bind_param("ssiss", $name, $location, $capacity_total, $type, $status);
 
     // Execute
     if ($stmt->execute()) {
@@ -27,6 +35,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         $error = "Error: " . $stmt->error;
     }
+
+    $stmt->close();
+}
+
+// =================== Get cities from database =============
+$location_sql = "SELECT city_id, name FROM cities ORDER BY name ASC";
+$location_result = mysqli_query($conn, $location_sql);
+$cities = [];
+while ($row = mysqli_fetch_assoc($location_result)) {
+    $cities[] = $row;
 }
 
 // =================== for warehouse stats =============
@@ -46,6 +64,9 @@ $warehouses_stat = mysqli_fetch_assoc($result);
 $available_capacity = $warehouses_stat['Total_Capacity'] - $warehouses_stat['Used_Capacity'];
 $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
     ($warehouses_stat['Used_Capacity'] / $warehouses_stat['Total_Capacity']) * 100 : 0;
+
+// Flush output buffer before HTML
+ob_end_flush();
 ?>
 
 <!DOCTYPE html>
@@ -223,9 +244,13 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     <i class='bx bx-map-pin mr-2'></i>Location
                                 </label>
-                                <input type="text" name="location" required
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 form-field"
-                                    placeholder="Enter warehouse location">
+                                <select name="location" id="locationSelect" required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
+                                    <option value="">Select location</option>
+                                    <?php foreach ($cities as $city): ?>
+                                        <option value="<?= htmlspecialchars($city['name']) ?>"><?= htmlspecialchars($city['name']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
 
                             <div>
@@ -385,6 +410,9 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
     </section>
 
     <script>
+        // Handle location dropdown
+        const locationSelect = document.getElementById('locationSelect');
+
         function clearForm() {
             document.getElementById('warehouseForm').reset();
 
@@ -408,6 +436,14 @@ $utilization_rate = $warehouses_stat['Total_Capacity'] > 0 ?
             if (capacity <= 0) {
                 e.preventDefault();
                 alert('Please enter a valid capacity greater than 0');
+                return;
+            }
+
+            // Validate location
+            const location = locationSelect.value;
+            if (!location || location === '') {
+                e.preventDefault();
+                alert('Please select a location');
                 return;
             }
 

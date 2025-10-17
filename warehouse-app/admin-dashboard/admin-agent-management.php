@@ -1,25 +1,17 @@
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
+
 <?php
-include '../../include/navbar.php';
-$admin_id = isset($user_id) ? $user_id : 65;
-// admin-agent-management.php - Admin panel to manage all agents (FIXED VERSION)
-
-
-// Check if user is logged in
-// if (!isset($_SESSION['user_id'])) {
-//     header("Location: login.php");
-//     exit();
-// }
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Database connection
-$servername = "localhost";
-$username = "root";
-$password = "";
-$databasename = "direct-edge";
+include '../../include/connect-db.php';
 
-$conn = mysqli_connect($servername, $username, $password, $databasename);
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
+$admin_id = isset($user_id) ? $user_id : 65;
+// admin-agent-management.php - Admin panel to manage all agents (FIXED VERSION)
 
 $user_id = $_SESSION['user_id'] ?? 1;
 
@@ -73,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         mysqli_begin_transaction($conn);
         try {
             // Delete agent_info record
-            $stmt = $conn->prepare("DELETE FROM agent_info WHERE user_id=?");
+            $stmt = $conn->prepare("DELETE FROM agent_info WHERE agent_id=?");
             $stmt->bind_param("i", $agent_user_id);
             $stmt->execute();
             $stmt->close();
@@ -102,7 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         mysqli_begin_transaction($conn);
         try {
             // Delete agent_info first
-            $stmt = $conn->prepare("DELETE FROM agent_info WHERE user_id=?");
+            $stmt = $conn->prepare("DELETE FROM agent_info WHERE agent_id=?");
             $stmt->bind_param("i", $agent_user_id);
             $stmt->execute();
             $stmt->close();
@@ -134,18 +126,18 @@ if ($status_filter !== 'all') {
 }
 if (!empty($search)) {
     $search_escaped = mysqli_real_escape_string($conn, $search);
-    $where_clauses[] = "(u.full_name LIKE '%$search_escaped%' OR u.email LIKE '%$search_escaped%' OR u.phone LIKE '%$search_escaped%' OR ai.region LIKE '%$search_escaped%')";
+    $where_clauses[] = "(u.full_name LIKE '%$search_escaped%' OR u.email LIKE '%$search_escaped%' OR u.phone LIKE '%$search_escaped%' OR ai.region LIKE '%$search_escaped%' OR ai.district LIKE '%$search_escaped%' OR ai.upazila LIKE '%$search_escaped%')";
 }
 
 $where_sql = implode(" AND ", $where_clauses);
 
-// Fetch all agents with their info (removed reviewed_at and reviewer columns)
+// Fetch all agents with their info
 $sql = "SELECT u.user_id, u.full_name, u.email, u.phone, u.image_url, u.created_at,
                ai.agent_info_id, ai.nid_number, ai.region, ai.district, ai.upazila, 
                ai.coverage_area_km, ai.experience_years, ai.crops_expertise, 
                ai.vehicle_types, ai.warehouse_capacity, ai.status
         FROM users u
-        LEFT JOIN agent_info ai ON u.user_id = ai.agent_id
+        INNER JOIN agent_info ai ON u.user_id = ai.agent_id
         WHERE $where_sql
         ORDER BY ai.created_at DESC";
 
@@ -164,12 +156,10 @@ $stats_sql = "SELECT
     SUM(CASE WHEN ai.status = 'Approved' THEN 1 ELSE 0 END) as approved,
     SUM(CASE WHEN ai.status = 'Rejected' THEN 1 ELSE 0 END) as rejected
 FROM users u
-LEFT JOIN agent_info ai ON u.user_id = ai.agent_id
+INNER JOIN agent_info ai ON u.user_id = ai.agent_id
 WHERE u.role = 'Agent'";
 $stats_result = mysqli_query($conn, $stats_sql);
 $stats = mysqli_fetch_assoc($stats_result);
-
-mysqli_close($conn);
 
 function sanitize($v)
 {
@@ -201,7 +191,8 @@ function sanitize($v)
                 </div>
                 <div class="flex items-center gap-4">
                     <span class="text-sm font-medium text-gray-700">👤
-                        <?php // echo sanitize($admin['full_name']); ?></span>
+                        <?php // echo sanitize($admin['full_name']); 
+                        ?></span>
                     <a href="profile.php" class="text-sm text-blue-600 hover:text-blue-700">Dashboard</a>
                     <a href="logout.php" class="text-sm text-red-600 hover:text-red-700 font-medium">Logout</a>
                 </div>

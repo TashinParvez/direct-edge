@@ -1,8 +1,11 @@
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
+
 <?php
 
 
 include '../../include/connect-db.php';
-include '../../include/navbar.php';
+// include '../../include/navbar.php';
 $admin_id = isset($user_id) ? $user_id : 65;
 
 //-------------------------  Segment 1 ------------------------- 
@@ -415,7 +418,7 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-gray-500">Low Stock Alerts</div>
-                        <a href="#" class="text-sm text-blue-600">View all</a>
+                        <a href="../warehouse information/product-list.php" class="text-sm text-blue-600">View all</a>
                     </div>
                     <div class="mt-2 space-y-1">
                         <?php foreach ($low_stock_alerts as $l): ?>
@@ -431,7 +434,7 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-gray-500">Low Space Alerts</div>
-                        <a href="#" class="text-sm text-blue-600">Manage</a>
+                        <a href="../Manage-Warehouse/warehouse-status.php" class="text-sm text-blue-600">Manage</a>
                     </div>
                     <div class="mt-2 space-y-1 text-sm">
                         <?php foreach ($low_space_alerts as $s): ?>
@@ -493,7 +496,7 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="flex items-center justify-between mb-3">
                         <div class="text-sm text-gray-500">Recent Orders</div>
-                        <a href="#" class="text-sm text-blue-600">View all</a>
+                        <a href="../orders/orders.php" class="text-sm text-blue-600">View all</a>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -538,7 +541,7 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="flex items-center justify-between mb-3">
                         <div class="text-sm text-gray-500">Warehouse Capacity (used vs free)</div>
-                        <a href="#" class="text-sm text-blue-600">Manage warehouses</a>
+                        <a href="../Manage-Warehouse/warehouse-status.php" class="text-sm text-blue-600">Manage warehouses</a>
                     </div>
                     <canvas id="warehouseBar" height="160"></canvas>
                     <div class="mt-3 text-sm text-gray-600">
@@ -558,7 +561,34 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="flex items-center justify-between mb-3">
                         <div class="text-sm text-gray-500">Stock In/Out History</div>
-                        <a href="#" class="text-sm text-blue-600">Export CSV</a>
+                        <button onclick="exportStockHistory()" class="text-sm text-blue-600 cursor-pointer hover:underline">Export CSV</button>
+
+                        <script>
+                            function exportStockHistory() {
+                                // Get table data
+                                const stockHistory = <?php echo json_encode($stock_history); ?>;
+
+                                // Create CSV content
+                                let csv = 'Date,Type,Product,Quantity\n';
+
+                                stockHistory.forEach(row => {
+                                    csv += `${row.date},${row.type},${row.product},${row.qty}\n`;
+                                });
+
+                                // Create blob and download
+                                const blob = new Blob([csv], {
+                                    type: 'text/csv'
+                                });
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = 'stock-history-' + new Date().toISOString().split('T')[0] + '.csv';
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                window.URL.revokeObjectURL(url);
+                            }
+                        </script>
                     </div>
 
                     <div class="overflow-x-auto text-sm">
