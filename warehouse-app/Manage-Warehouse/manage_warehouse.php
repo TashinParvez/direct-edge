@@ -1,9 +1,16 @@
 <?php
-// manage_warehouse.php
-include '../../include/navbar.php';
-$admin_id = isset($user_id) ? $user_id : 65;
+// Start output buffering to prevent header issues
+ob_start();
+?>
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
 
+<?php
+// manage_warehouse.php
 include '../../include/connect-db.php'; // database connection
+
+// Get admin_id from session (started by sidebar)
+$admin_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 65;
 
 // Get warehouse id from URL
 $warehouseId = $_GET['id'] ?? 15;
@@ -42,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateProduct'])) {
     }
 
     // Redirect to refresh the page after update
+    ob_end_clean(); // Clear buffered output before redirect
     header("Location: manage_warehouse.php?id=" . $warehouseId);
     exit;
 }
@@ -67,13 +75,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateWarehouse'])) {
     $updateStmt->bind_param("ssssiii", $name, $location_full, $type, $status, $capacity_total, $capacity_used, $warehouseId);
 
     if ($updateStmt->execute()) {
-        $success = "Warehouse updated successfully!";
-        // refresh info
-        $stmt->execute();
-        $warehouse = $stmt->get_result()->fetch_assoc();
+        // Redirect to refresh the page and show success message
+        ob_end_clean();
+        header("Location: manage_warehouse.php?id=" . $warehouseId . "&updated=1");
+        exit;
     } else {
         $error = "Error updating warehouse.";
     }
+}
+
+// Check for success message from redirect
+if (isset($_GET['updated']) && $_GET['updated'] == '1') {
+    $success = "Warehouse updated successfully!";
 }
 
 //======================== Fetch products of this warehouse (added product_id)
@@ -92,6 +105,9 @@ $productsArray = [];
 while ($row = $result->fetch_assoc()) {
     $productsArray[] = $row;
 }
+
+// Flush output buffer and send all content
+ob_end_flush();
 ?>
 
 <!DOCTYPE html>
@@ -165,6 +181,37 @@ while ($row = $result->fetch_assoc()) {
                 display: none !important;
             }
         }
+
+        .alert-message {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
     </style>
 </head>
 
@@ -203,11 +250,11 @@ while ($row = $result->fetch_assoc()) {
                 </div>
 
                 <?php if (!empty($success)): ?>
-                    <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                    <div id="successAlert" class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg alert-message">
                         <i class='bx bx-check-circle mr-2'></i><?= $success ?>
                     </div>
                 <?php elseif (!empty($error)): ?>
-                    <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    <div id="errorAlert" class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg alert-message">
                         <i class='bx bx-error-circle mr-2'></i><?= $error ?>
                     </div>
                 <?php endif; ?>
@@ -573,6 +620,30 @@ while ($row = $result->fetch_assoc()) {
         // Ensure selects stay enabled on submit so values post
         document.getElementById('warehouseForm').addEventListener('submit', function() {
             this.querySelectorAll('select').forEach(s => s.disabled = false);
+        });
+
+        // Auto-fade alert messages after 3 seconds
+        window.addEventListener('DOMContentLoaded', function() {
+            const successAlert = document.getElementById('successAlert');
+            const errorAlert = document.getElementById('errorAlert');
+
+            if (successAlert) {
+                setTimeout(function() {
+                    successAlert.classList.add('alert-fade-out');
+                    setTimeout(function() {
+                        successAlert.remove();
+                    }, 500);
+                }, 3000);
+            }
+
+            if (errorAlert) {
+                setTimeout(function() {
+                    errorAlert.classList.add('alert-fade-out');
+                    setTimeout(function() {
+                        errorAlert.remove();
+                    }, 500);
+                }, 3000);
+            }
         });
     </script>
 </body>
