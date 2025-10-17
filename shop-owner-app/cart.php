@@ -371,7 +371,7 @@ $conn->close();
     <?php if (isset($_SESSION['cart_message'])): ?>
     <div class="mx-4 mb-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
         <?php echo $_SESSION['cart_message'];
-                unset($_SESSION['cart_message']); ?>
+            unset($_SESSION['cart_message']); ?>
     </div>
     <?php endif; ?>
 
@@ -379,16 +379,16 @@ $conn->close();
         <!-- Cart Items -->
         <?php if (!empty($_SESSION['cart'])): ?>
         <?php
-                $total = 0;
-                foreach ($_SESSION['cart'] as $item):
-                    $subtotal = $item['price'] * $item['quantity'];
-                    $total += $subtotal;
-                    $stock_class = 'stock-high';
-                    if (isset($item['available_stock'])) {
-                        if ($item['available_stock'] <= 10) $stock_class = 'stock-low';
-                        elseif ($item['available_stock'] <= 30) $stock_class = 'stock-medium';
-                    }
-                ?>
+            $total = 0;
+            foreach ($_SESSION['cart'] as $item):
+                $subtotal = $item['price'] * $item['quantity'];
+                $total += $subtotal;
+                $stock_class = 'stock-high';
+                if (isset($item['available_stock'])) {
+                    if ($item['available_stock'] <= 10) $stock_class = 'stock-low';
+                    elseif ($item['available_stock'] <= 30) $stock_class = 'stock-medium';
+                }
+            ?>
         <div class="bg-white shadow-md rounded-lg mb-3 flex cart-item"
             data-product="<?php echo $item['product_id']; ?>">
             <div class="w-1/6 p-2">
@@ -450,10 +450,10 @@ $conn->close();
     </div>
 
     <div class="container mx-auto my-3 flex space-x-4">
-        <button type="button" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300" onclick="openManualModal()">
+        <button type="button" class="bg-gray-400 px-4 py-2 rounded hover:bg-gray-500" onclick="openManualModal()">
             <i class='bx bx-search'></i> Add Product Manually
         </button>
-        <button type="button" class="scan-btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+        <button type="button" class="scan-btn bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
             <i class='bx bx-scan'></i> Scan to Add Product
         </button>
     </div>

@@ -1,5 +1,5 @@
-<link rel="stylesheet" href="../../Include/sidebar.css">
-<?php include '../../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
+<?php include '../Include/SidebarAgent.php'; ?>
 <?php
 // Database connection
 $servername = "localhost";
@@ -7,7 +7,7 @@ $username = "root";
 $password = "";
 $dbname = "direct-edge";
 
-include '../../include/connect-db.php';
+include '../include/connect-db.php';
 // include '../../include/navbar.php';
 // $admin_id = isset($user_id) ? $user_id : 65;
 
@@ -164,8 +164,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demand Forecasting Dashboard</title>
-
-    <link rel="stylesheet" href="../../Include/sidebar.css">
     <style>
     * {
         margin: 0;
@@ -558,7 +556,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 <div class="form-group">
                     <label>&nbsp;</label>
-                    <button class="btn btn-primary" onclick="loadProducts()">Refresh Products</button>
+                    <button type="button" class="btn" style="background:#16a34a;color:#ffffff;border:none;"
+                        onclick="loadProducts()">Refresh Products</button>
                 </div>
             </div>
         </div>
