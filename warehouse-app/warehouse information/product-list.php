@@ -4,8 +4,8 @@
 <?php
 include '../../include/connect-db.php'; // Database connection
 
-// include '../../include/navbar.php';
 $admin_id = isset($user_id) ? $user_id : 65;
+
 // Define the uploads directory path
 $uploadDir = __DIR__ . '/uploads/';
 

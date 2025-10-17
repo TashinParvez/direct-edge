@@ -2,8 +2,11 @@
 <?php include '../Include/SidebarWarehouse.php'; ?>
 
 <?php
+
+$admin_id = isset($user_id) ? $user_id : 65;
+$user_id = $admin_id;
+
 include __DIR__ . '/../include/connect-db.php'; // Database connection
-// include '../include/navbar.php';
 
 $message = "";
 $messageType = "";
@@ -70,7 +73,7 @@ $conn->close();
 
 <body class="bg-gray-50">
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        
+
         <!-- Profile Header -->
         <div class="bg-white overflow-hidden shadow rounded-lg mb-6">
             <div class="bg-gradient-to-r from-green-600 to-blue-600 px-4 py-5 sm:px-6">

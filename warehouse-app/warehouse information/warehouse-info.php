@@ -6,7 +6,6 @@
 require_once __DIR__ . '/../../include/connect-db.php';
 
 
-// include '../../include/navbar.php';
 $admin_id = isset($user_id) ? $user_id : 65;
 
 // Metrics
