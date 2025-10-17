@@ -164,6 +164,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 mysqli_commit($conn);
 
+                // --- NOTIFICATION ---
+                include_once __DIR__ . '/../include/notification_helpers.php';
+                $admin_ids = get_user_ids_by_role($conn, 'Admin');
+                if (!empty($admin_ids)) {
+                    $notification_message = "New agent application from " . htmlspecialchars($full_name) . ".";
+                    $notification_link = "/warehouse-app/admin-dashboard/admin-agent-management.php";
+                    create_notification($conn, $admin_ids, 'new_agent_application', $notification_message, $notification_link);
+                }
+                // --- END NOTIFICATION ---
+
                 // Success - redirect to login
                 header("Location: ../Login-Signup/login.php");
                 exit();
