@@ -1,4 +1,33 @@
-<?php include 'notification-backend.php'; ?>
+<?php include '../include/SidebarLoader.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
+
+
+<?php
+// Ensure session is started and include backend functions
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Include backend which defines functions but won't execute display logic when included
+include_once __DIR__ . '/notification-backend.php';
+
+// Determine current user
+$user_id = $_SESSION['user_id'] ?? null;
+
+// Initialize defaults
+$notifications = [];
+$unread_count = 0;
+$show_all = false;
+$display_notifications = [];
+
+// If functions are available and user is authenticated, fetch data
+if ($user_id !== null && function_exists('getNotifications') && function_exists('getUnreadCount')) {
+    $notifications = getNotifications($conn, (int)$user_id);
+    $unread_count = getUnreadCount($conn, (int)$user_id);
+    $show_all = isset($_GET['show_all']);
+    $display_notifications = $show_all ? $notifications : array_slice($notifications, 0, 4);
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 

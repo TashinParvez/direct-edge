@@ -1,7 +1,9 @@
 <!-- SidebarAgent.php (Updated) -->
 <?php
 include __DIR__ . '/../include/connect-db.php'; // Database connection
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $name = '';
 $role = ''; // role: admin, agent, shop-owner, user
@@ -37,6 +39,21 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 $isPending = ($role === 'Agent' && $status === 'Pending');
 $linkClass = $isPending ? 'text-gray-500 cursor-not-allowed pointer-events-none' : '';
+
+// Try to get unread notification count for this user (optional)
+$unread_count = 0;
+if (isset($user_id)) {
+    // Avoid redeclaring functions if notification-backend is already included elsewhere
+    $nbPath = __DIR__ . '/../notification/notification-backend.php';
+    if (file_exists($nbPath)) {
+        // Include in a limited scope: use getUnreadCount if available after include
+        include_once $nbPath;
+        if (function_exists('getUnreadCount')) {
+            // getUnreadCount expects $conn and $user_id
+            $unread_count = (int) getUnreadCount($conn, $user_id);
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -96,6 +113,19 @@ $linkClass = $isPending ? 'text-gray-500 cursor-not-allowed pointer-events-none'
                 </a>
                 <span class="tooltip">Inventory Request</span>
             </li>
+            <li>
+                <a href="../notification/notification.php"
+                    class="notification-link <?php echo ($current_page == 'notification.php') ? 'text-white bg-white' : $linkClass; ?>">
+                    <i class='bx bx-bell'></i>
+                    <span class="links_name">Notifications</span>
+                    <?php if ($unread_count > 0): ?>
+                        <span class="notif-badge"><?php echo $unread_count; ?></span>
+                        <span class="blinking-dot"></span>
+                    <?php endif; ?>
+                </a>
+                <span class="tooltip">Notifications</span>
+            </li>
+
             <!-- Profile Info -->
             <li class="profile">
                 <?php $profileHref = isset($_SESSION['user_id']) ? '../agent-app/agent-profile.php' : '../Login-Signup/login.php'; ?>
@@ -107,33 +137,33 @@ $linkClass = $isPending ? 'text-gray-500 cursor-not-allowed pointer-events-none'
                     </div>
                 </a>
                 <?php if (isset($_SESSION['user_id'])): ?>
-                <a href="../Login-Signup/logout.php">
-                    <i class='bx bx-log-out' id="log_out"></i>
-                </a>
+                    <a href="../Login-Signup/logout.php">
+                        <i class='bx bx-log-out' id="log_out"></i>
+                    </a>
                 <?php else: ?>
-                <a href="../Login-Signup/login.php">
-                    <i class='bx bx-log-in' id="log_in"></i>
-                </a>
+                    <a href="../Login-Signup/login.php">
+                        <i class='bx bx-log-in' id="log_in"></i>
+                    </a>
                 <?php endif; ?>
             </li>
         </ul>
     </div>
     <script>
-    let sidebar = document.querySelector(".sidebar");
-    let closeBtn = document.querySelector("#btn");
+        let sidebar = document.querySelector(".sidebar");
+        let closeBtn = document.querySelector("#btn");
 
-    closeBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-        menuBtnChange();
-    });
+        closeBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            menuBtnChange();
+        });
 
-    function menuBtnChange() {
-        if (sidebar.classList.contains("open")) {
-            closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
-        } else {
-            closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+        function menuBtnChange() {
+            if (sidebar.classList.contains("open")) {
+                closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
+            } else {
+                closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+            }
         }
-    }
     </script>
 </body>
 

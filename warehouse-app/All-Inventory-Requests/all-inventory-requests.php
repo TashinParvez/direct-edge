@@ -1,3 +1,6 @@
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
+
 <?php
 include '../../include/connect-db.php'; // database connection
 $admin_id = isset($user_id) ? $user_id : 65;
@@ -62,7 +65,7 @@ while ($row = $result->fetch_assoc()) {
 <head>
     <meta charset="UTF-8">
     <title>Inventory Requests - Stock Integrated</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
+    <link rel="icon" type="image/x-icon" href="../../assets/Logo/LogoBG.png">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -171,7 +174,6 @@ while ($row = $result->fetch_assoc()) {
 </head>
 
 <body class="bg-gray-100 page-enter">
-    <?php include '../../include/navbar.php'; ?>
 
     <section class="home-section p-0">
         <div class="flex justify-between items-center p-6 bg-white shadow-sm border-b">
@@ -438,6 +440,14 @@ while ($row = $result->fetch_assoc()) {
                                 </div>
                             </div>
 
+                            <!-- In Progress Toggle -->
+                            <div>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" id="inProgressToggle" class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">Mark as In Progress</span>
+                                </label>
+                            </div>
+
                             <!-- Notes Section -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-2">Notes</label>
@@ -518,12 +528,10 @@ while ($row = $result->fetch_assoc()) {
         const closeModalBtn = document.querySelector('.close-modal');
         closeModalBtn.addEventListener('click', () => {
             modal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
         });
         window.addEventListener('click', (event) => {
             if (event.target === modal) {
                 modal.classList.add('hidden');
-                document.body.style.overflow = 'auto';
             }
         });
 
@@ -664,21 +672,19 @@ while ($row = $result->fetch_assoc()) {
                             item.requiredSpace.toFixed(3) + ' m³' :
                             'N/A';
 
-                        document.getElementById('modalHeading').textContent = `Inventory Request`;
-                        document.getElementById('modalSub').textContent =
-                            `Request #${item.id} - ${reqSpaceText}`;
+                        document.getElementById('modalHeading').textContent = `Inventory Request for ${reqSpaceText}`;
+                        document.getElementById('modalSub').textContent = `Request #${item.id}`;
                         document.getElementById('modalImage').src = `../../${item.image}`;
 
+                        const badge = document.getElementById('modalStatusBadge');
+                        const sClass = String(item.status || '').toLowerCase();
                         const statusClasses = {
                             'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
                             'rejected': 'bg-red-100 text-red-800 border border-red-200',
                             'working': 'bg-blue-100 text-blue-800 border border-blue-200',
                             'done': 'bg-green-100 text-green-800 border border-green-200'
                         };
-
-                        const badge = document.getElementById('modalStatusBadge');
-                        const sClass = String(item.status || '').toLowerCase();
-                        badge.className = `status-badge ${sClass}`;
+                        badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses[sClass] || 'bg-gray-100 text-gray-800'}`;
                         badge.textContent = item.status ?? '-';
 
                         document.getElementById('modalRequester').textContent = item.requester_name ?? '-';
@@ -693,30 +699,34 @@ while ($row = $result->fetch_assoc()) {
                         const inProgress = document.getElementById('inProgressToggle');
                         inProgress.checked = (String(item.status).toLowerCase() === 'working');
 
-                        modal.style.display = 'block';
+                        modal.classList.remove('hidden');
 
                         // Bind once: toggle Working/Pending when checkbox changes
                         if (!inProgress._bound) {
                             inProgress._bound = true;
                             inProgress.addEventListener('change', async () => {
                                 if (!selectedRequestId) return;
+                                
                                 const make = inProgress.checked ? 'SetWorking' : 'SetPending';
-                                const updated = await updateRequestStatus(make,
-                                    selectedRequestId, false);
-                                if (updated) {
-                                    // reflect local state + badge
-                                    const idx = items.findIndex(i => i.id == selectedRequestId);
-                                    if (idx > -1) items[idx].status = inProgress.checked ?
-                                        'Working' : 'Pending';
-                                    const cls = inProgress.checked ? 'working' : 'pending';
-                                    badge.className = `status-badge ${cls}`;
-                                    badge.textContent = items.find(i => i.id ==
-                                        selectedRequestId).status;
-                                } else {
-                                    // revert checkbox on failure
-                                    inProgress.checked = !inProgress.checked;
-                                    alert('Failed to update status.');
-                                }
+                                const newStatusText = inProgress.checked ? 'Working' : 'Pending';
+                                const cls = inProgress.checked ? 'working' : 'pending';
+                                
+                                // Update badge immediately for instant feedback
+                                const statusClasses = {
+                                    'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                                    'rejected': 'bg-red-100 text-red-800 border border-red-200',
+                                    'working': 'bg-blue-100 text-blue-800 border border-blue-200',
+                                    'done': 'bg-green-100 text-green-800 border border-green-200'
+                                };
+                                badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses[cls]}`;
+                                badge.textContent = newStatusText;
+                                
+                                // Update local state
+                                const idx = items.findIndex(i => i.id == selectedRequestId);
+                                if (idx > -1) items[idx].status = newStatusText;
+                                
+                                // Send update to server (no need to wait or check response for UI update)
+                                updateRequestStatus(make, selectedRequestId, false);
                             });
                         }
                     }
@@ -730,24 +740,45 @@ while ($row = $result->fetch_assoc()) {
             document.getElementById('last-page').disabled = currentPage >= totalPages - 1;
         }
 
-        // Handle accept/reject buttons
+        // Handle accept/reject buttons (outside renderCards)
         document.querySelector('.accept').addEventListener('click', async () => {
             if (!selectedRequestId) return;
-            await updateRequestStatus('Accept', selectedRequestId);
+            
+            // Update badge immediately for visual feedback
+            const badge = document.getElementById('modalStatusBadge');
+            const statusClasses = {
+                'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                'rejected': 'bg-red-100 text-red-800 border border-red-200',
+                'working': 'bg-blue-100 text-blue-800 border border-blue-200',
+                'done': 'bg-green-100 text-green-800 border border-green-200'
+            };
+            badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses['done']}`;
+            badge.textContent = 'Done';
+            
+            await updateRequestStatus('Accept', selectedRequestId, true);
         });
 
         document.querySelector('.reject').addEventListener('click', async () => {
             if (!selectedRequestId) return;
-            await updateRequestStatus('Reject', selectedRequestId);
+            
+            // Update badge immediately for visual feedback
+            const badge = document.getElementById('modalStatusBadge');
+            const statusClasses = {
+                'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                'rejected': 'bg-red-100 text-red-800 border border-red-200',
+                'working': 'bg-blue-100 text-blue-800 border border-blue-200',
+                'done': 'bg-green-100 text-green-800 border border-green-200'
+            };
+            badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses['rejected']}`;
+            badge.textContent = 'Rejected';
+            
+            await updateRequestStatus('Reject', selectedRequestId, true);
         });
 
-        async function updateRequestStatus(action, requestId) {
+        // action: 'Accept' | 'Reject' | 'SetWorking' | 'SetPending'
+        // closeModal: whether to close modal after update
+        async function updateRequestStatus(action, requestId, closeModal = false) {
             try {
-                const button = event.target;
-                const originalText = button.innerHTML;
-                button.innerHTML = '<i class="bx bx-loader-alt bx-spin mr-2"></i>Processing...';
-                button.disabled = true;
-
                 const formData = new FormData();
                 formData.append('action', action);
                 formData.append('request_id', requestId);
@@ -757,48 +788,44 @@ while ($row = $result->fetch_assoc()) {
                     body: formData
                 });
                 const data = await res.json();
-
                 if (data && data.success) {
                     const idx = items.findIndex(i => i.id == requestId);
-                    if (idx > -1) items[idx].status = action === 'Accept' ? 'Done' : 'Rejected';
+                    const newStatus = data.status ?? (action === 'Accept' ? 'Done' : action === 'Reject' ? 'Rejected' : (action === 'SetWorking' ? 'Working' : 'Pending'));
 
-                    // Show success message
-                    const successMsg = document.createElement('div');
-                    successMsg.className =
-                        'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-                    successMsg.innerHTML =
-                        `<i class='bx bx-check mr-2'></i>Request ${action.toLowerCase()}ed successfully!`;
-                    document.body.appendChild(successMsg);
+                    if (idx > -1) {
+                        // If status is Done, remove from items array (since page only shows non-Done requests)
+                        if (newStatus === 'Done') {
+                            items.splice(idx, 1);
+                        } else {
+                            items[idx].status = newStatus;
+                        }
+                    }
 
-                    setTimeout(() => {
-                        successMsg.remove();
-                    }, 3000);
+                    // Update modal badge if modal is open
+                    if (!closeModal && idx > -1 && newStatus !== 'Done') {
+                        const badge = document.getElementById('modalStatusBadge');
+                        const sClass = String(newStatus || '').toLowerCase();
+                        const statusClasses = {
+                            'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                            'rejected': 'bg-red-100 text-red-800 border border-red-200',
+                            'working': 'bg-blue-100 text-blue-800 border border-blue-200',
+                            'done': 'bg-green-100 text-green-800 border border-green-200'
+                        };
+                        badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses[sClass]}`;
+                        badge.textContent = newStatus;
+                    }
 
-                    document.getElementById('requestModal').classList.add('hidden');
-                    document.body.style.overflow = 'auto';
+                    if (closeModal) {
+                        document.getElementById('requestModal').classList.add('hidden');
+                    }
                     renderCards();
                     return true;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error updating status.');
-            } finally {
-                button.innerHTML = originalText;
-                button.disabled = false;
+            } catch (e) {
+                console.error('Error:', e);
             }
             return false;
         }
-
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                const modal = document.getElementById('requestModal');
-                if (!modal.classList.contains('hidden')) {
-                    modal.classList.add('hidden');
-                    document.body.style.overflow = 'auto';
-                }
-            }
-        });
     </script>
 </body>
 

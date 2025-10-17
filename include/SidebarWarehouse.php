@@ -5,14 +5,15 @@ session_start();
 
 $name = '';
 $role = ''; // role: admin, agent, shop-owner, user
+$image_url = '';
 
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
 
-    $stmt = $conn->prepare('SELECT full_name, role FROM users WHERE user_id = ? LIMIT 1');
+    $stmt = $conn->prepare('SELECT full_name, role, image_url FROM users WHERE user_id = ? LIMIT 1');
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
-    $stmt->bind_result($name, $role);
+    $stmt->bind_result($name, $role, $image_url);
     $stmt->fetch();
     $stmt->close();
 
@@ -40,12 +41,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 <body class="bg-custom">
     <div class="sidebar open m-0">
-        <!-- <div class="logo-details">
-            <i class='bx bx-menu-alt-right' id="btn"></i>
-        </div> -->
         <ul class="nav-list p-0">
             <li>
-                <a href="../warehouse-app/admin-dashboard/admin-dashboard.php"
+                <a href="/../warehouse-app/admin-dashboard/admin-dashboard.php"
                     class="<?php echo ($current_page == 'admin-dashboard.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-grid-alt'></i>
                     <span class="links_name">Dashboard</span>
@@ -53,7 +51,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="../warehouse-app\warehouse information\product-list.php"
+                <a href="/../warehouse-app/warehouse information/product-list.php"
                     class="<?php echo ($current_page == 'products.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-box'></i>
                     <span class="links_name">Products</span>
@@ -61,128 +59,106 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <span class="tooltip">Products</span>
             </li>
             <li>
-                <a href="../warehouse-app\Orders\orders.php"
+                <a href="/../warehouse-app/Orders/orders.php"
                     class="<?php echo ($current_page == 'orders.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-cart'></i>
                     <span class="links_name">Orders</span>
                 </a>
                 <span class="tooltip">Orders</span>
             </li>
-            <!-- Agents Section with Dropdown -->
-            <li x-data="{ open: <?php echo in_array($current_page, ['agents.php', 'agents-requests.php']) ? 'true' : 'false'; ?> }"
-                x-cloak>
-                <div class="flex items-center justify-between cursor-pointer">
-                    <a href="../warehouse-app\agent\all-agents.php"
-                        class="<?php echo in_array($current_page, ['agents.php', 'agents-requests.php']) ? 'text-white bg-white' : ''; ?> flex items-center w-full text-left">
-                        <i class='bx bx-user'></i>
-                        <span class="links_name">Agents</span>
-                    </a>
-                    <button type="button" @click.prevent="open = !open" class="btn-toggle"
-                        aria-label="Toggle Agents submenu">
-                        <i class='bx bx-chevron-down' :class="{ 'bx-rotate-180': open }"></i>
-                    </button>
-                </div>
-                <ul x-show="open" x-transition class="pl-6">
-                    <li>
-                        <a href="../Admin/agents-requests.php"
-                            class="<?php echo ($current_page == 'agents-requests.php') ? 'text-white bg-white' : ''; ?>">
-                            <span class="links_name">Agents Requests</span>
-                        </a>
-                    </li>
-                </ul>
+            <li>
+                <a href="/../warehouse-app/agent/all-agents.php"
+                    class="<?php echo ($current_page == 'agents.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-user'></i>
+                    <span class="links_name">Agents</span>
+                </a>
                 <span class="tooltip">Agents</span>
             </li>
-            <!-- Stock Section with Dropdown -->
-            <li x-data="{ open: <?php echo in_array($current_page, ['inventory-request.php', 'stock-request.php']) ? 'true' : 'false'; ?> }"
-                x-cloak>
-                <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
-                    <button type="button"
-                        class="<?php echo in_array($current_page, ['inventory-request.php', 'stock-request.php']) ? 'text-white bg-white' : ''; ?> flex items-center w-full text-left">
-                        <i class='bx bx-package'></i>
-                        <span class="links_name">Stock</span>
-                    </button>
-                    <i class='bx bx-chevron-down' :class="{ 'bx-rotate-180': open }"></i>
-                </div>
-                <ul x-show="open" x-transition class="pl-6">
-                    <li>
-                        <a href="../warehouse-app\All-Inventory-Requests\all-inventory-requests.php"
-                            class="<?php echo ($current_page == 'inventory-request.php') ? 'text-white bg-white' : ''; ?>">
-                            <span class="links_name">Inventory Request</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="../Admin/stock-request.php"
-                            class="<?php echo ($current_page == 'stock-request.php') ? 'text-white bg-white' : ''; ?>">
-                            <span class="links_name">Stock Request</span>
-                        </a>
-                    </li>
-                </ul>
-                <span class="tooltip">Stock</span>
+            <li>
+                <a href="/../warehouse-app/admin-dashboard/admin-agent-management.php"
+                    class="<?php echo ($current_page == 'agents-requests.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-user-check'></i>
+                    <span class="links_name">Agents Requests</span>
+                </a>
+                <span class="tooltip">Agents Requests</span>
             </li>
-            <!-- Warehouse Management with Dropdown -->
-            <li x-data="{ open: <?php echo in_array($current_page, ['manage-warehouse.php', 'add-warehouse.php', 'warehouse-products.php']) ? 'true' : 'false'; ?> }"
-                x-cloak>
-                <div class="flex items-center justify-between cursor-pointer" @click="open = !open">
-                    <button type="button"
-                        class="<?php echo in_array($current_page, ['manage-warehouse.php', 'add-warehouse.php', 'warehouse-products.php']) ? 'text-white bg-white' : ''; ?> flex items-center w-full text-left">
-                        <i class='bx bx-buildings'></i>
-                        <span class="links_name">Warehouse Management</span>
-                    </button>
-                    <i class='bx bx-chevron-down' :class="{ 'bx-rotate-180': open }"></i>
-                </div>
-                <ul x-show="open" x-transition class="pl-6">
-                    <li>
-                        <a href="../Admin/manage-warehouse.php"
-                            class="<?php echo ($current_page == 'manage-warehouse.php') ? 'text-white bg-white' : ''; ?>">
-                            <span class="links_name">Manage Warehouse</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="../warehouse-app\add-warehouse.php"
-                            class="<?php echo ($current_page == 'add-warehouse.php') ? 'text-white bg-white' : ''; ?>">
-                            <span class="links_name">Add New Warehouse</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="../warehouse-app\warehouse information\warehouse-info.php"
-                            class="<?php echo ($current_page == 'warehouse-products.php') ? 'text-white bg-white' : ''; ?>">
-                            <span class="links_name">Warehouse Products</span>
-                        </a>
-                    </li>
-                </ul>
-                <span class="tooltip">Warehouse Management</span>
+            <li>
+                <a href="/../warehouse-app/All-Inventory-Requests/all-inventory-requests.php"
+                    class="<?php echo ($current_page == 'inventory-request.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-package'></i>
+                    <span class="links_name">Inventory Request</span>
+                </a>
+                <span class="tooltip">Inventory Request</span>
             </li>
-            <!-- Profile Info -->
+            <li>
+                <a href="/../warehouse-app/stock-request/stock-request.php"
+                    class="<?php echo ($current_page == 'stock-request.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-cube'></i>
+                    <span class="links_name">Stock Request</span>
+                </a>
+                <span class="tooltip">Stock Request</span>
+            </li>
+            <li>
+                <a href="/../warehouse-app/Manage-Warehouse/manage_warehouse.php"
+                    class="<?php echo ($current_page == 'manage-warehouse.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-buildings'></i>
+                    <span class="links_name">Manage Warehouse</span>
+                </a>
+                <span class="tooltip">Manage Warehouse</span>
+            </li>
+            <li>
+                <a href="/../warehouse-app/add-warehouse.php"
+                    class="<?php echo ($current_page == 'add-warehouse.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-building-house'></i>
+                    <span class="links_name">Add New Warehouse</span>
+                </a>
+                <span class="tooltip">Add New Warehouse</span>
+            </li>
+            <li>
+                <a href="/../warehouse-app/warehouse information/warehouse-info.php"
+                    class="<?php echo ($current_page == 'warehouse-info.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bxs-box'></i>
+                    <span class="links_name">Warehouse Products</span>
+                </a>
+                <span class="tooltip">Warehouse Products</span>
+            </li>
             <li class="profile">
-                <a href="../Login-Signup/profile.php" class="profile-details">
-                    <img src="https://www.svgrepo.com/show/23012/profile-user.svg" alt="profileImg">
+                <?php $profileHref = '/../Login-Signup/login.php'; ?>
+                <a href="/../warehouse-app/admin-profile.php">
+                    <img src="<?php echo !empty($image_url) ? htmlspecialchars("../" . $image_url) : 'https://www.svgrepo.com/show/23012/profile-user.svg'; ?>" alt="Profile Image">
                     <div class="name_job">
-                        <div class="name"><?php echo htmlspecialchars($name); ?></div>
-                        <div class="job">Admin</div>
+                        <div class="name"><?php echo htmlspecialchars($name ?: 'Guest'); ?></div>
+                        <div class="job"><?php echo ($role === 'Agent') ? 'Agent' : ''; ?></div>
                     </div>
                 </a>
-                <a href="../Login-Signup/logout.php">
-                    <i class='bx bx-log-out' id="log_out"></i>
-                </a>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="/../Login-Signup/logout.php">
+                        <i class='bx bx-log-out' id="log_out"></i>
+                    </a>
+                <?php else: ?>
+                    <a href="../Login-Signup/login.php">
+                        <i class='bx bx-log-in' id="log_in"></i>
+                    </a>
+                <?php endif; ?>
             </li>
         </ul>
     </div>
     <script>
-    let sidebar = document.querySelector(".sidebar");
-    let closeBtn = document.querySelector("#btn");
+        let sidebar = document.querySelector(".sidebar");
+        let closeBtn = document.querySelector("#btn");
 
-    closeBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-        menuBtnChange();
-    });
+        closeBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            menuBtnChange();
+        });
 
-    function menuBtnChange() {
-        if (sidebar.classList.contains("open")) {
-            closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
-        } else {
-            closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+        function menuBtnChange() {
+            if (sidebar.classList.contains("open")) {
+                closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
+            } else {
+                closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+            }
         }
-    }
     </script>
 </body>
 

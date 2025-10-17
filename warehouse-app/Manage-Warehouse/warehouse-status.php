@@ -1,6 +1,9 @@
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
+
 <?php
 include '../../include/connect-db.php'; // database connection
-include '../../include/navbar.php';
+// include '../../include/navbar.php';
 $admin_id = isset($user_id) ? $user_id : 65;
 
 $sql = "SELECT warehouse_id, name, location, capacity_total, capacity_used, status, type
@@ -105,7 +108,7 @@ $locations = mysqli_fetch_all($locRes, MYSQLI_ASSOC);
                     class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
                     <i class='bx bx-printer'></i> Print
                 </button>
-                <button class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                <button onclick="window.location.href='../add-warehouse.php'" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
                     <i class='bx bx-plus'></i> Add Warehouse
                 </button>
             </div>
@@ -158,9 +161,9 @@ $locations = mysqli_fetch_all($locRes, MYSQLI_ASSOC);
                         <select id="filterStatus"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
                             <option value="All" selected>All Status</option>
-                            <option>Available</option>
-                            <option>Occupied</option>
-                            <option>Under Maintenance</option>
+                            <option value="Available">Available</option>
+                            <option value="Occupied">Occupied</option>
+                            <option value="Under Maintenance">Under Maintenance</option>
                         </select>
                     </div>
                 </div>

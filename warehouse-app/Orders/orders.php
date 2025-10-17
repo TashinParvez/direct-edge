@@ -1,10 +1,14 @@
 <?php
+// Start output buffering to handle redirects
+ob_start();
+?>
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
 
-include '../../include/navbar.php';
-$admin_id = isset($user_id) ? $user_id : 65;
-
+<?php
 // orders.php
 include '../../include/connect-db.php'; // database connection
+$admin_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 65;
 
 // Get all status options for the dropdown
 $statusOptions = ['Pending', 'Approved', 'Shipped', 'Delivered', 'Cancelled'];
@@ -19,16 +23,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateOrderStatus'])) 
         $stmtUp->bind_param("si", $newStatus, $orderId);
         if ($stmtUp->execute()) {
             if (isset($_POST['ajax'])) {
+                ob_end_clean();
                 echo json_encode(['success' => true, 'new_status' => $newStatus]);
                 exit;
             }
+            ob_end_clean();
+            header("Location: orders.php?updated=1");
+            exit;
         } else {
             if (isset($_POST['ajax'])) {
-                echo json_encode(['success' => false]);
+                ob_end_clean();
+                echo json_encode(['success' => false, 'message' => 'Database update failed']);
                 exit;
             }
         }
-        header("Location: orders.php");
+        ob_end_clean();
+        header("Location: orders.php?error=1");
         exit;
     }
 }
@@ -138,6 +148,19 @@ if (count($ordersArr) > 0) {
         $orderProducts[$row['order_id']][] = $row;
     }
 }
+
+// Check for success/error messages
+$successMessage = '';
+$errorMessage = '';
+if (isset($_GET['updated']) && $_GET['updated'] == '1') {
+    $successMessage = 'Order status updated successfully!';
+}
+if (isset($_GET['error']) && $_GET['error'] == '1') {
+    $errorMessage = 'Failed to update order status. Please try again.';
+}
+
+// Flush output buffer
+ob_end_flush();
 ?>
 
 <!DOCTYPE html>
@@ -237,6 +260,35 @@ if (count($ordersArr) > 0) {
                 display: none !important;
             }
         }
+
+        .animate-slideDown {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
     </style>
 </head>
 
@@ -250,13 +302,24 @@ if (count($ordersArr) > 0) {
                     class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600">
                     <i class='bx bx-printer'></i> Print
                 </button>
-                <button class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                    <i class='bx bx-plus'></i> New Order
-                </button>
             </div>
         </div>
 
         <div class="container mx-auto px-4">
+            
+            <!-- Success/Error Messages -->
+            <?php if ($successMessage): ?>
+                <div id="successAlert" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center animate-slideDown">
+                    <i class='bx bx-check-circle text-2xl mr-3'></i>
+                    <span><?= $successMessage ?></span>
+                </div>
+            <?php endif; ?>
+            <?php if ($errorMessage): ?>
+                <div id="errorAlert" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center animate-slideDown">
+                    <i class='bx bx-error-circle text-2xl mr-3'></i>
+                    <span><?= $errorMessage ?></span>
+                </div>
+            <?php endif; ?>
 
             <!-- Search & Filters -->
             <div class="bg-white shadow-lg rounded-lg p-6 mb-6 filter-container">
@@ -299,6 +362,16 @@ if (count($ordersArr) > 0) {
                         </select>
                     </div>
                 </form>
+                
+                <!-- Clear Filters Button -->
+                <?php if ($search || $filterStatus || $filterDate): ?>
+                    <div class="mt-4 flex justify-end">
+                        <a href="orders.php"
+                            class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm inline-flex items-center">
+                            <i class='bx bx-x-circle mr-2'></i>Clear All Filters
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <!-- Results Summary -->
@@ -597,6 +670,30 @@ if (count($ordersArr) > 0) {
     <?php endforeach; ?>
 
     <script>
+        // Auto-fade alert messages after 3 seconds
+        window.addEventListener('DOMContentLoaded', function() {
+            const successAlert = document.getElementById('successAlert');
+            const errorAlert = document.getElementById('errorAlert');
+            
+            if (successAlert) {
+                setTimeout(function() {
+                    successAlert.classList.add('alert-fade-out');
+                    setTimeout(function() {
+                        successAlert.remove();
+                    }, 500);
+                }, 3000);
+            }
+            
+            if (errorAlert) {
+                setTimeout(function() {
+                    errorAlert.classList.add('alert-fade-out');
+                    setTimeout(function() {
+                        errorAlert.remove();
+                    }, 500);
+                }, 3000);
+            }
+        });
+
         // Auto-submit filter on change
         document.querySelectorAll('select[name="status"], select[name="date"]').forEach(function(el) {
             el.addEventListener('change', function() {
@@ -620,6 +717,11 @@ if (count($ordersArr) > 0) {
         function updateStatus(orderId) {
             const select = document.getElementById('status-select-' + orderId);
             const newStatus = select.value;
+            const saveBtn = event.target;
+            
+            // Disable button and show loading state
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin mr-1"></i>Saving...';
 
             fetch('orders.php', {
                     method: 'POST',
@@ -631,13 +733,89 @@ if (count($ordersArr) > 0) {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('Status updated to ' + data.new_status);
-                        location.reload();
+                        // Status classes and icons
+                        const statusClasses = {
+                            'Pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                            'Approved': 'bg-green-100 text-green-800 border border-green-200',
+                            'Shipped': 'bg-blue-100 text-blue-800 border border-blue-200',
+                            'Delivered': 'bg-gray-100 text-gray-800 border border-gray-200',
+                            'Cancelled': 'bg-red-100 text-red-800 border border-red-200'
+                        };
+                        const statusIcons = {
+                            'Pending': 'bx-time-five',
+                            'Approved': 'bx-check-circle',
+                            'Shipped': 'bx-package',
+                            'Delivered': 'bx-check-double',
+                            'Cancelled': 'bx-x-circle'
+                        };
+                        
+                        // Find and update the status badge in the table
+                        const rows = document.querySelectorAll('tr.order-row');
+                        rows.forEach(row => {
+                            const viewBtn = row.querySelector(`button[onclick*="openOrderModal(${orderId})"]`);
+                            if (viewBtn) {
+                                const statusBadge = row.querySelector('.inline-flex.items-center');
+                                if (statusBadge) {
+                                    statusBadge.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${statusClasses[data.new_status]}`;
+                                    statusBadge.innerHTML = `<i class='${statusIcons[data.new_status]} mr-1'></i>${data.new_status}`;
+                                }
+                            }
+                        });
+                        
+                        // Show success notification
+                        showNotification('success', `Status updated to ${data.new_status}`);
+                        
+                        // Re-enable button with success feedback
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '<i class="bx bx-check mr-1"></i>Saved!';
+                        saveBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                        saveBtn.classList.add('bg-green-500');
+                        
+                        // Revert button after 2 seconds
+                        setTimeout(() => {
+                            saveBtn.innerHTML = '<i class="bx bx-save mr-1"></i>Save';
+                            saveBtn.classList.remove('bg-green-500');
+                            saveBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                        }, 2000);
+                        
                     } else {
-                        alert('Failed to update status');
+                        showNotification('error', data.message || 'Failed to update status');
+                        
+                        // Re-enable button
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '<i class="bx bx-save mr-1"></i>Save';
                     }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('error', 'Network error. Please try again.');
+                    
+                    // Re-enable button
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="bx bx-save mr-1"></i>Save';
+                });
+        }
+        
+        function showNotification(type, message) {
+            const notification = document.createElement('div');
+            const isSuccess = type === 'success';
+            
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center animate-slideDown ${
+                isSuccess ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'
+            }`;
+            
+            notification.innerHTML = `
+                <i class='bx ${isSuccess ? 'bx-check-circle' : 'bx-error-circle'} text-2xl mr-3'></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('alert-fade-out');
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
         }
     </script>
 </body>
