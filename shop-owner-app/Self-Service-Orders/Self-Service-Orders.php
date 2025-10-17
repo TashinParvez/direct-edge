@@ -8,7 +8,7 @@ ob_start(); // Start output buffering to handle session_start() in sidebar
 
 include '../../include/connect-db.php';
 
-$shop_id = 6;
+$shop_id = isset($user_id) ? $user_id : 6;
 
 // Query to extract products from JSON and join with products table
 $sql = "SELECT 
