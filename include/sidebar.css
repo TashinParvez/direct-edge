@@ -165,9 +165,9 @@ body.bg-custom.sidebar-collapsed {
   padding: 0 10px;
 }
 
-.sidebar li a:hover {
+/* .sidebar li a:hover {
   background: #fff;
-}
+} */
 
 .sidebar li a .links_name {
   color: #fff;
@@ -187,7 +187,7 @@ body.bg-custom.sidebar-collapsed {
 .sidebar li a:hover .links_name,
 .sidebar li a:hover i {
   transition: all 0.5s ease;
-  color: #16a34a;
+  color: #132440;
 }
 
 .sidebar li i {
