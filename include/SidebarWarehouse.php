@@ -125,21 +125,21 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <span class="tooltip">Warehouse Products</span>
             </li>
             <li class="profile">
-                <?php $profileHref = '/../Login-Signup/login.php'; ?>
-                <a href="/../warehouse-app/admin-profile.php">
-                    <img src="<?php echo !empty($image_url) ? htmlspecialchars("../" . $image_url) : 'https://www.svgrepo.com/show/23012/profile-user.svg'; ?>" alt="Profile Image">
-                    <div class="name_job">
-                        <div class="name"><?php echo htmlspecialchars($name ?: 'Guest'); ?></div>
-                        <div class="job"><?php echo ($role === 'Agent') ? 'Agent' : ''; ?></div>
-                    </div>
-                </a>
                 <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="/../warehouse-app/admin-profile.php">
+                        <img src="<?php echo !empty($image_url) ? htmlspecialchars("../" . $image_url) : 'https://www.svgrepo.com/show/23012/profile-user.svg'; ?>" alt="Profile Image">
+                        <div class="name_job">
+                            <div class="name"><?php echo htmlspecialchars($name ?: 'Guest'); ?></div>
+                            <div class="job"><?php echo ($role === 'Agent') ? 'Agent' : ''; ?></div>
+                        </div>
+                    </a>
                     <a href="/../Login-Signup/logout.php">
                         <i class='bx bx-log-out' id="log_out"></i>
                     </a>
                 <?php else: ?>
-                    <a href="../Login-Signup/login.php">
+                    <a href="/../Login-Signup/login.php">
                         <i class='bx bx-log-in' id="log_in"></i>
+                        <span class="links_name">Login</span>
                     </a>
                 <?php endif; ?>
             </li>
