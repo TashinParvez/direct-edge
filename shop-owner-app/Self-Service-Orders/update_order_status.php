@@ -13,7 +13,7 @@ $orderId = (int)$data['orderId'];
 $status = $data['status'];
 
 // Only allow specific statuses
-$allowedStatuses = ['Running', 'Done', 'Cancelled'];
+$allowedStatuses = ['In queue', 'Running', 'Done', 'Cancelled'];
 if (!in_array($status, $allowedStatuses)) {
     echo json_encode(['success' => false, 'message' => 'Invalid status']);
     exit;
