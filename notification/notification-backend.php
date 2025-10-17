@@ -1,18 +1,16 @@
 <?php
 include __DIR__ . '/../include/connect-db.php'; // Database connection
 
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// Start session to get user_id (assuming user is logged in)
-session_start();
-
-// Check if user is logged in
-// if (!isset($_SESSION['user_id'])) {
-//     header('Location: login.php'); // Redirect to login if not authenticated
-//     exit();
-// }
-
-// $user_id = $_SESSION['user_id'];
-$user_id = 1; // For testing purposes, replace with actual user ID from session
+// Determine user id from session if available
+$user_id = null;
+if (isset($_SESSION['user_id']) && !empty($_SESSION['user_id'])) {
+    $user_id = (int) $_SESSION['user_id'];
+}
 
 // Set timezone to Asia/Dhaka (+06)
 date_default_timezone_set('Asia/Dhaka');
@@ -20,6 +18,12 @@ date_default_timezone_set('Asia/Dhaka');
 // Handle AJAX requests
 if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
+    // If no authenticated user, return not authenticated
+    if ($user_id === null) {
+        echo json_encode(['success' => false, 'error' => 'not_authenticated']);
+        mysqli_close($conn);
+        exit();
+    }
 
     $action = $_GET['action'] ?? '';
 
@@ -210,11 +214,19 @@ function getNotificationIcon($type)
     return $icons[$type] ?? '🔔';
 }
 
-// Get data for display
-$notifications = getNotifications($conn, $user_id);
-$unread_count = getUnreadCount($conn, $user_id);
-$show_all = isset($_GET['show_all']);
-$display_notifications = $show_all ? $notifications : array_slice($notifications, 0, 4);
+// Get data for display only when this file is the main script (not when included)
+if (realpath(__FILE__) === realpath($_SERVER['SCRIPT_FILENAME'])) {
+    // If no authenticated user, redirect to login
+    if ($user_id === null) {
+        header('Location: ../Login-Signup/login.php');
+        exit();
+    }
 
-// Close database connection
-mysqli_close($conn);
+    $notifications = getNotifications($conn, $user_id);
+    $unread_count = getUnreadCount($conn, $user_id);
+    $show_all = isset($_GET['show_all']);
+    $display_notifications = $show_all ? $notifications : array_slice($notifications, 0, 4);
+
+    // Close database connection
+    mysqli_close($conn);
+}

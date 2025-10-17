@@ -50,7 +50,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="../warehouse-app/warehouse information/product-list.php"
+                <a href="/../warehouse-app/warehouse information/product-list.php"
                     class="<?php echo ($current_page == 'products.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-box'></i>
                     <span class="links_name">Products</span>
@@ -58,7 +58,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <span class="tooltip">Products</span>
             </li>
             <li>
-                <a href="../warehouse-app/Orders/orders.php"
+                <a href="/../warehouse-app/Orders/orders.php"
                     class="<?php echo ($current_page == 'orders.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-cart'></i>
                     <span class="links_name">Orders</span>
@@ -143,21 +143,21 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </ul>
     </div>
     <script>
-    let sidebar = document.querySelector(".sidebar");
-    let closeBtn = document.querySelector("#btn");
+        let sidebar = document.querySelector(".sidebar");
+        let closeBtn = document.querySelector("#btn");
 
-    closeBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-        menuBtnChange();
-    });
+        closeBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            menuBtnChange();
+        });
 
-    function menuBtnChange() {
-        if (sidebar.classList.contains("open")) {
-            closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
-        } else {
-            closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+        function menuBtnChange() {
+            if (sidebar.classList.contains("open")) {
+                closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
+            } else {
+                closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+            }
         }
-    }
     </script>
 </body>
 

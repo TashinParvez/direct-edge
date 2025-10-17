@@ -224,11 +224,29 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 Add Farmer
                             </a>
                         </li>
-                        <li>
-                            <a <?php echo $hrefAttr . '../agent-app/inventory-request.php"'; ?>
-                                class="font-semibold <?php echo ($current_page == 'inventory-request.php') ? 'text-green-700' : $linkClass; ?>">
-                                Inventory Request
+                        <!-- Inventory Dropdown for Agent -->
+                        <?php $is_inventory_section = in_array($current_page, ['inventory-request.php', 'my-inventory.php']); ?>
+                        <li class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                            <a href="#"
+                                class="font-semibold flex items-center <?php echo $is_inventory_section ? 'text-green-700' : $linkClass; ?>">
+                                Inventory
+                                <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
                             </a>
+                            <div x-show="open" x-transition
+                                class="absolute top-full left-0 bg-white shadow-md rounded mt-2 py-2 border min-w-[180px]"
+                                style="display:none;">
+                                <a <?php echo $hrefAttr . '../agent-app/inventory-request.php"'; ?>
+                                    class="block px-6 py-2 font-semibold <?php echo ($current_page == 'inventory-request.php') ? 'text-green-700 bg-green-50' : $linkClass; ?>">
+                                    Request
+                                </a>
+                                <a <?php echo $hrefAttr . '../agent-app/my-inventory-requests.php"'; ?>
+                                    class="block px-6 py-2 font-semibold <?php echo ($current_page == 'my-inventory.php') ? 'text-green-700 bg-green-50' : $linkClass; ?>">
+                                    My Inventory
+                                </a>
+                            </div>
                         </li>
                         <li>
                             <a <?php echo $hrefAttr . '../agent-app/agent-profile.php"'; ?>
