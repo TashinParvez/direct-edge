@@ -1,9 +1,22 @@
 <?php
+// Start output buffering to prevent header issues
+ob_start();
+?>
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
+
+<?php
+
+// include '../../include/navbar.php';
+$admin_id = isset($user_id) ? $user_id : 65;
+
 include '../../include/connect-db.php'; // database connection
 
 // Preserve current filters across actions
 $search = $_GET['search'] ?? '';
 $status = $_GET['status'] ?? '';
+$successMessage = '';
+$errorMessage = '';
 
 // Handle status update if approve/reject clicked
 if (isset($_GET['action'], $_GET['id'])) {
@@ -12,14 +25,21 @@ if (isset($_GET['action'], $_GET['id'])) {
 
     if ($action === 'approve') {
         $statusVal = 'Done';
+        $message = 'approved';
     } elseif ($action === 'reject') {
         $statusVal = 'Rejected';
+        $message = 'rejected';
     }
 
     if (isset($statusVal)) {
         $stmt = $conn->prepare("UPDATE stock_requests SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE request_id = ?");
         $stmt->bind_param("si", $statusVal, $requestId);
-        $stmt->execute();
+
+        if ($stmt->execute()) {
+            $successMessage = "Request has been " . $message . " successfully!";
+        } else {
+            $errorMessage = "Failed to update request status.";
+        }
         $stmt->close();
     }
 
@@ -27,6 +47,9 @@ if (isset($_GET['action'], $_GET['id'])) {
     $params = $_GET;
     unset($params['action'], $params['id']);
     $redirect = 'stock-request.php' . (!empty($params) ? ('?' . http_build_query($params)) : '');
+
+    // Clean buffer and redirect
+    ob_end_clean();
     header("Location: $redirect");
     exit;
 }
@@ -73,6 +96,9 @@ $qsStr = http_build_query(array_filter([
     'status' => $status
 ], fn($v) => $v !== '' && $v !== null));
 $qsAppend = $qsStr ? '&' . htmlspecialchars($qsStr, ENT_QUOTES) : '';
+
+// Flush output buffer before HTML
+ob_end_flush();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -82,14 +108,59 @@ $qsAppend = $qsStr ? '&' . htmlspecialchars($qsStr, ENT_QUOTES) : '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stock Requests</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="../../Include/sidebar.css">
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .fade-out {
+            animation: fadeOut 0.3s ease-out;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-50 p-8">
     <div class="max-w-7xl mx-auto bg-white shadow rounded-lg p-6">
+        <!-- Success/Error Messages -->
+        <?php if ($successMessage): ?>
+            <div id="successAlert" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded fade-in">
+                <?= htmlspecialchars($successMessage) ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($errorMessage): ?>
+            <div id="errorAlert" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded fade-in">
+                <?= htmlspecialchars($errorMessage) ?>
+            </div>
+        <?php endif; ?>
         <h1 class="text-3xl font-bold text-blue-700 mb-6">Stock Requests</h1>
 
-        <!-- Search & Filters (dynamic auto-search on typing with debounce, no Enter needed) -->
-        <form id="filterForm" method="GET" class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+        <!-- Search & Filters -->
+        <form id="filterForm" method="GET" class="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-4">
             <input
                 id="searchInput"
                 type="text"
@@ -97,10 +168,8 @@ $qsAppend = $qsStr ? '&' . htmlspecialchars($qsStr, ENT_QUOTES) : '';
                 placeholder="Search by product or requester..."
                 value="<?= htmlspecialchars($search) ?>"
                 autocomplete="off"
-                autocapitalize="none"
-                autocorrect="off"
-                spellcheck="false"
-                class="border p-2 rounded w-full md:w-full focus:ring focus:ring-blue-200" />
+                class="border p-2 rounded w-full md:flex-1 focus:ring focus:ring-blue-200" />
+
             <div class="flex gap-2">
                 <select name="status" id="statusSelect" class="border p-2 rounded w-full md:w-auto">
                     <option value="">Filter by Status</option>
@@ -109,6 +178,14 @@ $qsAppend = $qsStr ? '&' . htmlspecialchars($qsStr, ENT_QUOTES) : '';
                     <option value="Rejected" <?= $status === 'Rejected' ? 'selected' : '' ?>>Rejected</option>
                     <option value="Working" <?= $status === 'Working'  ? 'selected' : '' ?>>Working</option>
                 </select>
+
+                <!-- Clear Filters Button -->
+                <?php if ($search || $status): ?>
+                    <a href="stock-request.php"
+                        class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors text-sm inline-flex items-center">
+                        <i class='bx bx-x-circle mr-1'></i>Clear
+                    </a>
+                <?php endif; ?>
             </div>
         </form>
 
@@ -132,30 +209,47 @@ $qsAppend = $qsStr ? '&' . htmlspecialchars($qsStr, ENT_QUOTES) : '';
                             <td class="p-3"><?= htmlspecialchars($row['requester_name']) ?></td>
                             <td class="p-3"><?= htmlspecialchars($row['product_name']) ?></td>
                             <td class="p-3"><?= (int)$row['quantity'] ?></td>
-                            <td class="p-3"><?= htmlspecialchars($row['status']) ?></td>
+                            <td class="p-3">
+                                <span class="status-badge px-2 py-1 rounded text-sm font-medium
+                                    <?php
+                                    echo match ($row['status']) {
+                                        'Pending' => 'bg-yellow-100 text-yellow-800',
+                                        'Done' => 'bg-green-100 text-green-800',
+                                        'Rejected' => 'bg-red-100 text-red-800',
+                                        'Working' => 'bg-blue-100 text-blue-800',
+                                        default => 'bg-gray-100 text-gray-800'
+                                    };
+                                    ?>">
+                                    <?= htmlspecialchars($row['status']) ?>
+                                </span>
+                            </td>
                             <td class="p-3"><?= date('d M, Y H:i', strtotime($row['requested_at'])) ?></td>
                             <td class="p-3"><?= $row['notes'] !== null ? htmlspecialchars($row['notes']) : '-' ?></td>
 
                             <!-- action btn -->
                             <td class="p-3 flex gap-2">
-                                <!-- Approve -->
-                                <a
-                                    href="?action=approve&id=<?= (int)$row['request_id'] ?><?= $qsAppend ?>"
-                                    class="text-green-500 hover:text-green-700"
-                                    title="Approve">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                    </svg>
-                                </a>
-                                <!-- Reject -->
-                                <a
-                                    href="?action=reject&id=<?= (int)$row['request_id'] ?><?= $qsAppend ?>"
-                                    class="text-red-500 hover:text-red-700"
-                                    title="Reject">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-2.293-9.707a1 1 0 011.414 0L10 10.586l1.879-1.879a1 1 0 111.414 1.414L11.414 12l1.879 1.879a1 1 0 11-1.414 1.414L10 13.414l-1.879 1.879a1 1 0 11-1.414-1.414L8.586 12 6.707 10.121a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                </a>
+                                <?php if ($row['status'] === 'Pending' || $row['status'] === 'Working'): ?>
+                                    <!-- Approve -->
+                                    <button
+                                        onclick="confirmAction(<?= (int)$row['request_id'] ?>, 'approve', this)"
+                                        class="approve-btn text-green-500 hover:text-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Approve">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    <!-- Reject -->
+                                    <button
+                                        onclick="confirmAction(<?= (int)$row['request_id'] ?>, 'reject', this)"
+                                        class="reject-btn text-red-500 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Reject">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-2.293-9.707a1 1 0 011.414 0L10 10.586l1.879-1.879a1 1 0 111.414 1.414L11.414 12l1.879 1.879a1 1 0 11-1.414 1.414L10 13.414l-1.879 1.879a1 1 0 11-1.414-1.414L8.586 12 6.707 10.121a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                <?php else: ?>
+                                    <span class="text-gray-400 text-sm">-</span>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -172,48 +266,42 @@ $qsAppend = $qsStr ? '&' . htmlspecialchars($qsStr, ENT_QUOTES) : '';
     </div>
 
     <script>
-        // Dynamic search like before: auto-submit on typing with improved debounce and focus handling
+        // Auto-fade alerts after 3 seconds
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+
+        if (successAlert) {
+            setTimeout(() => {
+                successAlert.classList.add('fade-out');
+                setTimeout(() => successAlert.remove(), 300);
+            }, 3000);
+        }
+
+        if (errorAlert) {
+            setTimeout(() => {
+                errorAlert.classList.add('fade-out');
+                setTimeout(() => errorAlert.remove(), 300);
+            }, 3000);
+        }
+
+        // Search with Enter key (no auto-submit)
         const form = document.getElementById('filterForm');
         const searchInput = document.getElementById('searchInput');
         const statusSelect = document.getElementById('statusSelect');
 
-        let debounceTimer;
-
-        // Debounced auto-submit on search input (dynamic, no Enter needed)
-        function debounceSearch() {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                // Submit if search has content or is empty (to reset)
-                const q = searchInput.value.trim();
-                if (q.length >= 0) {
-                    if (form.requestSubmit) {
-                        form.requestSubmit();
-                    } else {
-                        form.submit();
-                    }
-                }
-            }, 300); // 300ms debounce delay balances UX and performance
-        }
-
-        searchInput.addEventListener('input', debounceSearch);
-
-        // Optional: Immediate submit on Enter (for faster confirmation)
-        searchInput.addEventListener('keydown', (e) => {
+        // Submit only on Enter key press in search input
+        searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                clearTimeout(debounceTimer);
                 if (form.requestSubmit) {
                     form.requestSubmit();
                 } else {
                     form.submit();
                 }
-                e.preventDefault(); // Prevent default form submit if needed
+                e.preventDefault();
             }
         });
 
-        // Auto-submit when search is cleared (if browser supports native clear button)
-        searchInput.addEventListener('search', debounceSearch);
-
-        // Status filter: immediate submit on change (as before)
+        // Auto-submit when status filter changes
         statusSelect.addEventListener('change', () => {
             if (form.requestSubmit) {
                 form.requestSubmit();
@@ -222,17 +310,85 @@ $qsAppend = $qsStr ? '&' . htmlspecialchars($qsStr, ENT_QUOTES) : '';
             }
         });
 
-        // Prevent Enter in status select from submitting unexpectedly
-        statusSelect.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-            }
-        });
+        // Confirmation dialog before action
+        function confirmAction(requestId, action, button) {
+            const actionText = action === 'approve' ? 'approve' : 'reject';
+            const message = `Are you sure you want to ${actionText} this request? This action cannot be undone.`;
 
-        // Global: Prevent Enter in form from causing double-submit
-        form.addEventListener('submit', (e) => {
-            // Optional: Add loading state or disable during submit if needed
-        });
+            if (confirm(message)) {
+                updateStatus(requestId, action, button);
+            }
+        }
+
+        // AJAX status update function
+        function updateStatus(requestId, action, button) {
+            // Disable all buttons in the row
+            const row = button.closest('tr');
+            const buttons = row.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+
+            // Show loading state
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<svg class="animate-spin h-5 w-5 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+            // Optimistically update UI
+            const statusBadge = row.querySelector('.status-badge');
+            const newStatus = action === 'approve' ? 'Done' : 'Rejected';
+            const newStatusClass = action === 'approve' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+
+            const oldStatus = statusBadge.textContent.trim();
+            const oldClass = statusBadge.className;
+
+            statusBadge.className = 'status-badge px-2 py-1 rounded text-sm font-medium ' + newStatusClass;
+            statusBadge.textContent = newStatus;
+
+            // Send AJAX request
+            const params = new URLSearchParams(window.location.search);
+            const queryString = params.toString();
+
+            fetch(`?action=${action}&id=${requestId}${queryString ? '&' + queryString : ''}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Success - show notification
+                        showNotification('success', `Request ${action === 'approve' ? 'approved' : 'rejected'} successfully!`);
+
+                        // Hide action buttons
+                        const actionCell = row.querySelector('td:last-child');
+                        actionCell.innerHTML = '<span class="text-gray-400 text-sm">-</span>';
+                    } else {
+                        throw new Error('Update failed');
+                    }
+                })
+                .catch(error => {
+                    // Revert UI on error
+                    statusBadge.className = oldClass;
+                    statusBadge.textContent = oldStatus;
+                    button.innerHTML = originalHTML;
+                    buttons.forEach(btn => btn.disabled = false);
+
+                    showNotification('error', 'Failed to update status. Please try again.');
+                });
+        }
+
+        // Show notification function
+        function showNotification(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `fixed top-4 right-4 p-4 rounded shadow-lg fade-in z-50 ${
+                type === 'success' ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'
+            }`;
+            alertDiv.textContent = message;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.classList.add('fade-out');
+                setTimeout(() => alertDiv.remove(), 300);
+            }, 3000);
+        }
     </script>
 </body>
 

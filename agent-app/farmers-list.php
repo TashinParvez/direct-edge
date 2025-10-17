@@ -1,5 +1,7 @@
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
 <?php
-include '../include/navbar.php';
+
 $agent_id = isset($user_id) ? $user_id : 45;
 
 // Connect database
@@ -170,10 +172,13 @@ $conn->close();
 
     <section class="home-section p-0 pb-4 mx-2 md:mx-8 lg:mx-16">
         <div class="flex justify-between items-center p-4">
-            <h1 class="text-2xl font-bold">Farmers Directory</h1>
-            <!-- <a href="add-farmers-info.php" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+            <div class="flex-1">
+                <h1 class="text-2xl font-bold">Farmers Directory</h1>
+                <p class="text-xs text-gray-500 mt-1">View farmers' profiles, contacts, land, and crops. Search to find easily.</p>
+            </div>
+            <a href="add-farmers-info.php" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
                 <i class='bx bx-plus'></i> Add Farmer
-            </a> -->
+            </a>
         </div>
 
         <div class="container mx-auto px-4">
@@ -334,6 +339,9 @@ $conn->close();
 
         </div>
     </section>
+
+
+
 
     <?php include '../Include/footer.php'; ?>
 </body>

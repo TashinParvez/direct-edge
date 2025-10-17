@@ -1,5 +1,9 @@
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
+
 <?php
 include '../../include/connect-db.php'; // database connection
+$admin_id = isset($user_id) ? $user_id : 65;
 
 // Handle status update (Accept/Reject/Toggle Working-Pending)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['request_id'])) {
@@ -61,8 +65,7 @@ while ($row = $result->fetch_assoc()) {
 <head>
     <meta charset="UTF-8">
     <title>Inventory Requests - Stock Integrated</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/LogoBG.png">
-    <link rel="stylesheet" href="../../Include/sidebar.css">
+    <link rel="icon" type="image/x-icon" href="../../assets/Logo/LogoBG.png">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -70,66 +73,108 @@ while ($row = $result->fetch_assoc()) {
         .request-card {
             transition: all 0.3s ease;
         }
+
         .request-card:hover {
             background-color: #f8fafc;
             transform: translateY(-4px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
+
         .filter-container {
             transition: all 0.3s ease;
         }
+
         .filter-container:hover {
             background-color: #f9fafb;
         }
+
         .search-field {
             transition: all 0.3s ease;
         }
+
         .search-field:hover {
             background-color: #f3f4f6;
         }
+
         .search-field:focus {
             background-color: #ffffff;
             border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
+
         .modal {
             animation: fadeIn 0.3s ease-out;
             backdrop-filter: blur(4px);
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
+
         .modal-content {
             animation: slideIn 0.3s ease-out;
         }
+
         @keyframes slideIn {
-            from { transform: translateY(-30px) scale(0.95); opacity: 0; }
-            to { transform: translateY(0) scale(1); opacity: 1; }
+            from {
+                transform: translateY(-30px) scale(0.95);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
         }
+
         .requests-grid {
             animation: fadeInUp 0.6s ease-out;
         }
+
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         .page-enter {
             animation: pageEnter 0.5s ease-out;
         }
+
         @keyframes pageEnter {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         @media print {
-            .no-print { display: none !important; }
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
 
 <body class="bg-gray-100 page-enter">
-    <?php include '../../include/Sidebar.php'; ?>
-    
+
     <section class="home-section p-0">
         <div class="flex justify-between items-center p-6 bg-white shadow-sm border-b">
             <div>
@@ -137,10 +182,12 @@ while ($row = $result->fetch_assoc()) {
                 <p class="text-gray-600 mt-1">Review and manage stock requests from agents</p>
             </div>
             <div class="flex space-x-3 no-print">
-                <button onclick="window.print()" class="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition-colors">
+                <button onclick="window.print()"
+                    class="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition-colors">
                     <i class='bx bx-printer mr-2'></i>Print Report
                 </button>
-                <button onclick="location.reload()" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">
+                <button onclick="location.reload()"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition-colors">
                     <i class='bx bx-refresh mr-2'></i>Refresh
                 </button>
             </div>
@@ -148,10 +195,10 @@ while ($row = $result->fetch_assoc()) {
 
         <div class="container mx-auto px-6 py-6">
             <div class="flex flex-col lg:flex-row gap-6">
-                
+
                 <!-- Left Sidebar: Filters -->
                 <div class="w-full lg:w-80 space-y-6">
-                    
+
                     <!-- Search Section -->
                     <div class="bg-white shadow-lg rounded-xl p-6 filter-container border border-gray-100">
                         <div class="flex items-center mb-4">
@@ -161,7 +208,8 @@ while ($row = $result->fetch_assoc()) {
                         <div class="relative">
                             <input type="search" id="search-input" placeholder="Search products..."
                                 class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 search-field">
-                            <i class='bx bx-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'></i>
+                            <i
+                                class='bx bx-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400'></i>
                         </div>
                     </div>
 
@@ -216,26 +264,37 @@ while ($row = $result->fetch_assoc()) {
                             <h3 class="text-lg font-semibold text-gray-900">Categories</h3>
                         </div>
                         <div class="space-y-3 max-h-64 overflow-y-auto">
-                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3" value="Fresh Produce"> Fresh Produce</label>
-                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3" value="Dairy & Eggs"> Dairy & Eggs</label>
-                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3" value="Meat & Poultry"> Meat & Poultry</label>
-                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3" value="Seafood"> Seafood</label>
-                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3" value="Bakery"> Bakery</label>
-                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3" value="Frozen Foods"> Frozen Foods</label>
-                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3" value="Canned Goods"> Canned Goods</label>
-                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3" value="Snacks & Sweets"> Snacks & Sweets</label>
-                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3" value="Beverages"> Beverages</label>
-                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3" value="Household Essentials"> Household Essentials</label>
+                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3"
+                                    value="Fresh Produce"> Fresh Produce</label>
+                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3"
+                                    value="Dairy & Eggs"> Dairy & Eggs</label>
+                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3"
+                                    value="Meat & Poultry"> Meat & Poultry</label>
+                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3"
+                                    value="Seafood"> Seafood</label>
+                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3"
+                                    value="Bakery"> Bakery</label>
+                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3"
+                                    value="Frozen Foods"> Frozen Foods</label>
+                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3"
+                                    value="Canned Goods"> Canned Goods</label>
+                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3"
+                                    value="Snacks & Sweets"> Snacks & Sweets</label>
+                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3"
+                                    value="Beverages"> Beverages</label>
+                            <label class="flex items-center"><input type="checkbox" class="category-checkbox mr-3"
+                                    value="Household Essentials"> Household Essentials</label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Right Side: Main Content -->
                 <div class="flex-1">
-                    
+
                     <!-- Controls Header -->
                     <div class="bg-white shadow-md rounded-lg p-6 mb-6 border border-gray-100">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                        <div
+                            class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
                             <div>
                                 <h2 id="requests-header" class="text-xl font-semibold text-gray-900">All Requests</h2>
                                 <p class="text-sm text-gray-600">Manage pending inventory requests</p>
@@ -243,7 +302,8 @@ while ($row = $result->fetch_assoc()) {
                             <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                                 <div class="flex items-center space-x-2">
                                     <span class="text-sm font-medium text-gray-700">Show:</span>
-                                    <select id="per-page" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <select id="per-page"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                                         <option value="10" selected>10</option>
                                         <option value="20">20</option>
                                         <option value="50">50</option>
@@ -253,7 +313,8 @@ while ($row = $result->fetch_assoc()) {
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <span class="text-sm font-medium text-gray-700">Order by:</span>
-                                    <select id="sort-by" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <select id="sort-by"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                                         <option value="request-order" selected>Request Order (FCFS)</option>
                                         <option value="volume-high-low">Volume (High to Low)</option>
                                         <option value="volume-low-high">Volume (Low to High)</option>
@@ -272,17 +333,21 @@ while ($row = $result->fetch_assoc()) {
                     <!-- Pagination -->
                     <div class="bg-white shadow-md rounded-lg p-4 border border-gray-100">
                         <div class="flex justify-center items-center space-x-2">
-                            <button id="first-page" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                            <button id="first-page"
+                                class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
                                 <i class='bx bx-chevrons-left'></i>
                             </button>
-                            <button id="prev-page" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                            <button id="prev-page"
+                                class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
                                 <i class='bx bx-chevron-left'></i>
                             </button>
                             <span id="page-info" class="px-4 py-2 font-medium">1 / 1</span>
-                            <button id="next-page" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                            <button id="next-page"
+                                class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
                                 <i class='bx bx-chevron-right'></i>
                             </button>
-                            <button id="last-page" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                            <button id="last-page"
+                                class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
                                 <i class='bx bx-chevrons-right'></i>
                             </button>
                         </div>
@@ -296,9 +361,10 @@ while ($row = $result->fetch_assoc()) {
     <div id="requestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 modal">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl modal-content border border-gray-200">
-                
+
                 <!-- Modal Header -->
-                <div class="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <div
+                    class="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
                     <div class="flex items-center space-x-3">
                         <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                             <i class='bx bx-package text-2xl text-blue-600'></i>
@@ -319,7 +385,7 @@ while ($row = $result->fetch_assoc()) {
                 <!-- Modal Content -->
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        
+
                         <!-- Product Image -->
                         <div class="space-y-4">
                             <div class="w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
@@ -373,7 +439,15 @@ while ($row = $result->fetch_assoc()) {
                                     </div>
                                 </div>
                             </div>
-                            
+
+                            <!-- In Progress Toggle -->
+                            <div>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" id="inProgressToggle" class="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-700">Mark as In Progress</span>
+                                </label>
+                            </div>
+
                             <!-- Notes Section -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-2">Notes</label>
@@ -390,10 +464,12 @@ while ($row = $result->fetch_assoc()) {
 
                 <!-- Modal Footer -->
                 <div class="flex justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
-                    <button class="reject bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors font-medium">
+                    <button
+                        class="reject bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-colors font-medium">
                         <i class='bx bx-x mr-2'></i>Reject
                     </button>
-                    <button class="accept bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors font-medium">
+                    <button
+                        class="accept bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors font-medium">
                         <i class='bx bx-check mr-2'></i>Accept
                     </button>
                 </div>
@@ -452,12 +528,10 @@ while ($row = $result->fetch_assoc()) {
         const closeModalBtn = document.querySelector('.close-modal');
         closeModalBtn.addEventListener('click', () => {
             modal.classList.add('hidden');
-            document.body.style.overflow = 'auto';
         });
         window.addEventListener('click', (event) => {
             if (event.target === modal) {
                 modal.classList.add('hidden');
-                document.body.style.overflow = 'auto';
             }
         });
 
@@ -470,10 +544,12 @@ while ($row = $result->fetch_assoc()) {
             const maxVolume = parseFloat(document.getElementById('max-volume').value) || Infinity;
             const startDate = document.getElementById('start-date').value;
             const startOption = document.querySelector('input[name="start-date-option"]:checked')?.value;
-            const selectedCategories = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
+            const selectedCategories = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb
+                .value);
             const searchQuery = document.getElementById('search-input').value.toLowerCase();
             const sortValue = document.getElementById('sort-by').value;
-            const perPage = document.getElementById('per-page').value === 'all' ? items.length : parseInt(document.getElementById('per-page').value, 10);
+            const perPage = document.getElementById('per-page').value === 'all' ? items.length : parseInt(document
+                .getElementById('per-page').value, 10);
 
             let filtered = items.filter(item => {
                 if (typeof item.requiredSpace === 'number') {
@@ -503,7 +579,8 @@ while ($row = $result->fetch_assoc()) {
                 filtered.sort((a, b) => new Date(a.requested_at) - new Date(b.requested_at));
             }
 
-            document.getElementById('requests-header').innerText = filtered.length === items.length ? 'All Requests' : 'Filtered Requests';
+            document.getElementById('requests-header').innerText = filtered.length === items.length ? 'All Requests' :
+                'Filtered Requests';
 
             // Pagination
             totalPages = Math.ceil(filtered.length / perPage);
@@ -537,7 +614,8 @@ while ($row = $result->fetch_assoc()) {
                     };
 
                     const card = document.createElement('div');
-                    card.classList.add('bg-white', 'rounded-xl', 'shadow-md', 'hover:shadow-xl', 'overflow-hidden', 'request-card', 'border', 'border-gray-100');
+                    card.classList.add('bg-white', 'rounded-xl', 'shadow-md', 'hover:shadow-xl', 'overflow-hidden',
+                        'request-card', 'border', 'border-gray-100');
                     card.innerHTML = `
                         <div class="p-6">
                             <div class="flex justify-between items-start mb-4">
@@ -593,21 +671,20 @@ while ($row = $result->fetch_assoc()) {
                         const reqSpaceText = (typeof item.requiredSpace === 'number') ?
                             item.requiredSpace.toFixed(3) + ' m³' :
                             'N/A';
-                        
-                        document.getElementById('modalHeading').textContent = `Inventory Request`;
-                        document.getElementById('modalSub').textContent = `Request #${item.id} - ${reqSpaceText}`;
+
+                        document.getElementById('modalHeading').textContent = `Inventory Request for ${reqSpaceText}`;
+                        document.getElementById('modalSub').textContent = `Request #${item.id}`;
                         document.getElementById('modalImage').src = `../../${item.image}`;
 
+                        const badge = document.getElementById('modalStatusBadge');
+                        const sClass = String(item.status || '').toLowerCase();
                         const statusClasses = {
                             'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
                             'rejected': 'bg-red-100 text-red-800 border border-red-200',
                             'working': 'bg-blue-100 text-blue-800 border border-blue-200',
                             'done': 'bg-green-100 text-green-800 border border-green-200'
                         };
-
-                        const badge = document.getElementById('modalStatusBadge');
-                        const sClass = String(item.status || '').toLowerCase();
-                        badge.className = `status-badge ${sClass}`;
+                        badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses[sClass] || 'bg-gray-100 text-gray-800'}`;
                         badge.textContent = item.status ?? '-';
 
                         document.getElementById('modalRequester').textContent = item.requester_name ?? '-';
@@ -622,27 +699,34 @@ while ($row = $result->fetch_assoc()) {
                         const inProgress = document.getElementById('inProgressToggle');
                         inProgress.checked = (String(item.status).toLowerCase() === 'working');
 
-                        modal.style.display = 'block';
+                        modal.classList.remove('hidden');
 
                         // Bind once: toggle Working/Pending when checkbox changes
                         if (!inProgress._bound) {
                             inProgress._bound = true;
                             inProgress.addEventListener('change', async () => {
                                 if (!selectedRequestId) return;
+                                
                                 const make = inProgress.checked ? 'SetWorking' : 'SetPending';
-                                const updated = await updateRequestStatus(make, selectedRequestId, false);
-                                if (updated) {
-                                    // reflect local state + badge
-                                    const idx = items.findIndex(i => i.id == selectedRequestId);
-                                    if (idx > -1) items[idx].status = inProgress.checked ? 'Working' : 'Pending';
-                                    const cls = inProgress.checked ? 'working' : 'pending';
-                                    badge.className = `status-badge ${cls}`;
-                                    badge.textContent = items.find(i => i.id == selectedRequestId).status;
-                                } else {
-                                    // revert checkbox on failure
-                                    inProgress.checked = !inProgress.checked;
-                                    alert('Failed to update status.');
-                                }
+                                const newStatusText = inProgress.checked ? 'Working' : 'Pending';
+                                const cls = inProgress.checked ? 'working' : 'pending';
+                                
+                                // Update badge immediately for instant feedback
+                                const statusClasses = {
+                                    'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                                    'rejected': 'bg-red-100 text-red-800 border border-red-200',
+                                    'working': 'bg-blue-100 text-blue-800 border border-blue-200',
+                                    'done': 'bg-green-100 text-green-800 border border-green-200'
+                                };
+                                badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses[cls]}`;
+                                badge.textContent = newStatusText;
+                                
+                                // Update local state
+                                const idx = items.findIndex(i => i.id == selectedRequestId);
+                                if (idx > -1) items[idx].status = newStatusText;
+                                
+                                // Send update to server (no need to wait or check response for UI update)
+                                updateRequestStatus(make, selectedRequestId, false);
                             });
                         }
                     }
@@ -656,24 +740,45 @@ while ($row = $result->fetch_assoc()) {
             document.getElementById('last-page').disabled = currentPage >= totalPages - 1;
         }
 
-        // Handle accept/reject buttons
+        // Handle accept/reject buttons (outside renderCards)
         document.querySelector('.accept').addEventListener('click', async () => {
             if (!selectedRequestId) return;
-            await updateRequestStatus('Accept', selectedRequestId);
+            
+            // Update badge immediately for visual feedback
+            const badge = document.getElementById('modalStatusBadge');
+            const statusClasses = {
+                'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                'rejected': 'bg-red-100 text-red-800 border border-red-200',
+                'working': 'bg-blue-100 text-blue-800 border border-blue-200',
+                'done': 'bg-green-100 text-green-800 border border-green-200'
+            };
+            badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses['done']}`;
+            badge.textContent = 'Done';
+            
+            await updateRequestStatus('Accept', selectedRequestId, true);
         });
 
         document.querySelector('.reject').addEventListener('click', async () => {
             if (!selectedRequestId) return;
-            await updateRequestStatus('Reject', selectedRequestId);
+            
+            // Update badge immediately for visual feedback
+            const badge = document.getElementById('modalStatusBadge');
+            const statusClasses = {
+                'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                'rejected': 'bg-red-100 text-red-800 border border-red-200',
+                'working': 'bg-blue-100 text-blue-800 border border-blue-200',
+                'done': 'bg-green-100 text-green-800 border border-green-200'
+            };
+            badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses['rejected']}`;
+            badge.textContent = 'Rejected';
+            
+            await updateRequestStatus('Reject', selectedRequestId, true);
         });
 
-        async function updateRequestStatus(action, requestId) {
+        // action: 'Accept' | 'Reject' | 'SetWorking' | 'SetPending'
+        // closeModal: whether to close modal after update
+        async function updateRequestStatus(action, requestId, closeModal = false) {
             try {
-                const button = event.target;
-                const originalText = button.innerHTML;
-                button.innerHTML = '<i class="bx bx-loader-alt bx-spin mr-2"></i>Processing...';
-                button.disabled = true;
-
                 const formData = new FormData();
                 formData.append('action', action);
                 formData.append('request_id', requestId);
@@ -683,46 +788,44 @@ while ($row = $result->fetch_assoc()) {
                     body: formData
                 });
                 const data = await res.json();
-                
                 if (data && data.success) {
                     const idx = items.findIndex(i => i.id == requestId);
-                    if (idx > -1) items[idx].status = action === 'Accept' ? 'Done' : 'Rejected';
-                    
-                    // Show success message
-                    const successMsg = document.createElement('div');
-                    successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-                    successMsg.innerHTML = `<i class='bx bx-check mr-2'></i>Request ${action.toLowerCase()}ed successfully!`;
-                    document.body.appendChild(successMsg);
-                    
-                    setTimeout(() => {
-                        successMsg.remove();
-                    }, 3000);
+                    const newStatus = data.status ?? (action === 'Accept' ? 'Done' : action === 'Reject' ? 'Rejected' : (action === 'SetWorking' ? 'Working' : 'Pending'));
 
-                    document.getElementById('requestModal').classList.add('hidden');
-                    document.body.style.overflow = 'auto';
+                    if (idx > -1) {
+                        // If status is Done, remove from items array (since page only shows non-Done requests)
+                        if (newStatus === 'Done') {
+                            items.splice(idx, 1);
+                        } else {
+                            items[idx].status = newStatus;
+                        }
+                    }
+
+                    // Update modal badge if modal is open
+                    if (!closeModal && idx > -1 && newStatus !== 'Done') {
+                        const badge = document.getElementById('modalStatusBadge');
+                        const sClass = String(newStatus || '').toLowerCase();
+                        const statusClasses = {
+                            'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                            'rejected': 'bg-red-100 text-red-800 border border-red-200',
+                            'working': 'bg-blue-100 text-blue-800 border border-blue-200',
+                            'done': 'bg-green-100 text-green-800 border border-green-200'
+                        };
+                        badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses[sClass]}`;
+                        badge.textContent = newStatus;
+                    }
+
+                    if (closeModal) {
+                        document.getElementById('requestModal').classList.add('hidden');
+                    }
                     renderCards();
                     return true;
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Error updating status.');
-            } finally {
-                button.innerHTML = originalText;
-                button.disabled = false;
+            } catch (e) {
+                console.error('Error:', e);
             }
             return false;
         }
-
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                const modal = document.getElementById('requestModal');
-                if (!modal.classList.contains('hidden')) {
-                    modal.classList.add('hidden');
-                    document.body.style.overflow = 'auto';
-                }
-            }
-        });
     </script>
 </body>
 

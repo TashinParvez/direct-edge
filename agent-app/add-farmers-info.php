@@ -1,6 +1,7 @@
-<?php
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
 
-include '../include/navbar.php';
+<?php
 $agent_id = isset($user_id) ? $user_id : 45;
 
 // connect database

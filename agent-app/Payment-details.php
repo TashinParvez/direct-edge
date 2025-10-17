@@ -1,5 +1,7 @@
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
 <?php
-include '../include/navbar.php';
+
 $agent_id = isset($user_id) ? $user_id : 64;
 include '../include/connect-db.php'; // Database connection
 
@@ -373,7 +375,7 @@ $conn->close();
 
 
                     <div class="flex space-x-2">
-                        <button type="submit" class="flex-1 bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors">
+                        <button type="submit" class="flex-1 bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition-colors">
                             <i class='bx bx-filter-alt mr-2'></i>Apply Filter
                         </button>
                         <a href="<?php echo $_SERVER['PHP_SELF']; ?>" class="flex-1 bg-gray-500 text-white px-6 py-2 rounded text-center hover:bg-gray-600 transition-colors">

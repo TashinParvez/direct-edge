@@ -1,7 +1,12 @@
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
+
 <?php
 
 
 include '../../include/connect-db.php';
+// include '../../include/navbar.php';
+$admin_id = isset($user_id) ? $user_id : 65;
 
 //-------------------------  Segment 1 ------------------------- 
 
@@ -340,20 +345,17 @@ $activity_logs = [
             </div>
             <div class="flex items-center gap-3">
 
-                <button
-                    class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
+                <button class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
                     onclick="window.location.href='../add-warehouse.php'">
                     Add Warehouse
                 </button>
 
-                <button
-                    class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
+                <button class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
                     onclick="window.location.href='../Manage-Warehouse/warehouse-status.php'">
                     Warehouse Status
                 </button>
 
-                <button
-                    class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
+                <button class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
                     onclick="window.location.href='admin-agent-management.php'">
                     Agent Management
                 </button>
@@ -379,9 +381,12 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="text-sm text-gray-500">Total Warehouses</div>
                     <div class="mt-2 flex items-baseline gap-3">
-                        <div class="text-2xl font-bold"><?= $total_warehouses_active + $total_warehouses_inactive ?></div>
-                        <div class="text-sm text-gray-600">Active: <span class="font-semibold text-green-600"><?= $total_warehouses_active ?></span></div>
-                        <div class="text-sm text-gray-600">Inactive: <span class="font-semibold text-red-600"><?= $total_warehouses_inactive ?></span></div>
+                        <div class="text-2xl font-bold"><?= $total_warehouses_active + $total_warehouses_inactive ?>
+                        </div>
+                        <div class="text-sm text-gray-600">Active: <span
+                                class="font-semibold text-green-600"><?= $total_warehouses_active ?></span></div>
+                        <div class="text-sm text-gray-600">Inactive: <span
+                                class="font-semibold text-red-600"><?= $total_warehouses_inactive ?></span></div>
                     </div>
                 </div>
 
@@ -413,7 +418,7 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-gray-500">Low Stock Alerts</div>
-                        <a href="#" class="text-sm text-blue-600">View all</a>
+                        <a href="../warehouse information/product-list.php" class="text-sm text-blue-600">View all</a>
                     </div>
                     <div class="mt-2 space-y-1">
                         <?php foreach ($low_stock_alerts as $l): ?>
@@ -429,7 +434,7 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-gray-500">Low Space Alerts</div>
-                        <a href="#" class="text-sm text-blue-600">Manage</a>
+                        <a href="../Manage-Warehouse/warehouse-status.php" class="text-sm text-blue-600">Manage</a>
                     </div>
                     <div class="mt-2 space-y-1 text-sm">
                         <?php foreach ($low_space_alerts as $s): ?>
@@ -474,9 +479,12 @@ $activity_logs = [
                             <div class="text-2xl font-bold"><?= array_sum($order_counts) ?></div>
                         </div>
                         <div class="space-y-1 text-sm text-gray-600 text-right">
-                            <div>Pending: <span class="font-semibold text-yellow-600"><?= $order_counts['Pending'] ?></span></div>
-                            <div>Completed: <span class="font-semibold text-green-600"><?= $order_counts['Completed'] ?></span></div>
-                            <div>Rejected: <span class="font-semibold text-red-600"><?= $order_counts['Rejected'] ?></span></div>
+                            <div>Pending: <span
+                                    class="font-semibold text-yellow-600"><?= $order_counts['Pending'] ?></span></div>
+                            <div>Completed: <span
+                                    class="font-semibold text-green-600"><?= $order_counts['Completed'] ?></span></div>
+                            <div>Rejected: <span
+                                    class="font-semibold text-red-600"><?= $order_counts['Rejected'] ?></span></div>
                         </div>
                     </div>
                     <div>
@@ -488,7 +496,7 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="flex items-center justify-between mb-3">
                         <div class="text-sm text-gray-500">Recent Orders</div>
-                        <a href="#" class="text-sm text-blue-600">View all</a>
+                        <a href="../orders/orders.php" class="text-sm text-blue-600">View all</a>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -510,7 +518,8 @@ $activity_logs = [
                                         <td class="py-2"><?= date('d M, Y', strtotime($ro['placed_at'])) ?></td>
                                         <td class="py-2"><?= number_format($ro['total'], 2) ?></td>
                                         <td class="py-2">
-                                            <span class="<?= $ro['status'] == 'Pending' ? 'text-yellow-600' : ($ro['status'] == 'Completed' ? 'text-green-600' : 'text-gray-600') ?> font-semibold"><?= $ro['status'] ?></span>
+                                            <span
+                                                class="<?= $ro['status'] == 'Pending' ? 'text-yellow-600' : ($ro['status'] == 'Completed' ? 'text-green-600' : 'text-gray-600') ?> font-semibold"><?= $ro['status'] ?></span>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -532,7 +541,7 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="flex items-center justify-between mb-3">
                         <div class="text-sm text-gray-500">Warehouse Capacity (used vs free)</div>
-                        <a href="#" class="text-sm text-blue-600">Manage warehouses</a>
+                        <a href="../Manage-Warehouse/warehouse-status.php" class="text-sm text-blue-600">Manage warehouses</a>
                     </div>
                     <canvas id="warehouseBar" height="160"></canvas>
                     <div class="mt-3 text-sm text-gray-600">
@@ -541,7 +550,8 @@ $activity_logs = [
                         ?>
                             <div class="flex justify-between">
                                 <div><?= htmlspecialchars($w['name']) ?></div>
-                                <div>Used: <?= number_format($w['capacity_used']) ?> / Free: <?= number_format($free) ?></div>
+                                <div>Used: <?= number_format($w['capacity_used']) ?> / Free: <?= number_format($free) ?>
+                                </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -551,7 +561,34 @@ $activity_logs = [
                 <div class="bg-white p-4 rounded shadow-sm">
                     <div class="flex items-center justify-between mb-3">
                         <div class="text-sm text-gray-500">Stock In/Out History</div>
-                        <a href="#" class="text-sm text-blue-600">Export CSV</a>
+                        <button onclick="exportStockHistory()" class="text-sm text-blue-600 cursor-pointer hover:underline">Export CSV</button>
+
+                        <script>
+                            function exportStockHistory() {
+                                // Get table data
+                                const stockHistory = <?php echo json_encode($stock_history); ?>;
+
+                                // Create CSV content
+                                let csv = 'Date,Type,Product,Quantity\n';
+
+                                stockHistory.forEach(row => {
+                                    csv += `${row.date},${row.type},${row.product},${row.qty}\n`;
+                                });
+
+                                // Create blob and download
+                                const blob = new Blob([csv], {
+                                    type: 'text/csv'
+                                });
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = 'stock-history-' + new Date().toISOString().split('T')[0] + '.csv';
+                                document.body.appendChild(a);
+                                a.click();
+                                document.body.removeChild(a);
+                                window.URL.revokeObjectURL(url);
+                            }
+                        </script>
                     </div>
 
                     <div class="overflow-x-auto text-sm">
