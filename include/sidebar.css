@@ -33,8 +33,10 @@ body {
 
 /* MINIMAL BODY PUSH: Only push body to the right, don't touch content spacing */
 body.bg-custom {
-  margin-left: 250px; /* Push body content to the right */
-  width: calc(100% - 250px); /* Adjust body width */
+  margin-left: 250px;
+  /* Push body content to the right */
+  width: calc(100% - 250px);
+  /* Adjust body width */
   transition: margin-left 0.5s ease, width 0.5s ease;
   /* CRITICAL: Do NOT touch any padding, margin-top, or other spacing properties */
 }
@@ -51,7 +53,8 @@ body.bg-custom.sidebar-collapsed {
   left: 0;
   top: 0;
   height: 100%;
-  width: 250px; /* Always expanded */
+  width: 250px;
+  /* Always expanded */
   background: #16a34a;
   z-index: 99;
   transition: all 0.5s ease;
@@ -275,6 +278,52 @@ body.bg-custom.sidebar-collapsed {
   margin: 18px;
 }
 
+/* Notification badge and blinking dot styles */
+.sidebar .nav-list li .notif-badge {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 30px;
+  background-color: #e41d1d;
+  color: white;
+  border-radius: 6px;
+  padding: 1px 5px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 2;
+}
+
+.sidebar .nav-list li .blinking-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  background-color: #ff4d4d;
+  border-radius: 50%;
+  animation: blink 1.5s infinite ease-in-out;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  z-index: 1;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.3;
+    transform: translateY(-50%) scale(0.8);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   body.bg-custom {
@@ -327,7 +376,7 @@ body.bg-custom.sidebar-collapsed {
 }
 
 /* CRITICAL: Exclude sidebar from body adjustments */
-body > .sidebar {
+body>.sidebar {
   position: fixed !important;
   left: 0 !important;
   margin-left: 0 !important;

@@ -55,6 +55,37 @@ function updateBadge(count) {
     }
 }
 
+// Update sidebar notification badge and blinking dot
+function updateSidebarNotificationStatus(unreadCount) {
+    const sidebarNotifLinks = document.querySelectorAll('.notification-link');
+
+    sidebarNotifLinks.forEach(link => {
+        let badge = link.querySelector('.notif-badge');
+        let dot = link.querySelector('.blinking-dot');
+
+        if (unreadCount > 0) {
+            // Create badge if it doesn't exist
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'notif-badge';
+                link.appendChild(badge);
+            }
+            badge.textContent = unreadCount;
+
+            // Create blinking dot if it doesn't exist
+            if (!dot) {
+                dot = document.createElement('span');
+                dot.className = 'blinking-dot';
+                link.appendChild(dot);
+            }
+        } else {
+            // Remove badge and dot if count is zero
+            if (badge) badge.remove();
+            if (dot) dot.remove();
+        }
+    });
+}
+
 // Render notifications
 function renderNotifications(notifications, unreadCount) {
     const list = document.getElementById('notificationsList');
@@ -126,6 +157,7 @@ function loadNotifications() {
             currentNotifications = response.notifications;
             lastUnreadCount = response.unread_count;
             renderNotifications(currentNotifications, response.unread_count);
+            updateSidebarNotificationStatus(response.unread_count); // Update sidebar as well
         }
     });
 }
@@ -200,17 +232,20 @@ function viewAllNotifications() {
 function startPolling() {
     updateInterval = setInterval(() => {
         ajaxRequest('get_unread_count').then(response => {
-            if (response.success && response.unread_count !== lastUnreadCount) {
-                lastUnreadCount = response.unread_count;
-                updateBadge(response.unread_count);
+            if (response.success) {
+                // Update both the main notification UI and the sidebar
+                if (response.unread_count !== lastUnreadCount) {
+                    lastUnreadCount = response.unread_count;
+                    updateBadge(response.unread_count);
+                    updateSidebarNotificationStatus(response.unread_count); // Update sidebar
 
-                // If we have new notifications, refresh the list
-                if (response.unread_count > 0) {
-                    loadNotifications();
+                    if (response.unread_count > 0) {
+                        loadNotifications(); // Refresh main list if new notifications
+                    }
                 }
             }
         });
-    }, 10000); // Check every 30 seconds
+    }, 5000); // Check every 5 seconds for faster updates
 }
 
 // Start updating relative times periodically
@@ -299,6 +334,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (viewAllBtn) {
         viewAllBtn.addEventListener('click', viewAllNotifications);
     }
+
+    // Initial sidebar update
+    ajaxRequest('get_unread_count').then(response => {
+        if (response.success) {
+            updateSidebarNotificationStatus(response.unread_count);
+        }
+    });
 });
 
 // Cleanup on page unload
