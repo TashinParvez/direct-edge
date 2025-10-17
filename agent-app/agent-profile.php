@@ -1,7 +1,7 @@
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
 <?php
-// agent-profile.php - Dedicated profile page for agents only
 
-include '../include/navbar.php';
 $user_id = isset($user_id) ? $user_id : 51;
 
 
@@ -191,11 +191,12 @@ function sanitize($v)
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Status Message -->
         <?php if ($message): ?>
-            <div class="mb-6 rounded-lg p-4 <?php echo $success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'; ?>">
-                <p class="<?php echo $success ? 'text-green-800' : 'text-red-800'; ?> text-sm font-medium">
-                    <?php echo sanitize($message); ?>
-                </p>
-            </div>
+        <div
+            class="mb-6 rounded-lg p-4 <?php echo $success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'; ?>">
+            <p class="<?php echo $success ? 'text-green-800' : 'text-red-800'; ?> text-sm font-medium">
+                <?php echo sanitize($message); ?>
+            </p>
+        </div>
         <?php endif; ?>
 
         <!-- Profile Header -->
@@ -204,17 +205,20 @@ function sanitize($v)
             <div class="px-6 pb-6 -mt-16">
                 <div class="flex flex-col sm:flex-row items-center sm:items-end gap-4">
                     <?php if (!empty($user['image_url'])): ?>
-                        <img src="<?php echo sanitize($user['image_url']); ?>" alt="Agent Photo" class="w-32 h-32 rounded-2xl ring-4 ring-white object-cover shadow-lg">
+                    <img src="<?php echo sanitize($user['image_url']); ?>" alt="Agent Photo"
+                        class="w-32 h-32 rounded-2xl ring-4 ring-white object-cover shadow-lg">
                     <?php else: ?>
-                        <div class="w-32 h-32 rounded-2xl ring-4 ring-white bg-green-100 text-green-700 grid place-items-center text-4xl font-bold shadow-lg">
-                            <?php echo strtoupper(substr($user['full_name'], 0, 2)); ?>
-                        </div>
+                    <div
+                        class="w-32 h-32 rounded-2xl ring-4 ring-white bg-green-100 text-green-700 grid place-items-center text-4xl font-bold shadow-lg">
+                        <?php echo strtoupper(substr($user['full_name'], 0, 2)); ?>
+                    </div>
                     <?php endif; ?>
 
                     <div class="text-center sm:text-left pb-2">
                         <h1 class="text-2xl font-bold text-white"><?php echo sanitize($user['full_name']); ?></h1>
                         <p class="text-sm text-gray-600 flex items-center gap-2 justify-center sm:justify-start mt-1">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            <span
+                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                                 🌾 Agricultural Agent
                             </span>
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
@@ -247,15 +251,20 @@ function sanitize($v)
                     <div class="space-y-3">
                         <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                             <span class="text-sm text-gray-700">Coverage Area</span>
-                            <span class="text-sm font-bold text-green-700"><?php echo sanitize($agent_info['coverage_area_km'] ?? 0); ?> km</span>
+                            <span
+                                class="text-sm font-bold text-green-700"><?php echo sanitize($agent_info['coverage_area_km'] ?? 0); ?>
+                                km</span>
                         </div>
                         <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                             <span class="text-sm text-gray-700">Experience</span>
-                            <span class="text-sm font-bold text-blue-700"><?php echo sanitize($agent_info['experience_years'] ?? 0); ?> years</span>
+                            <span
+                                class="text-sm font-bold text-blue-700"><?php echo sanitize($agent_info['experience_years'] ?? 0); ?>
+                                years</span>
                         </div>
                         <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                             <span class="text-sm text-gray-700">Status</span>
-                            <span class="text-sm font-bold text-purple-700"><?php echo sanitize($agent_info['status'] ?? 'Pending'); ?></span>
+                            <span
+                                class="text-sm font-bold text-purple-700"><?php echo sanitize($agent_info['status'] ?? 'Pending'); ?></span>
                         </div>
                     </div>
                 </div>
@@ -266,19 +275,23 @@ function sanitize($v)
                     <dl class="space-y-3">
                         <div>
                             <dt class="text-xs font-medium text-gray-500 uppercase">Crops Expertise</dt>
-                            <dd class="text-sm text-gray-900 mt-1"><?php echo sanitize($agent_info['crops_expertise'] ?? 'N/A'); ?></dd>
+                            <dd class="text-sm text-gray-900 mt-1">
+                                <?php echo sanitize($agent_info['crops_expertise'] ?? 'N/A'); ?></dd>
                         </div>
                         <div>
                             <dt class="text-xs font-medium text-gray-500 uppercase">Vehicles</dt>
-                            <dd class="text-sm text-gray-900 mt-1"><?php echo sanitize($agent_info['vehicle_types'] ?? 'N/A'); ?></dd>
+                            <dd class="text-sm text-gray-900 mt-1">
+                                <?php echo sanitize($agent_info['vehicle_types'] ?? 'N/A'); ?></dd>
                         </div>
                         <div>
                             <dt class="text-xs font-medium text-gray-500 uppercase">Storage Capacity</dt>
-                            <dd class="text-sm text-gray-900 mt-1"><?php echo sanitize($agent_info['warehouse_capacity'] ?? 'N/A'); ?></dd>
+                            <dd class="text-sm text-gray-900 mt-1">
+                                <?php echo sanitize($agent_info['warehouse_capacity'] ?? 'N/A'); ?></dd>
                         </div>
                         <div>
                             <dt class="text-xs font-medium text-gray-500 uppercase">NID Number</dt>
-                            <dd class="text-sm text-gray-900 mt-1"><?php echo sanitize($agent_info['nid_number'] ?? 'N/A'); ?></dd>
+                            <dd class="text-sm text-gray-900 mt-1">
+                                <?php echo sanitize($agent_info['nid_number'] ?? 'N/A'); ?></dd>
                         </div>
                     </dl>
                 </div>
@@ -296,7 +309,8 @@ function sanitize($v)
                         <!-- <a href="orders.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
                             📦 Orders
                         </a> -->
-                        <a href="agent-farmer-dashboard.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border">
+                        <a href="agent-farmer-dashboard.php"
+                            class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border">
                             🌾 Manage Farmers
                         </a>
                         <!-- <a href="support.php" class="w-full flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">
@@ -322,19 +336,26 @@ function sanitize($v)
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
-                                    <input type="text" name="full_name" value="<?php echo sanitize($user['full_name']); ?>" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <input type="text" name="full_name"
+                                        value="<?php echo sanitize($user['full_name']); ?>" required
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
-                                    <input type="email" name="email" value="<?php echo sanitize($user['email']); ?>" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <input type="email" name="email" value="<?php echo sanitize($user['email']); ?>"
+                                        required
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Phone</label>
-                                    <input type="text" name="phone" value="<?php echo sanitize($user['phone']); ?>" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <input type="text" name="phone" value="<?php echo sanitize($user['phone']); ?>"
+                                        required
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Profile Photo</label>
-                                    <input type="file" name="profile_photo" accept=".jpg,.jpeg,.png,.webp" class="w-full text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 outline-none">
+                                    <input type="file" name="profile_photo" accept=".jpg,.jpeg,.png,.webp"
+                                        class="w-full text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 outline-none">
                                 </div>
                             </div>
                         </div>
@@ -345,25 +366,39 @@ function sanitize($v)
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Region</label>
-                                    <input type="text" name="region" value="<?php echo sanitize($agent_info['region'] ?? ''); ?>" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <input type="text" name="region"
+                                        value="<?php echo sanitize($agent_info['region'] ?? ''); ?>" required
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">District</label>
-                                    <input type="text" name="district" value="<?php echo sanitize($agent_info['district'] ?? ''); ?>" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <input type="text" name="district"
+                                        value="<?php echo sanitize($agent_info['district'] ?? ''); ?>"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Upazila</label>
-                                    <input type="text" name="upazila" value="<?php echo sanitize($agent_info['upazila'] ?? ''); ?>" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <input type="text" name="upazila"
+                                        value="<?php echo sanitize($agent_info['upazila'] ?? ''); ?>"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Coverage Area (km)</label>
-                                    <input type="number" name="coverage_area_km" value="<?php echo sanitize($agent_info['coverage_area_km'] ?? 20); ?>" min="5" max="200" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Coverage Area
+                                        (km)</label>
+                                    <input type="number" name="coverage_area_km"
+                                        value="<?php echo sanitize($agent_info['coverage_area_km'] ?? 20); ?>" min="5"
+                                        max="200"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-1">Experience (years)</label>
-                                    <input type="number" name="experience_years" value="<?php echo sanitize($agent_info['experience_years'] ?? 0); ?>" min="0" max="50" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Experience
+                                        (years)</label>
+                                    <input type="number" name="experience_years"
+                                        value="<?php echo sanitize($agent_info['experience_years'] ?? 0); ?>" min="0"
+                                        max="50"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                                 </div>
                             </div>
                         </div>
@@ -374,22 +409,31 @@ function sanitize($v)
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Crops Expertise</label>
-                                    <input type="text" name="crops_expertise" value="<?php echo sanitize($agent_info['crops_expertise'] ?? ''); ?>" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <input type="text" name="crops_expertise"
+                                        value="<?php echo sanitize($agent_info['crops_expertise'] ?? ''); ?>" required
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Vehicle Types</label>
-                                    <input type="text" name="vehicle_types" value="<?php echo sanitize($agent_info['vehicle_types'] ?? ''); ?>" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <input type="text" name="vehicle_types"
+                                        value="<?php echo sanitize($agent_info['vehicle_types'] ?? ''); ?>"
+                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                                 </div>
                             </div>
                             <div class="mt-4">
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Warehouse Capacity</label>
-                                <input type="text" name="warehouse_capacity" value="<?php echo sanitize($agent_info['warehouse_capacity'] ?? ''); ?>" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                <input type="text" name="warehouse_capacity"
+                                    value="<?php echo sanitize($agent_info['warehouse_capacity'] ?? ''); ?>"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                             </div>
                         </div>
 
                         <div class="flex justify-end gap-3 pt-4 border-t">
-                            <button type="reset" class="px-5 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
-                            <button type="submit" class="px-5 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 font-medium">Save Changes</button>
+                            <button type="reset"
+                                class="px-5 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">Cancel</button>
+                            <button type="submit"
+                                class="px-5 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 font-medium">Save
+                                Changes</button>
                         </div>
                     </form>
                 </div>
@@ -404,20 +448,25 @@ function sanitize($v)
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Current Password</label>
-                                <input type="password" name="current_password" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                <input type="password" name="current_password" required
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">New Password</label>
-                                <input type="password" name="new_password" required minlength="6" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                <input type="password" name="new_password" required minlength="6"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Confirm Password</label>
-                                <input type="password" name="confirm_password" required minlength="6" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                <input type="password" name="confirm_password" required minlength="6"
+                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
                             </div>
                         </div>
 
                         <div class="flex justify-end pt-2">
-                            <button type="submit" class="px-5 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 font-medium">Update Password</button>
+                            <button type="submit"
+                                class="px-5 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 font-medium">Update
+                                Password</button>
                         </div>
                     </form>
                 </div>

@@ -1,6 +1,7 @@
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
 <?php
 ob_start();
-include '../include/navbar.php';
 include '../include/connect-db.php';
 
 $agreement_ref = isset($_GET['ref']) ? $_GET['ref'] : '';

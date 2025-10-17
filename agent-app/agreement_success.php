@@ -1,6 +1,8 @@
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
 <?php
+
 ob_start();
-include '../include/navbar.php';
 include '../include/connect-db.php';
 
 $agent_id = $_SESSION['user_id'];
