@@ -1,6 +1,9 @@
+<?php include '../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
+
 <?php
-// become-agent.php - Agent signup from main signup page
-session_start();
+
+// $agent_id = isset($user_id) ? $user_id : 45;
 
 $servername = "localhost";
 $username = "root";
@@ -154,7 +157,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                 // 2. Insert into agent_info table
                 $status = 'Pending'; // Start as pending for admin approval
-                $stmt = $conn->prepare("INSERT INTO agent_info (user_id, nid_number, region, district, upazila, coverage_area_km, experience_years, crops_expertise, vehicle_types, warehouse_capacity, reference_name, reference_phone, statement, id_doc_url, photo_url, trade_license_url, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+                $stmt = $conn->prepare("INSERT INTO agent_info (agent_id, nid_number, region, district, upazila, coverage_area_km, experience_years, crops_expertise, vehicle_types, warehouse_capacity, reference_name, reference_phone, statement, id_doc_url, photo_url, trade_license_url, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
                 $stmt->bind_param("issssiissssssssss", $user_id, $nid_number, $region, $district, $upazila, $coverage_area_km, $experience_years, $crops_expertise, $vehicle_types, $warehouse_capacity, $reference_name, $reference_phone, $statement, $id_doc_url, $photo_url, $trade_license_url, $status);
                 $stmt->execute();
                 $stmt->close();
@@ -182,18 +185,17 @@ mysqli_close($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Become an Agent - DirectEdge</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/Favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/Logo/favicon.png">
 </head>
 
-<body class="bg-gradient-to-br from-green-50 via-white to-emerald-50 min-h-screen py-8">
-    <div class="max-w-4xl mx-auto px-4">
+<body class="bg-gradient-to-br from-green-50 via-white to-emerald-50 min-h-screen pb-8">
+
+    <div class="max-w-4xl mx-auto px-4 pb-4">
         <!-- Header -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center gap-3 mb-4">
-                <div class="w-12 h-12 rounded-xl bg-green-600 text-white grid place-items-center font-bold text-lg">DE</div>
-                <h1 class="text-3xl font-bold text-gray-900">DirectEdge</h1>
-            </div>
+        <div class="text-center mb-2 pt-2">
             <h2 class="text-2xl font-bold text-gray-900">Become an Agricultural Agent</h2>
             <p class="text-gray-600 mt-2">Join our network of verified agricultural professionals</p>
         </div>
@@ -208,7 +210,7 @@ mysqli_close($conn);
         <?php endif; ?>
 
         <!-- Form -->
-        <form method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-xl p-8 space-y-8">
+        <form method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-xl p-8 space-y-0">
             <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
 
             <!-- Account Information -->
@@ -341,6 +343,9 @@ mysqli_close($conn);
             Already have an account? <a href="login.php" class="text-green-600 hover:underline font-medium">Log in</a>
         </p>
     </div>
+
+    <?php include '../include/footer.php'; ?>
+
 </body>
 
 </html>

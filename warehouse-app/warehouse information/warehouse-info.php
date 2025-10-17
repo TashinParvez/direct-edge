@@ -1,3 +1,98 @@
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
+
+<?php
+// DB: connect and fetch metrics + inventory rows
+require_once __DIR__ . '/../../include/connect-db.php';
+
+
+// include '../../include/navbar.php';
+$admin_id = isset($user_id) ? $user_id : 65;
+
+// Metrics
+$totalCapacity = 0;
+$usedCapacity = 0;
+$itemCount = 0;
+
+$resCap = mysqli_query($conn, "SELECT SUM(capacity_total) AS total_capacity, SUM(capacity_used) AS used_capacity FROM warehouses");
+if ($resCap) {
+    $capRow = mysqli_fetch_assoc($resCap);
+    $totalCapacity = (int)($capRow['total_capacity'] ?? 0);
+    $usedCapacity = (int)($capRow['used_capacity'] ?? 0);
+}
+$freeCapacity = $totalCapacity - $usedCapacity;
+if ($freeCapacity < 0) {
+    $freeCapacity = 0;
+}
+
+$resCount = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM warehouse_products");
+if ($resCount) {
+    $cntRow = mysqli_fetch_assoc($resCount);
+    $itemCount = (int)($cntRow['cnt'] ?? 0);
+}
+
+// Inventory rows
+$inventoryRows = [];
+$sql = "SELECT
+            wp.id,
+            wp.product_id,
+            p.name AS product_name,
+            p.special_instructions AS product_instructions,
+            p.unit AS product_unit,
+            wp.quantity,
+            wp.unit_volume,
+            CASE WHEN wp.request_status = 1 THEN 'In progress' ELSE 'Completed' END AS status,
+            w.warehouse_id,
+            w.name AS warehouse_name,
+            (w.capacity_total - w.capacity_used) AS warehouse_free_space,
+            wp.agent_id,
+            wp.offer_percentage,
+            wp.offer_start,
+            wp.offer_end,
+            wp.inbound_stock_date,
+            wp.expiry_date,
+            wp.last_updated
+        FROM warehouse_products wp
+        JOIN products p ON p.product_id = wp.product_id
+        JOIN warehouses w ON w.warehouse_id = wp.warehouse_id
+        ORDER BY wp.last_updated DESC";
+$resInv = mysqli_query($conn, $sql);
+if ($resInv) {
+    while ($row = mysqli_fetch_assoc($resInv)) {
+        $inventoryRows[] = $row;
+    }
+}
+
+$currentDate = new DateTime();
+
+// Load warehouses for selects
+$warehouses = [];
+$resWh = mysqli_query($conn, "SELECT warehouse_id, name FROM warehouses ORDER BY name");
+if ($resWh) {
+    while ($w = mysqli_fetch_assoc($resWh)) {
+        $warehouses[] = $w;
+    }
+}
+
+// Load products for selects (product code implied as PRD-<id>)
+$products = [];
+$resPr = mysqli_query($conn, "SELECT product_id, name, unit, special_instructions FROM products ORDER BY name");
+if ($resPr) {
+    while ($p = mysqli_fetch_assoc($resPr)) {
+        $products[] = $p;
+    }
+}
+
+// Load agents (users with role = 'Agent') for selects
+$agents = [];
+$resAg = mysqli_query($conn, "SELECT user_id, full_name FROM users WHERE role = 'Agent' ORDER BY full_name");
+if ($resAg) {
+    while ($a = mysqli_fetch_assoc($resAg)) {
+        $agents[] = $a;
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -10,11 +105,13 @@
 
 <body>
     <div class="container">
-        <img src="warehouse-products-icon.png" alt="Warehouse Products Icon" style="width:90px;height:90px;display:block;margin:0 auto 16px auto;">
+        <img src="warehouse-products-icon.png" alt="Warehouse Products Icon"
+            style="width:90px;height:90px;display:block;margin:0 auto 16px auto;">
         <h1>Warehouse Products</h1>
 
         <!-- Metrics Section -->
         <?php
+
         // DB: connect and fetch metrics + inventory rows
         require_once __DIR__ . '/../../include/connect-db.php';
 
@@ -53,6 +150,7 @@
                     CASE WHEN wp.request_status = 1 THEN 'In progress' ELSE 'Completed' END AS status,
                     w.warehouse_id,
                     w.name AS warehouse_name,
+                    (w.capacity_total - w.capacity_used) AS warehouse_free_space,
                     wp.agent_id,
                     wp.offer_percentage,
                     wp.offer_start,
@@ -139,7 +237,9 @@
                             <span class="group-title">Warehouse</span>
                             <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
                             <?php foreach ($warehouses as $w) { ?>
-                                <label><input type="checkbox" class="filter-option" value="<?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?>"> <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></label>
+                                <label><input type="checkbox" class="filter-option"
+                                        value="<?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></label>
                             <?php } ?>
                         </div>
                         <div class="group">
@@ -153,7 +253,9 @@
                             }
                             sort($units);
                             foreach ($units as $u) { ?>
-                                <label><input type="checkbox" class="filter-option" value="<?php echo htmlspecialchars($u, ENT_QUOTES, 'UTF-8'); ?>"> <?php echo htmlspecialchars($u, ENT_QUOTES, 'UTF-8'); ?></label>
+                                <label><input type="checkbox" class="filter-option"
+                                        value="<?php echo htmlspecialchars($u, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php echo htmlspecialchars($u, ENT_QUOTES, 'UTF-8'); ?></label>
                             <?php } ?>
                         </div>
                         <div class="dropdown-footer">
@@ -187,6 +289,7 @@
                         <th>Unit Volume</th>
                         <th>Status</th>
                         <th>Warehouse</th>
+                        <th>Warehouse Free Space</th>
                         <th>Agent Id</th>
                         <th>Offer Suggestion</th>
                         <th>Inbound Stock Date</th>
@@ -219,6 +322,7 @@
                         $expiryDate = $row['expiry_date'] ?? '—';
                         $lastUpdated = $row['last_updated'] ?? '—';
                         $productUnit = htmlspecialchars($row['product_unit'] ?? '', ENT_QUOTES, 'UTF-8');
+                        $warehouseFreeSpace = isset($row['warehouse_free_space']) ? number_format((float)$row['warehouse_free_space']) : '—';
                         echo "
                         <tr data-id='" . (int)$row['id'] . "' data-product-id='" . (int)$row['product_id'] . "' data-warehouse-id='" . (int)$row['warehouse_id'] . "' data-offer='" . htmlspecialchars($offerSuggestion, ENT_QUOTES, 'UTF-8') . "' data-unit='" . $productUnit . "'>
                             <td title='" . $productCode . "'>" . $productCode . "</td>
@@ -228,6 +332,7 @@
                             <td title='" . $unitVolume . "'>" . $unitVolume . "</td>
                             <td class='" . $statusClass . "' title='" . $statusText . "'>" . $statusText . "</td>
                             <td title='" . $warehouseName . "'>" . $warehouseName . "</td>
+                            <td title='" . $warehouseFreeSpace . "'>" . $warehouseFreeSpace . "</td>
                             <td title='" . $agentId . "'>" . $agentId . "</td>
                             <td>
                                 <button class='offer-suggestion-link' title='View offer suggestion'>" . htmlspecialchars($offerSuggestion, ENT_QUOTES, 'UTF-8') . "</button>
@@ -246,7 +351,7 @@
                 <tfoot id="totalRow">
                     <tr>
 
-                        <td colspan="6">
+                        <td colspan="7">
                             <span class="label">TotalItems:</span>
                             <span class="value" id="totalItems">0</span>
 
@@ -269,6 +374,7 @@
                 <option value="10">10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
+                <option value="0">All</option>
             </select>
             <span>Rows per page</span>
         </div>
@@ -283,7 +389,10 @@
                         <option value="">Select code</option>
                         <?php foreach ($products as $p) {
                             $code = 'PRD-' . str_pad((string)$p['product_id'], 3, '0', STR_PAD_LEFT); ?>
-                            <option value="<?php echo (int)$p['product_id']; ?>" data-instructions="<?php echo htmlspecialchars($p['special_instructions'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" data-unit="<?php echo htmlspecialchars($p['unit'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo $code; ?></option>
+                            <option value="<?php echo (int)$p['product_id']; ?>"
+                                data-instructions="<?php echo htmlspecialchars($p['special_instructions'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                data-unit="<?php echo htmlspecialchars($p['unit'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php echo $code; ?></option>
                         <?php } ?>
                     </select>
 
@@ -291,7 +400,10 @@
                     <select id="productNameSelect" name="productNameSelect" required>
                         <option value="">Select product</option>
                         <?php foreach ($products as $p) { ?>
-                            <option value="<?php echo (int)$p['product_id']; ?>" data-instructions="<?php echo htmlspecialchars($p['special_instructions'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" data-unit="<?php echo htmlspecialchars($p['unit'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo (int)$p['product_id']; ?>"
+                                data-instructions="<?php echo htmlspecialchars($p['special_instructions'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                data-unit="<?php echo htmlspecialchars($p['unit'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php echo htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
 
@@ -316,7 +428,8 @@
                     <label for="warehouse">Warehouse:</label>
                     <select id="warehouse" name="warehouse" required>
                         <?php foreach ($warehouses as $w) { ?>
-                            <option value="<?php echo (int)$w['warehouse_id']; ?>"><?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo (int)$w['warehouse_id']; ?>">
+                                <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
 
@@ -324,7 +437,9 @@
                     <select id="agentId" name="agentId">
                         <option value="">Select agent</option>
                         <?php foreach ($agents as $a) { ?>
-                            <option value="<?php echo (int)$a['user_id']; ?>"><?php echo (int)$a['user_id'] . ' - ' . htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo (int)$a['user_id']; ?>">
+                                <?php echo (int)$a['user_id'] . ' - ' . htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
                         <?php } ?>
                     </select>
 
@@ -370,7 +485,8 @@
                     <label for="editWarehouse">Warehouse:</label>
                     <select id="editWarehouse" name="editWarehouse" required>
                         <?php foreach ($warehouses as $w) { ?>
-                            <option value="<?php echo (int)$w['warehouse_id']; ?>"><?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo (int)$w['warehouse_id']; ?>">
+                                <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
 
@@ -378,7 +494,9 @@
                     <select id="editAgentId" name="editAgentId">
                         <option value="">Select agent</option>
                         <?php foreach ($agents as $a) { ?>
-                            <option value="<?php echo (int)$a['user_id']; ?>"><?php echo (int)$a['user_id'] . ' - ' . htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo (int)$a['user_id']; ?>">
+                                <?php echo (int)$a['user_id'] . ' - ' . htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
                         <?php } ?>
                     </select>
 

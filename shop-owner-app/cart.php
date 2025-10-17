@@ -37,87 +37,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $discount_amount = 0.00; // No discount for now  
         $total_amount = $subtotal + $tax_amount - $discount_amount;
 
-        // Generate transaction number
-        $transaction_number_query = "SELECT generate_transaction_number() as txn_number";
-        $txn_result = $conn->query($transaction_number_query);
-        $txn_row = $txn_result->fetch_assoc();
-        $transaction_number = $txn_row['txn_number'];
+        // Generate simple transaction number
+        $transaction_number = 'TXN-' . date('YmdHis') . '-' . rand(100, 999);
 
-        // Insert main transaction record
-        $stmt_transaction = $conn->prepare("
-            INSERT INTO sales_transactions 
-            (transaction_number, subtotal, tax_amount, discount_amount, total_amount, payment_method, transaction_status) 
-            VALUES (?, ?, ?, ?, ?, 'Cash', 'Completed')
-        ");
-        $stmt_transaction->bind_param("sdddd", $transaction_number, $subtotal, $tax_amount, $discount_amount, $total_amount);
-
-        if (!$stmt_transaction->execute()) {
-            throw new Exception("Failed to create transaction record");
-        }
-
-        $transaction_id = $conn->insert_id;
-        $stmt_transaction->close();
-
-        // Process each cart item
+        // Process each cart item and deduct from shop_products
         $stock_issues = [];
         $processed_items = [];
 
         foreach ($_SESSION['cart'] as $product_id => $item) {
-            // Check current stock before processing
+            // Check current stock in shop_products (assuming shop_id = 6 for this example)
+            $shop_id = 6; // You can make this dynamic based on your requirements
+
             $stock_check = $conn->prepare("
-                SELECT current_quantity, minimum_stock_level 
-                FROM store_inventory 
-                WHERE product_id = ? AND store_location = 'Main Store'
+                SELECT sp.quantity as current_quantity, p.name, sp.selling_price
+                FROM shop_products sp
+                JOIN products p ON sp.product_id = p.product_id  
+                WHERE sp.product_id = ? AND sp.shop_id = ?
             ");
-            $stock_check->bind_param("i", $product_id);
+            $stock_check->bind_param("ii", $product_id, $shop_id);
             $stock_check->execute();
             $stock_result = $stock_check->get_result();
 
             if ($stock_row = $stock_result->fetch_assoc()) {
                 $available_stock = $stock_row['current_quantity'];
-                $minimum_stock = $stock_row['minimum_stock_level'];
 
                 if ($available_stock < $item['quantity']) {
                     $stock_issues[] = "Insufficient stock for {$item['name']}. Available: {$available_stock}, Required: {$item['quantity']}";
                     continue;
-                } elseif (($available_stock - $item['quantity']) < $minimum_stock) {
-                    $stock_issues[] = "Warning: {$item['name']} will be below minimum stock level after this sale";
+                } elseif ($available_stock - $item['quantity'] <= 10) {
+                    $stock_issues[] = "Warning: {$item['name']} will be low in stock after this sale";
                 }
             } else {
-                $stock_issues[] = "Product {$item['name']} not found in store inventory";
+                $stock_issues[] = "Product {$item['name']} not found in shop inventory";
                 continue;
             }
             $stock_check->close();
 
-            // Insert transaction item
-            $stmt_item = $conn->prepare("
-                INSERT INTO transaction_items 
-                (transaction_id, product_id, product_name, quantity_sold, unit_price, discount_per_item) 
-                VALUES (?, ?, ?, ?, ?, 0.00)
+            // Deduct stock from shop_products
+            $update_stock = $conn->prepare("
+                UPDATE shop_products 
+                SET quantity = quantity - ? 
+                WHERE product_id = ? AND shop_id = ? AND quantity >= ?
             ");
-            $stmt_item->bind_param("iisid", $transaction_id, $product_id, $item['name'], $item['quantity'], $item['price']);
+            $update_stock->bind_param("iiii", $item['quantity'], $product_id, $shop_id, $item['quantity']);
 
-            if (!$stmt_item->execute()) {
-                throw new Exception("Failed to create transaction item for {$item['name']}");
+            if (!$update_stock->execute() || $conn->affected_rows == 0) {
+                throw new Exception("Failed to deduct stock for {$item['name']}");
             }
-            $stmt_item->close();
-
-            // Use stored procedure to safely deduct stock
-            $stmt_stock = $conn->prepare("CALL deduct_store_stock(?, ?, ?, @success, @message)");
-            $stmt_stock->bind_param("iii", $product_id, $item['quantity'], $transaction_id);
-
-            if (!$stmt_stock->execute()) {
-                throw new Exception("Failed to execute stock deduction for {$item['name']}");
-            }
-            $stmt_stock->close();
-
-            // Get the result of the stored procedure
-            $result_query = $conn->query("SELECT @success as success, @message as message");
-            $result_row = $result_query->fetch_assoc();
-
-            if (!$result_row['success']) {
-                throw new Exception("Stock deduction failed: " . $result_row['message']);
-            }
+            $update_stock->close();
 
             $processed_items[] = $item;
         }
@@ -158,19 +125,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($_POST['action'] === 'search_products') {
         $search = $_POST['search'] ?? '';
+        $shop_id = 6; // You can make this dynamic
 
-        // Search products that are available in store inventory
-        $sql = "SELECT p.product_id, p.name, p.category, p.price, p.unit, p.image_url, si.current_quantity
+        // Search products that are available in shop_products
+        $sql = "SELECT p.product_id, p.name, p.category, sp.selling_price as price, p.unit, p.img_url as image_url, sp.quantity as current_quantity
                 FROM products p
-                JOIN store_inventory si ON p.product_id = si.product_id
+                JOIN shop_products sp ON p.product_id = sp.product_id
                 WHERE (p.name LIKE ? OR p.category LIKE ?) 
-                  AND si.store_location = 'Main Store'
-                  AND si.current_quantity > 0
+                  AND sp.shop_id = ?
+                  AND sp.quantity > 0
                 ORDER BY p.name 
                 LIMIT 20";
         $stmt = $conn->prepare($sql);
         $searchParam = "%$search%";
-        $stmt->bind_param("ss", $searchParam, $searchParam);
+        $stmt->bind_param("ssi", $searchParam, $searchParam, $shop_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -184,15 +152,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     if ($_POST['action'] === 'get_inventory_status') {
+        $shop_id = 6; // You can make this dynamic
+
         $sql = "SELECT 
                     COUNT(*) as total_products,
-                    COUNT(CASE WHEN si.current_quantity <= si.minimum_stock_level THEN 1 END) as low_stock_count,
-                    SUM(si.current_quantity * p.price) as total_inventory_value
-                FROM store_inventory si
-                JOIN products p ON si.product_id = p.product_id
-                WHERE si.store_location = 'Main Store'";
+                    COUNT(CASE WHEN sp.quantity <= 10 THEN 1 END) as low_stock_count,
+                    SUM(sp.quantity * sp.selling_price) as total_inventory_value
+                FROM shop_products sp
+                JOIN products p ON sp.product_id = p.product_id
+                WHERE sp.shop_id = ?";
 
-        $result = $conn->query($sql);
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("i", $shop_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
         $status = $result->fetch_assoc();
 
         echo json_encode($status);
@@ -206,13 +179,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
     $action = $_POST['cart_action'];
 
     if ($action === 'add' && $product_id > 0) {
+        $shop_id = 6; // You can make this dynamic
+
         // Check stock availability before adding to cart
-        $stock_sql = "SELECT si.current_quantity, p.product_id, p.name, p.price, p.unit, p.image_url
-                      FROM store_inventory si
-                      JOIN products p ON si.product_id = p.product_id  
-                      WHERE si.product_id = ? AND si.store_location = 'Main Store'";
+        $stock_sql = "SELECT sp.quantity as current_quantity, p.product_id, p.name, sp.selling_price as price, p.unit, p.img_url as image_url
+                      FROM shop_products sp
+                      JOIN products p ON sp.product_id = p.product_id  
+                      WHERE sp.product_id = ? AND sp.shop_id = ?";
         $stmt = $conn->prepare($stock_sql);
-        $stmt->bind_param("i", $product_id);
+        $stmt->bind_param("ii", $product_id, $shop_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -237,6 +212,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
             } else {
                 $_SESSION['cart_message'] = "Cannot add more. Only {$available_stock} items available in stock.";
             }
+        } else {
+            $_SESSION['cart_message'] = "Product not available in this shop.";
         }
         $stmt->close();
     } elseif ($action === 'remove' && $product_id > 0) {
@@ -327,83 +304,81 @@ $conn->close();
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        .cart-item {
-            transition: all 0.3s ease;
-        }
+    .cart-item {
+        transition: all 0.3s ease;
+    }
 
-        .cart-item:hover {
-            background-color: #f9fafb;
-        }
+    .cart-item:hover {
+        background-color: #f9fafb;
+    }
 
-        .modal {
-            backdrop-filter: blur(4px);
-        }
+    .modal {
+        backdrop-filter: blur(4px);
+    }
 
-        .search-result:hover {
-            background-color: #f3f4f6;
-        }
+    .search-result:hover {
+        background-color: #f3f4f6;
+    }
 
-        .stock-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
+    .stock-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
 
-        .stock-high {
-            background-color: #10b981;
-        }
+    .stock-high {
+        background-color: #10b981;
+    }
 
-        .stock-medium {
-            background-color: #f59e0b;
-        }
+    .stock-medium {
+        background-color: #f59e0b;
+    }
 
-        .stock-low {
-            background-color: #ef4444;
+    .stock-low {
+        background-color: #ef4444;
+    }
+
+    .receipt-container {
+        font-family: 'Courier New', monospace;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
         }
 
         .receipt-container {
-            font-family: 'Courier New', monospace;
-            max-width: 300px;
-            margin: 0 auto;
+            font-size: 12px;
         }
-
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-
-            .receipt-container {
-                font-size: 12px;
-            }
-        }
+    }
     </style>
 </head>
 
-<body class="bg-gray-100">
+<body>
     <?php include '../Include/SidebarAgent.php'; ?>
+    <div class="flex justify-between items-center p-4">
+        <h1 class="text-2xl font-bold">Generate Receipt (Stock Integrated)</h1>
+        <button onclick="showInventoryStatus()"
+            class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+            <i class='bx bx-package'></i> Stock Status
+        </button>
+    </div>
 
-    <section class="home-section p-0">
-        <div class="flex justify-between items-center p-4">
-            <h1 class="text-2xl font-bold">Generate Receipt (Stock Integrated)</h1>
-            <button onclick="showInventoryStatus()"
-                class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                <i class='bx bx-package'></i> Stock Status
-            </button>
-        </div>
-
-        <?php if (isset($_SESSION['cart_message'])): ?>
-            <div class="mx-4 mb-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
-                <?php echo $_SESSION['cart_message'];
+    <?php if (isset($_SESSION['cart_message'])): ?>
+    <div class="mx-4 mb-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+        <?php echo $_SESSION['cart_message'];
                 unset($_SESSION['cart_message']); ?>
-            </div>
-        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
-        <div class="container mx-auto my-3">
-            <!-- Cart Items -->
-            <?php if (!empty($_SESSION['cart'])): ?>
-                <?php
+    <div class="container mx-auto my-3">
+        <!-- Cart Items -->
+        <?php if (!empty($_SESSION['cart'])): ?>
+        <?php
                 $total = 0;
                 foreach ($_SESSION['cart'] as $item):
                     $subtotal = $item['price'] * $item['quantity'];
@@ -414,75 +389,74 @@ $conn->close();
                         elseif ($item['available_stock'] <= 30) $stock_class = 'stock-medium';
                     }
                 ?>
-                    <div class="bg-white shadow-md rounded-lg mb-3 flex cart-item"
-                        data-product="<?php echo $item['product_id']; ?>">
-                        <div class="w-1/6 p-2">
-                            <img src="<?php echo htmlspecialchars($item['image_url'] ?: '../assets/products-image/default.jpg'); ?>"
-                                class="w-full h-48 object-cover rounded" alt="<?php echo htmlspecialchars($item['name']); ?>">
-                        </div>
-                        <div class="w-4/6 flex flex-col justify-center p-4">
-                            <h5 class="text-xl font-semibold">
-                                <span class="stock-indicator <?php echo $stock_class; ?>"></span>
-                                <?php echo htmlspecialchars($item['name']); ?>
-                            </h5>
-                            <p class="text-gray-600">Price: ৳<?php echo number_format($item['price'], 2); ?> per
-                                <?php echo htmlspecialchars($item['unit']); ?></p>
-                            <p class="counter-price font-bold text-lg">৳<?php echo number_format($subtotal, 2); ?></p>
-                            <?php if (isset($item['available_stock'])): ?>
-                                <p class="text-xs text-gray-500">Stock Available: <?php echo $item['available_stock']; ?></p>
-                            <?php endif; ?>
-                        </div>
-                        <div class="w-1/6 flex flex-col items-center justify-center">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <form method="post" style="display: inline;">
-                                    <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
-                                    <input type="hidden" name="cart_action" value="remove">
-                                    <button type="submit"
-                                        class="decrease-btn bg-red-200 hover:bg-red-300 px-3 py-1 rounded">-</button>
-                                </form>
-                                <div class="counter text-lg font-semibold"><?php echo $item['quantity']; ?></div>
-                                <form method="post" style="display: inline;">
-                                    <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
-                                    <input type="hidden" name="cart_action" value="add">
-                                    <button type="submit"
-                                        class="increase-btn bg-green-200 hover:bg-green-300 px-3 py-1 rounded">+</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-
-                <!-- Total Section -->
-                <div class="bg-white shadow-md rounded-lg mb-3 p-4">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-xl font-bold">Total: ৳<?php echo number_format($total, 2); ?></h3>
-                        <div class="space-x-2">
-                            <form method="post" style="display: inline;">
-                                <input type="hidden" name="cart_action" value="clear">
-                                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Clear
-                                    Cart</button>
-                            </form>
-                            <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                                onclick="generateReceipt()">Generate Receipt & Process Sale</button>
-                        </div>
-                    </div>
+        <div class="bg-white shadow-md rounded-lg mb-3 flex cart-item"
+            data-product="<?php echo $item['product_id']; ?>">
+            <div class="w-1/6 p-2">
+                <img src="<?php echo htmlspecialchars($item['image_url'] ?: '../assets/products-image/default.jpg'); ?>"
+                    class="w-full h-48 object-cover rounded" alt="<?php echo htmlspecialchars($item['name']); ?>">
+            </div>
+            <div class="w-4/6 flex flex-col justify-center p-4">
+                <h5 class="text-xl font-semibold">
+                    <span class="stock-indicator <?php echo $stock_class; ?>"></span>
+                    <?php echo htmlspecialchars($item['name']); ?>
+                </h5>
+                <p class="text-gray-600">Price: ৳<?php echo number_format($item['price'], 2); ?> per
+                    <?php echo htmlspecialchars($item['unit']); ?></p>
+                <p class="counter-price font-bold text-lg">৳<?php echo number_format($subtotal, 2); ?></p>
+                <?php if (isset($item['available_stock'])): ?>
+                <p class="text-xs text-gray-500">Stock Available: <?php echo $item['available_stock']; ?></p>
+                <?php endif; ?>
+            </div>
+            <div class="w-1/6 flex flex-col items-center justify-center">
+                <div class="flex items-center space-x-2 mb-2">
+                    <form method="post" style="display: inline;">
+                        <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
+                        <input type="hidden" name="cart_action" value="remove">
+                        <button type="submit"
+                            class="decrease-btn bg-red-200 hover:bg-red-300 px-3 py-1 rounded">-</button>
+                    </form>
+                    <div class="counter text-lg font-semibold"><?php echo $item['quantity']; ?></div>
+                    <form method="post" style="display: inline;">
+                        <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
+                        <input type="hidden" name="cart_action" value="add">
+                        <button type="submit"
+                            class="increase-btn bg-green-200 hover:bg-green-300 px-3 py-1 rounded">+</button>
+                    </form>
                 </div>
-            <?php else: ?>
-                <div class="bg-white shadow-md rounded-lg p-4 text-center">
-                    <p class="text-gray-600">Your cart is empty. Add products using the buttons below.</p>
-                </div>
-            <?php endif; ?>
+            </div>
         </div>
+        <?php endforeach; ?>
 
-        <div class="container mx-auto my-3 flex space-x-4">
-            <button type="button" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300" onclick="openManualModal()">
-                <i class='bx bx-search'></i> Add Product Manually
-            </button>
-            <button type="button" class="scan-btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                <i class='bx bx-scan'></i> Scan to Add Product
-            </button>
+        <!-- Total Section -->
+        <div class="bg-white shadow-md rounded-lg mb-3 p-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold">Total: ৳<?php echo number_format($total, 2); ?></h3>
+                <div class="space-x-2">
+                    <form method="post" style="display: inline;">
+                        <input type="hidden" name="cart_action" value="clear">
+                        <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Clear
+                            Cart</button>
+                    </form>
+                    <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                        onclick="generateReceipt()">Generate Receipt & Process Sale</button>
+                </div>
+            </div>
         </div>
-    </section>
+        <?php else: ?>
+        <div class="bg-white shadow-md rounded-lg p-4 text-center">
+            <p class="text-gray-600">Your cart is empty. Add products using the buttons below.</p>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <div class="container mx-auto my-3 flex space-x-4">
+        <button type="button" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300" onclick="openManualModal()">
+            <i class='bx bx-search'></i> Add Product Manually
+        </button>
+        <button type="button" class="scan-btn bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            <i class='bx bx-scan'></i> Scan to Add Product
+        </button>
+    </div>
 
     <!-- Manual Product Addition Modal -->
     <div id="manual-modal"
@@ -490,7 +464,7 @@ $conn->close();
         <div class="bg-white p-6 rounded-lg max-w-4xl w-full mx-4 max-h-96 overflow-hidden">
             <h3 class="text-xl font-bold mb-4">Add Product Manually</h3>
             <div class="mb-4">
-                <input type="text" id="product-search" placeholder="Search for products in store inventory..."
+                <input type="text" id="product-search" placeholder="Search for products in shop inventory..."
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div id="search-results" class="max-h-64 overflow-y-auto mb-4">
@@ -548,47 +522,47 @@ $conn->close();
     </div>
 
     <script>
-        // Manual Product Addition
-        function openManualModal() {
-            document.getElementById('manual-modal').classList.remove('hidden');
-            document.getElementById('product-search').focus();
-            searchProducts(''); // Load all products initially
-        }
+    // Manual Product Addition
+    function openManualModal() {
+        document.getElementById('manual-modal').classList.remove('hidden');
+        document.getElementById('product-search').focus();
+        searchProducts(''); // Load all products initially
+    }
 
-        function closeManualModal() {
-            document.getElementById('manual-modal').classList.add('hidden');
-            document.getElementById('search-results').innerHTML = '';
-            document.getElementById('product-search').value = '';
-        }
+    function closeManualModal() {
+        document.getElementById('manual-modal').classList.add('hidden');
+        document.getElementById('search-results').innerHTML = '';
+        document.getElementById('product-search').value = '';
+    }
 
-        function searchProducts(query) {
-            fetch('', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'action=search_products&search=' + encodeURIComponent(query)
-                })
-                .then(response => response.json())
-                .then(products => {
-                    const resultsDiv = document.getElementById('search-results');
-                    resultsDiv.innerHTML = '';
+    function searchProducts(query) {
+        fetch('', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'action=search_products&search=' + encodeURIComponent(query)
+            })
+            .then(response => response.json())
+            .then(products => {
+                const resultsDiv = document.getElementById('search-results');
+                resultsDiv.innerHTML = '';
 
-                    if (products.length === 0) {
-                        resultsDiv.innerHTML =
-                            '<p class="text-gray-500 text-center">No products found in store inventory</p>';
-                        return;
-                    }
+                if (products.length === 0) {
+                    resultsDiv.innerHTML =
+                        '<p class="text-gray-500 text-center">No products found in shop inventory</p>';
+                    return;
+                }
 
-                    products.forEach(product => {
-                        let stockClass = 'stock-high';
-                        if (product.current_quantity <= 10) stockClass = 'stock-low';
-                        else if (product.current_quantity <= 30) stockClass = 'stock-medium';
+                products.forEach(product => {
+                    let stockClass = 'stock-high';
+                    if (product.current_quantity <= 10) stockClass = 'stock-low';
+                    else if (product.current_quantity <= 30) stockClass = 'stock-medium';
 
-                        const productDiv = document.createElement('div');
-                        productDiv.className =
-                            'flex items-center p-3 border-b hover:bg-gray-50 cursor-pointer search-result';
-                        productDiv.innerHTML = `
+                    const productDiv = document.createElement('div');
+                    productDiv.className =
+                        'flex items-center p-3 border-b hover:bg-gray-50 cursor-pointer search-result';
+                    productDiv.innerHTML = `
                     <img src="${product.image_url || '../assets/products-image/default.jpg'}" 
                          class="w-12 h-12 object-cover rounded mr-3" alt="${product.name}">
                     <div class="flex-1">
@@ -602,71 +576,71 @@ $conn->close();
                     <button onclick="addToCart(${product.product_id})" 
                             class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">Add</button>
                 `;
-                        resultsDiv.appendChild(productDiv);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error searching products:', error);
+                    resultsDiv.appendChild(productDiv);
                 });
-        }
+            })
+            .catch(error => {
+                console.error('Error searching products:', error);
+            });
+    }
 
-        function addToCart(productId) {
-            const form = document.createElement('form');
-            form.method = 'post';
-            form.innerHTML = `
+    function addToCart(productId) {
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.innerHTML = `
             <input type="hidden" name="product_id" value="${productId}">
             <input type="hidden" name="cart_action" value="add">
         `;
-            document.body.appendChild(form);
-            form.submit();
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // Generate Receipt with Stock Deduction
+    function generateReceipt() {
+        if (!confirm('This will process the sale and deduct items from inventory. Continue?')) {
+            return;
         }
 
-        // Generate Receipt with Stock Deduction
-        function generateReceipt() {
-            if (!confirm('This will process the sale and deduct items from inventory. Continue?')) {
-                return;
-            }
+        fetch('', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'action=generate_receipt'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('receipt-content').innerHTML = data.receipt_html;
+                    document.getElementById('receipt-modal').classList.remove('hidden');
 
-            fetch('', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'action=generate_receipt'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('receipt-content').innerHTML = data.receipt_html;
-                        document.getElementById('receipt-modal').classList.remove('hidden');
-
-                        // Show warnings if any
-                        if (data.warnings && data.warnings.length > 0) {
-                            alert('Transaction completed with warnings:\n' + data.warnings.join('\n'));
-                        }
-
-                        // Reload page to update cart and stock display
-                        setTimeout(() => {
-                            location.reload();
-                        }, 3000);
-                    } else {
-                        alert('Error generating receipt: ' + data.message);
+                    // Show warnings if any
+                    if (data.warnings && data.warnings.length > 0) {
+                        alert('Transaction completed with warnings:\n' + data.warnings.join('\n'));
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error generating receipt. Please check the console.');
-                });
-        }
 
-        function closeReceiptModal() {
-            document.getElementById('receipt-modal').classList.add('hidden');
-        }
+                    // Reload page to update cart and stock display
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
+                } else {
+                    alert('Error generating receipt: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error generating receipt. Please check the console.');
+            });
+    }
 
-        function printReceipt() {
-            const printContent = document.getElementById('receipt-content').innerHTML;
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
+    function closeReceiptModal() {
+        document.getElementById('receipt-modal').classList.add('hidden');
+    }
+
+    function printReceipt() {
+        const printContent = document.getElementById('receipt-content').innerHTML;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
             <html>
                 <head>
                     <title>Receipt</title>
@@ -699,23 +673,23 @@ $conn->close();
                 </body>
             </html>
         `);
-            printWindow.document.close();
-            printWindow.print();
-            printWindow.close();
-        }
+        printWindow.document.close();
+        printWindow.print();
+        printWindow.close();
+    }
 
-        // Inventory Status
-        function showInventoryStatus() {
-            fetch('', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'action=get_inventory_status'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('inventory-content').innerHTML = `
+    // Inventory Status
+    function showInventoryStatus() {
+        fetch('', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'action=get_inventory_status'
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('inventory-content').innerHTML = `
                 <div class="space-y-3">
                     <div class="flex justify-between">
                         <span>Total Products:</span>
@@ -731,144 +705,148 @@ $conn->close();
                     </div>
                 </div>
             `;
-                    document.getElementById('inventory-modal').classList.remove('hidden');
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+                document.getElementById('inventory-modal').classList.remove('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
+    function closeInventoryModal() {
+        document.getElementById('inventory-modal').classList.add('hidden');
+    }
+
+    // Search input event listener
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('product-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                searchProducts(this.value);
+            });
         }
+    });
 
-        function closeInventoryModal() {
-            document.getElementById('inventory-modal').classList.add('hidden');
-        }
+    // Webcam scanning code
+    const scanBtn = document.querySelector('.scan-btn');
+    const modal = document.getElementById('webcam-modal');
+    const video = document.getElementById('webcam-video');
+    const status = document.getElementById('detection-status');
+    const stopBtn = document.getElementById('stop-scan-btn');
+    const API_KEY = 'u64iBlZU98pNf3NhHccg'; // Your Roboflow API Key
 
-        // Search input event listener
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('product-search');
-            if (searchInput) {
-                searchInput.addEventListener('input', function() {
-                    searchProducts(this.value);
-                });
-            }
-        });
+    let stream = null;
+    let detectionInterval = null;
+    let detected = false;
 
-        // Webcam scanning code (keep existing functionality)
-        const scanBtn = document.querySelector('.scan-btn');
-        const modal = document.getElementById('webcam-modal');
-        const video = document.getElementById('webcam-video');
-        const status = document.getElementById('detection-status');
-        const stopBtn = document.getElementById('stop-scan-btn');
-        const API_KEY = 'u64iBlZU98pNf3NhHccg'; // Your Roboflow API Key
+    // Product mapping for detection - Updated to use actual products from your database
+    const productMappings = {
+        'lays': 1, // Apple - since you mentioned product_id 18 but your database shows products 1-15
+        'chips': 2, // Banana 
+        'snack': 3, // Mango
+        'apple': 1, // Apple
+        'banana': 2, // Banana
+        'orange': 4 // Orange
+    };
 
-        let stream = null;
-        let detectionInterval = null;
-        let detected = false;
+    scanBtn.addEventListener('click', async () => {
+        console.log('Starting scan...');
+        try {
+            modal.classList.remove('hidden');
 
-        // Product mapping for detection (expand this based on your trained models)
-        const productMappings = {
-            'lays': 18, // T-Shirt product ID as example
-            'chips': 18,
-            'snack': 18
-        };
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment'
+                }
+            });
+            video.srcObject = stream;
+            await new Promise(resolve => {
+                video.onloadedmetadata = () => {
+                    video.play();
+                    resolve();
+                };
+            });
 
-        scanBtn.addEventListener('click', async () => {
-            console.log('Starting scan...');
-            try {
-                modal.classList.remove('hidden');
+            status.textContent = 'Hold a product in view...';
 
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: 'environment'
-                    }
-                });
-                video.srcObject = stream;
-                await new Promise(resolve => {
-                    video.onloadedmetadata = () => {
-                        video.play();
-                        resolve();
-                    };
-                });
+            detectionInterval = setInterval(async () => {
+                if (video.readyState === video.HAVE_ENOUGH_DATA && !detected) {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0);
+                    const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
-                status.textContent = 'Hold a product in view...';
+                    try {
+                        const response = await fetch(
+                            'https://detect.roboflow.com/lays-txw7q/1?api_key=' +
+                            API_KEY, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                },
+                                body: imageData
+                            });
+                        const predictions = await response.json();
 
-                detectionInterval = setInterval(async () => {
-                    if (video.readyState === video.HAVE_ENOUGH_DATA && !detected) {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        canvas.getContext('2d').drawImage(video, 0, 0);
-                        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                        if (predictions.predictions && predictions.predictions.length > 0 &&
+                            predictions.predictions[0].confidence > 0.5) {
 
-                        try {
-                            const response = await fetch(
-                                'https://detect.roboflow.com/lays-txw7q/1?api_key=' + API_KEY, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/x-www-form-urlencoded'
-                                    },
-                                    body: imageData
-                                });
-                            const predictions = await response.json();
+                            const detectedClass = predictions.predictions[0].class
+                                .toLowerCase();
+                            const productId = productMappings[detectedClass];
 
-                            if (predictions.predictions && predictions.predictions.length > 0 &&
-                                predictions.predictions[0].confidence > 0.5) {
+                            if (productId) {
+                                status.textContent =
+                                    `Detected ${predictions.predictions[0].class}! Adding to cart...`;
+                                detected = true;
 
-                                const detectedClass = predictions.predictions[0].class
-                                    .toLowerCase();
-                                const productId = productMappings[detectedClass];
-
-                                if (productId) {
-                                    status.textContent =
-                                        `Detected ${predictions.predictions[0].class}! Adding to cart...`;
-                                    detected = true;
-
-                                    // Add to cart
-                                    const form = document.createElement('form');
-                                    form.method = 'post';
-                                    form.innerHTML = `
+                                // Add to cart
+                                const form = document.createElement('form');
+                                form.method = 'post';
+                                form.innerHTML = `
                                     <input type="hidden" name="product_id" value="${productId}">
                                     <input type="hidden" name="cart_action" value="add">
                                 `;
-                                    document.body.appendChild(form);
+                                document.body.appendChild(form);
 
-                                    setTimeout(() => {
-                                        form.submit();
-                                    }, 1000);
-                                } else {
-                                    status.textContent =
-                                        `Detected ${predictions.predictions[0].class} but no matching product found.`;
-                                }
+                                setTimeout(() => {
+                                    form.submit();
+                                }, 1000);
                             } else {
                                 status.textContent =
-                                    'No products detected. Try adjusting the angle or lighting.';
+                                    `Detected ${predictions.predictions[0].class} but no matching product found.`;
                             }
-                        } catch (apiError) {
-                            console.error('API error:', apiError);
-                            status.textContent = 'Error contacting detection API.';
+                        } else {
+                            status.textContent =
+                                'No products detected. Try adjusting the angle or lighting.';
                         }
+                    } catch (apiError) {
+                        console.error('API error:', apiError);
+                        status.textContent = 'Error contacting detection API.';
                     }
-                }, 1000);
+                }
+            }, 1000);
 
-            } catch (error) {
-                console.error('Scan error:', error);
-                alert(`Error starting scan: ${error.message}`);
-                stopScan();
-            }
-        });
-
-        stopBtn.addEventListener('click', stopScan);
-
-        function stopScan() {
-            if (detectionInterval) clearInterval(detectionInterval);
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-            modal.classList.add('hidden');
-            detected = false;
-            status.textContent = 'Hold a product in view...';
+        } catch (error) {
+            console.error('Scan error:', error);
+            alert(`Error starting scan: ${error.message}`);
+            stopScan();
         }
+    });
 
-        window.addEventListener('beforeunload', stopScan);
+    stopBtn.addEventListener('click', stopScan);
+
+    function stopScan() {
+        if (detectionInterval) clearInterval(detectionInterval);
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        modal.classList.add('hidden');
+        detected = false;
+        status.textContent = 'Hold a product in view...';
+    }
+
+    window.addEventListener('beforeunload', stopScan);
     </script>
 </body>
 

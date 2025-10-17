@@ -1,121 +1,163 @@
+<!-- SidebarAdmin.php -->
 <?php
-// session_start();
+include __DIR__ . '/../include/connect-db.php'; // Database connection
+session_start();
+
+$name = '';
+$role = ''; // role: admin, agent, shop-owner, user
+
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+
+    $stmt = $conn->prepare('SELECT full_name, role FROM users WHERE user_id = ? LIMIT 1');
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
+    $stmt->bind_result($name, $role);
+    $stmt->fetch();
+    $stmt->close();
+
+    if (!empty($name)) {
+        $name = explode(' ', trim($name))[0];
+    }
+}
+
+// Get current filename
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
+
 <!DOCTYPE html>
-<!-- Created by CodingLab |www.youtube.com/CodingLabYT-->
 <html lang="en" dir="ltr">
 
 <head>
     <meta charset="UTF-8">
-    <title>Sidebar</title>
     <link rel="stylesheet" href="sidebar.css">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png">
+    <!-- Alpine.js for dropdowns -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
 <body class="bg-custom">
-    <div class="sidebar pl-5 m-0">
-        <div class="logo-details">
-            <i class='bx bx-menu' id="btn"></i>
-        </div>
+    <div class="sidebar open m-0">
         <ul class="nav-list p-0">
             <li>
-                <i class='bx bx-search'></i>
-                <input type="text" placeholder="Search...">
-                <span class="tooltip">Search</span>
-            </li>
-            <li>
-                <a href="..\Dashboard\Dashboard.php">
+                <a href="../warehouse-app/admin-dashboard/admin-dashboard.php"
+                    class="<?php echo ($current_page == 'admin-dashboard.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-grid-alt'></i>
                     <span class="links_name">Dashboard</span>
                 </a>
                 <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="..\Investment Page\Investment.php">
-                    <i class='bx bx-store-alt'></i>
-                    <span class="links_name">Invest in Store</span>
+                <a href="/../warehouse-app/warehouse information/product-list.php"
+                    class="<?php echo ($current_page == 'products.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-box'></i>
+                    <span class="links_name">Products</span>
                 </a>
-                <span class="tooltip">Invest in Store</span>
+                <span class="tooltip">Products</span>
             </li>
             <li>
-                <a href="#">
-                    <i class='bx bx-target-lock'></i>
-                    <span class="links_name">Projection</span>
+                <a href="/../warehouse-app/Orders/orders.php"
+                    class="<?php echo ($current_page == 'orders.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-cart'></i>
+                    <span class="links_name">Orders</span>
                 </a>
-                <span class="tooltip">Projection</span>
+                <span class="tooltip">Orders</span>
             </li>
             <li>
-                <a href="..\Receipt Page\RPage.php">
-                    <i class='bx bx-receipt'></i>
-                    <span class="links_name">Receipt</span>
+                <a href="../warehouse-app/agent/all-agents.php"
+                    class="<?php echo ($current_page == 'agents.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-user'></i>
+                    <span class="links_name">Agents</span>
                 </a>
-                <span class="tooltip">Receipt</span>
+                <span class="tooltip">Agents</span>
             </li>
             <li>
-                <a href="..\Stock and Storage\Stock.php">
-                    <i class='bx bx-archive'></i>
-                    <span class="links_name">Track Storage</span>
+                <a href="../Admin/agents-requests.php"
+                    class="<?php echo ($current_page == 'agents-requests.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-user-check'></i>
+                    <span class="links_name">Agents Requests</span>
                 </a>
-                <span class="tooltip">Track Storage</span>
+                <span class="tooltip">Agents Requests</span>
             </li>
             <li>
-                <a href="#">
-                    <i class='bx bx-cart-alt'></i>
-                    <span class="links_name">Order</span>
+                <a href="../warehouse-app/All-Inventory-Requests/all-inventory-requests.php"
+                    class="<?php echo ($current_page == 'inventory-request.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-package'></i>
+                    <span class="links_name">Inventory Request</span>
                 </a>
-                <span class="tooltip">Order</span>
+                <span class="tooltip">Inventory Request</span>
             </li>
             <li>
-                <a href="#">
-                    <i class='bx bx-heart'></i>
-                    <span class="links_name">Saved</span>
+                <a href="../Admin/stock-request.php"
+                    class="<?php echo ($current_page == 'stock-request.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-cube'></i>
+                    <span class="links_name">Stock Request</span>
                 </a>
-                <span class="tooltip">Saved</span>
+                <span class="tooltip">Stock Request</span>
             </li>
             <li>
-                <a href="..\User Settings\Settings.php">
-                    <i class='bx bx-cog'></i>
-                    <span class="links_name">Setting</span>
+                <a href="../Admin/manage-warehouse.php"
+                    class="<?php echo ($current_page == 'manage-warehouse.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-buildings'></i>
+                    <span class="links_name">Manage Warehouse</span>
                 </a>
-                <span class="tooltip">Setting</span>
+                <span class="tooltip">Manage Warehouse</span>
+            </li>
+            <li>
+                <a href="../warehouse-app/add-warehouse.php"
+                    class="<?php echo ($current_page == 'add-warehouse.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-building-house'></i>
+                    <span class="links_name">Add New Warehouse</span>
+                </a>
+                <span class="tooltip">Add New Warehouse</span>
+            </li>
+            <li>
+                <a href="../warehouse-app/warehouse information/warehouse-info.php"
+                    class="<?php echo ($current_page == 'warehouse-info.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bxs-box'></i>
+                    <span class="links_name">Warehouse Products</span>
+                </a>
+                <span class="tooltip">Warehouse Products</span>
             </li>
             <li class="profile">
-                <div class="profile-details">
+                <?php $profileHref = isset($_SESSION['user_id']) ? '../agent-app/agent-profile.php' : '../Login-Signup/login.php'; ?>
+                <a href="<?php echo $profileHref; ?>" class="profile-details <?php echo $linkClass; ?>">
                     <img src="https://www.svgrepo.com/show/23012/profile-user.svg" alt="profileImg">
                     <div class="name_job">
-                        <div class="name">Aranya</div>
+                        <div class="name"><?php echo htmlspecialchars($name ?: 'Guest'); ?></div>
+                        <div class="job"><?php echo ($role === 'Agent') ? 'Agent' : ''; ?></div>
                     </div>
-                </div>
-                <i class='bx bx-log-out' id="log_out"></i>
+                </a>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                <a href="../Login-Signup/logout.php">
+                    <i class='bx bx-log-out' id="log_out"></i>
+                </a>
+                <?php else: ?>
+                <a href="../Login-Signup/login.php">
+                    <i class='bx bx-log-in' id="log_in"></i>
+                </a>
+                <?php endif; ?>
             </li>
         </ul>
     </div>
-    <section class="home-section">
-    </section>
     <script>
-    let sidebar = document.querySelector(".sidebar");
-    let closeBtn = document.querySelector("#btn");
-    let searchBtn = document.querySelector(".bx-search");
+        let sidebar = document.querySelector(".sidebar");
+        let closeBtn = document.querySelector("#btn");
 
-    closeBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-        menuBtnChange(); //calling the function(optional)
-    });
+        closeBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            menuBtnChange();
+        });
 
-    searchBtn.addEventListener("click", () => { // Sidebar open when you click on the search iocn
-        sidebar.classList.toggle("open");
-        menuBtnChange(); //calling the function(optional)
-    });
-
-    // following are the code to change sidebar button(optional)
-    function menuBtnChange() {
-        if (sidebar.classList.contains("open")) {
-            closeBtn.classList.replace("bx-menu", "bx-menu-alt-right"); //replacing the iocns class
-        } else {
-            closeBtn.classList.replace("bx-menu-alt-right", "bx-menu"); //replacing the iocns class
+        function menuBtnChange() {
+            if (sidebar.classList.contains("open")) {
+                closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
+            } else {
+                closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+            }
         }
-    }
     </script>
 </body>
 

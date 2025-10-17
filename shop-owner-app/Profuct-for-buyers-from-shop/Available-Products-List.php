@@ -1,5 +1,6 @@
 <?php
-
+    include '../../include/connect-db.php';
+    include '../../include/navbar.php'; 
 
 
 ?>

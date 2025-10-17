@@ -1,25 +1,7 @@
 <?php
-// Start session
-session_start();
+include __DIR__ . '/../include/connect-db.php'; // Database connection
+include '../include/navbar.php';
 
-// Database connection
-$servername = "localhost";
-$username = "root";
-$password = "";
-$databasename = "direct-edge";
-
-$conn = mysqli_connect($servername, $username, $password, $databasename);
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
-
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-$user_id = $_SESSION['user_id'];
 $message = "";
 $messageType = "";
 
@@ -68,11 +50,6 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $stmt->close();
 
-if (!$user) {
-    header("Location: login.php");
-    exit();
-}
-
 $conn->close();
 ?>
 
@@ -89,40 +66,6 @@ $conn->close();
 </head>
 
 <body class="bg-gray-50">
-    <!-- Navigation Header
-    <nav class="bg-white shadow-lg border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <h1 class="text-2xl font-bold text-green-600">DirectEdge</h1>
-                    </div>
-                    <div class="hidden md:ml-10 md:flex md:space-x-8">
-                        <a href="dashboard.php" class="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium transition-colors">Dashboard</a>
-                        <a href="profile.php" class="text-green-600 border-b-2 border-green-600 px-3 py-2 text-sm font-medium">Profile</a>
-                        <?php if ($user['role'] === 'Admin'): ?>
-                            <a href="admin.php" class="text-gray-700 hover:text-green-600 px-3 py-2 text-sm font-medium transition-colors">Admin</a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center overflow-hidden">
-                            <?php if (!empty($user['image_url']) && file_exists($user['image_url'])): ?>
-                        <img src="<?php echo htmlspecialchars($user['image_url']); ?>" alt="Profile" class="w-full h-full object-cover">
-                    <?php else: ?>
-                        <span class="text-white text-sm font-medium"><?php echo strtoupper(substr($user['full_name'], 0, 1)); ?></span>
-                    <?php endif; ?>
-                        </div>
-                        <span class="text-gray-700 text-sm font-medium"><?php echo htmlspecialchars($user['full_name']); ?></span>
-                    </div>
-                    <a href="logout.php" class="text-red-600 hover:text-red-700 px-3 py-2 text-sm font-medium transition-colors">
-                        Logout
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav> -->
 
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <!-- Profile Header -->
@@ -131,10 +74,10 @@ $conn->close();
                 <div class="flex items-center">
                     <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
                         <?php if (!empty($user['image_url']) && file_exists($user['image_url'])): ?>
-                    <img src="<?php echo htmlspecialchars($user['image_url']); ?>" alt="<?php echo htmlspecialchars($user['full_name']); ?>" class="w-full h-full object-cover">
-                <?php else: ?>
-                    <span class="text-3xl font-bold text-green-600"><?php echo strtoupper(substr($user['full_name'], 0, 1)); ?></span>
-                <?php endif; ?>
+                            <img src="<?php echo htmlspecialchars($user['image_url']); ?>" alt="<?php echo htmlspecialchars($user['full_name']); ?>" class="w-full h-full object-cover">
+                        <?php else: ?>
+                            <span class="text-3xl font-bold text-green-600"><?php echo strtoupper(substr($user['full_name'], 0, 1)); ?></span>
+                        <?php endif; ?>
                     </div>
                     <div class="ml-6">
                         <h1 class="text-2xl font-bold text-white"><?php echo htmlspecialchars($user['full_name']); ?></h1>
