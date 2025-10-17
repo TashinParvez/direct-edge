@@ -214,20 +214,24 @@ if ($result) {
             <div class="filter-container">
                 <label for="filterDropdown">Filter by:</label>
                 <div class="dropdown">
-                    <button class="dropdown-toggle" onclick="toggleDropdown()">All Products ▾</button>
+                    <button class="dropdown-toggle" onclick="toggleDropdown()">All Products</button>
                     <div class="dropdown-menu" id="dropdownMenu">
                         <div class="group">
                             <span class="group-title">Category</span>
                             <label><input type="checkbox" class="filter-option" value="all"> all</label>
                             <?php foreach ($categories as $cat): ?>
-                                <label><input type="checkbox" class="filter-option" value="<?php echo htmlspecialchars($cat); ?>"> <?php echo htmlspecialchars($cat); ?></label>
+                            <label><input type="checkbox" class="filter-option"
+                                    value="<?php echo htmlspecialchars($cat); ?>">
+                                <?php echo htmlspecialchars($cat); ?></label>
                             <?php endforeach; ?>
                         </div>
                         <div class="group">
                             <span class="group-title">Unit</span>
                             <label><input type="checkbox" class="filter-option" value="all"> all</label>
                             <?php foreach ($units as $unit): ?>
-                                <label><input type="checkbox" class="filter-option" value="<?php echo htmlspecialchars($unit); ?>"> <?php echo htmlspecialchars($unit); ?></label>
+                            <label><input type="checkbox" class="filter-option"
+                                    value="<?php echo htmlspecialchars($unit); ?>">
+                                <?php echo htmlspecialchars($unit); ?></label>
                             <?php endforeach; ?>
                         </div>
                         <div class="dropdown-footer">
@@ -261,26 +265,47 @@ if ($result) {
                 </thead>
                 <tbody id="productTableBody">
                     <?php foreach ($products as $product): ?>
-                        <tr data-id="<?php echo htmlspecialchars($product['product_id']); ?>">
-                            <td><?php echo htmlspecialchars($product['name']); ?></td>
-                            <td><?php echo htmlspecialchars($product['category']); ?></td>
-                            <td><?php echo number_format($product['price'], 2); ?></td>
-                            <td><?php echo htmlspecialchars($product['unit']); ?></td>
-                            <td>
-                                <?php if ($product['img_url']): ?>
-                                    <img src="<?php echo htmlspecialchars("../../" . $product['img_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" style="width: 50px; height: auto;">
-                                <?php else: ?>
-                                    —
-                                <?php endif; ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($product['special_instructions'] ?? '—'); ?></td>
-                            <td><?php echo htmlspecialchars($product['created_at']); ?></td>
-                            <td><?php echo htmlspecialchars($product['updated_at']); ?></td>
-                            <td>
-                                <button class='action-btn edit-btn' onclick='editProduct(<?php echo $product['product_id']; ?>)'>✎</button>
-                                <button class='action-btn delete-btn' onclick='deleteProduct(<?php echo $product['product_id']; ?>)'>🗑</button>
-                            </td>
-                        </tr>
+                    <tr data-id="<?php echo htmlspecialchars($product['product_id']); ?>">
+                        <td><?php echo htmlspecialchars($product['name']); ?></td>
+                        <td><?php echo htmlspecialchars($product['category']); ?></td>
+                        <td><?php echo number_format($product['price'], 2); ?></td>
+                        <td><?php echo htmlspecialchars($product['unit']); ?></td>
+                        <td>
+                            <?php if ($product['img_url']): ?>
+                            <img src="<?php echo htmlspecialchars("../../" . $product['img_url']); ?>"
+                                alt="<?php echo htmlspecialchars($product['name']); ?>"
+                                style="width: 50px; height: auto;">
+                            <?php else: ?>
+                            —
+                            <?php endif; ?>
+                        </td>
+                        <td><?php echo htmlspecialchars($product['special_instructions'] ?? '—'); ?></td>
+                        <td><?php echo htmlspecialchars($product['created_at']); ?></td>
+                        <td><?php echo htmlspecialchars($product['updated_at']); ?></td>
+                        <td>
+                            <button class="action-btn edit-btn"
+                                onclick="editProduct(<?php echo $product['product_id']; ?>)" aria-label="Edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button class="action-btn delete-btn"
+                                onclick="deleteProduct(<?php echo $product['product_id']; ?>)" aria-label="Delete">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                            </button>
+                        </td>
+
+                    </tr>
                     <?php endforeach; ?>
                 </tbody>
                 <tfoot id="totalRow" style="display: none;">
@@ -321,7 +346,7 @@ if ($result) {
                     <input type="text" id="category" name="category" list="categoryList" required>
                     <datalist id="categoryList">
                         <?php foreach ($categories as $cat): ?>
-                            <option value="<?php echo htmlspecialchars($cat); ?>">
+                        <option value="<?php echo htmlspecialchars($cat); ?>">
                             <?php endforeach; ?>
                     </datalist>
 
@@ -331,7 +356,8 @@ if ($result) {
                     <label for="unit">Unit:</label>
                     <select id="unit" name="unit" required>
                         <?php foreach ($units as $unit): ?>
-                            <option value="<?php echo htmlspecialchars($unit); ?>"><?php echo htmlspecialchars($unit); ?></option>
+                        <option value="<?php echo htmlspecialchars($unit); ?>"><?php echo htmlspecialchars($unit); ?>
+                        </option>
                         <?php endforeach; ?>
                     </select>
 
@@ -361,7 +387,7 @@ if ($result) {
                     <input type="text" id="editCategory" name="editCategory" list="categoryList" required>
                     <datalist id="categoryList">
                         <?php foreach ($categories as $cat): ?>
-                            <option value="<?php echo htmlspecialchars($cat); ?>">
+                        <option value="<?php echo htmlspecialchars($cat); ?>">
                             <?php endforeach; ?>
                     </datalist>
 
@@ -371,7 +397,8 @@ if ($result) {
                     <label for="editUnit">Unit:</label>
                     <select id="editUnit" name="editUnit" required>
                         <?php foreach ($units as $unit): ?>
-                            <option value="<?php echo htmlspecialchars($unit); ?>"><?php echo htmlspecialchars($unit); ?></option>
+                        <option value="<?php echo htmlspecialchars($unit); ?>"><?php echo htmlspecialchars($unit); ?>
+                        </option>
                         <?php endforeach; ?>
                     </select>
 
