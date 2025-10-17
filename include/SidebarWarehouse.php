@@ -1,7 +1,9 @@
-<!-- SidebarAdmin.php -->
 <?php
+// SidebarWarehouse.php
 include __DIR__ . '/../include/connect-db.php'; // Database connection
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $name = '';
 $role = ''; // role: admin, agent, shop-owner, user

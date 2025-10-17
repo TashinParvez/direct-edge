@@ -1,3 +1,6 @@
+<?php
+ob_start(); // Start output buffering to handle session_start() in sidebar
+?>
 <link rel="stylesheet" href="../../Include/sidebar.css">
 <?php include '../../Include/SidebarWarehouse.php'; ?>
 
@@ -544,7 +547,10 @@ if ($resAg) {
         </div>
     </div>
 
-    <script src="../warehouse information/warehouse-info.js"></script>
+    <script src="warehouse-info.js?v=<?php echo time(); ?>"></script>
 </body>
 
 </html>
+<?php
+ob_end_flush(); // End output buffering
+?>
