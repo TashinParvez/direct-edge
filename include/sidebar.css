@@ -35,7 +35,7 @@ body {
 body.bg-custom {
   margin-left: 250px; /* Push body content to the right */
   width: calc(100% - 250px); /* Adjust body width */
-  /* transition: margin-left 0.5s ease, width 0.5s ease; */
+  transition: margin-left 0.5s ease, width 0.5s ease;
   /* CRITICAL: Do NOT touch any padding, margin-top, or other spacing properties */
 }
 
@@ -96,7 +96,7 @@ body.bg-custom.sidebar-collapsed {
   transition: all 0.4s ease;
   text-align: center;
   cursor: pointer;
-  color: #16a34a;
+  color: #fff;
 }
 
 .sidebar i {
@@ -162,9 +162,9 @@ body.bg-custom.sidebar-collapsed {
   padding: 0 10px;
 }
 
-.sidebar li a:hover {
+/* .sidebar li a:hover {
   background: #fff;
-}
+} */
 
 .sidebar li a .links_name {
   color: #fff;
@@ -184,7 +184,7 @@ body.bg-custom.sidebar-collapsed {
 .sidebar li a:hover .links_name,
 .sidebar li a:hover i {
   transition: all 0.5s ease;
-  color: #16a34a;
+  color: #132440;
 }
 
 .sidebar li i {
