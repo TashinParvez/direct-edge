@@ -205,7 +205,7 @@ body.bg-custom.sidebar-collapsed {
   left: 14px;
   bottom: 10px;
   padding: 10px 14px;
-  background: #188038;
+  /* background: #188038; */
   transition: all 0.5s ease;
   overflow: hidden;
   border-radius: 12px;
