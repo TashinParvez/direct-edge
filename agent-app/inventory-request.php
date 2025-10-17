@@ -47,7 +47,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->bind_param("iiissii", $warehouseId, $productId, $quantity, $inbound, $expiry, $unitVolume, $agent_id);
 
     if ($stmt->execute()) {
-        $success = "Request submitted successfully!";
+        $last_id = $conn->insert_id;
+
+        // --- NOTIFICATION ---
+        include_once __DIR__ . '/../include/notification_helpers.php';
+        $admin_ids = get_user_ids_by_role($conn, 'Admin'); // Assuming warehouse managers are Admins
+        if (!empty($admin_ids)) {
+            $agent_name = $_SESSION['username'] ?? 'An agent';
+            $notification_message = "New inventory request from " . htmlspecialchars($agent_name) . ".";
+            $notification_link = "/warehouse-app/All-Inventory-Requests/all-inventory-requests.php";
+            create_notification($conn, $admin_ids, 'inventory_request_new', $notification_message, $notification_link);
+        }
+        // --- END NOTIFICATION ---
+
+        // Redirect or show success message
+        header("Location: my-inventory-requests.php?status=success");
+        exit;
     } else {
         $error = "Error: " . $stmt->error;
     }
