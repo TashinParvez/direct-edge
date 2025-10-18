@@ -218,9 +218,11 @@ ob_end_flush();
                     <!-- Form Card -->
                     <div class="bg-white shadow-xl rounded-xl p-8 form-container border border-gray-100">
                         <div class="flex items-center mb-6">
+
                             <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
                                 <i class='bx bx-buildings text-2xl text-green-600'></i>
                             </div>
+
                             <div>
                                 <h2 class="text-xl font-bold text-gray-900">Warehouse Information</h2>
                                 <p class="text-gray-600">Fill in the details for the new warehouse</p>

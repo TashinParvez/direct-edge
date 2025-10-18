@@ -311,10 +311,10 @@ $agents_filtered = array_filter($agents, function ($a) use ($warehouse_filter, $
                                         <span><?= htmlspecialchars($agent['area']) ?></span>
                                     </div>
 
-                                    <div class="flex items-center text-sm text-gray-600">
+                                    <!-- <div class="flex items-center text-sm text-gray-600">
                                         <i class='bx bx-building mr-3 text-gray-400'></i>
                                         <span><?= htmlspecialchars($agent['warehouse']) ?></span>
-                                    </div>
+                                    </div> -->
                                 </div>
 
                                 <!-- Agent Stats -->
