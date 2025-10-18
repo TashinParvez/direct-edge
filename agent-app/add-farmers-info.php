@@ -87,10 +87,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 
         if ($stmt->execute()) {
-            // $farmer_id = $conn->insert_id();
+            $farmer_id = $conn->insert_id;
             $message = "Farmer information saved successfully!";
             $message_type = "success";
             $show_actions = true;
+
+            // --- NOTIFICATION ---
+            include_once __DIR__ . '/../include/notification_helpers.php';
+            $notification_message = "You have successfully added a new farmer: " . htmlspecialchars($full_name) . ".";
+            $notification_link = "/agent-app/farmer-profile.php?id=" . $farmer_id;
+            create_notification($conn, $agent_id, 'new_farmer_added', $notification_message, $notification_link);
+            // --- END NOTIFICATION ---
+
         } else {
             $message = "Error: " . $stmt->error;
             $message_type = "error";

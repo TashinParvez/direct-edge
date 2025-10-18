@@ -1,10 +1,11 @@
+<?php
+// Start output buffering at the very beginning
+ob_start();
+?>
 <?php include '../Include/SidebarAgent.php'; ?>
 <link rel="stylesheet" href="../Include/sidebar.css">
 
 <?php
-// Start output buffering BEFORE any includes
-ob_start();
-
 $agent_id = isset($user_id);
 
 // connect database
@@ -92,11 +93,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
 
     if ($stmt->execute()) {
+        $agreement_id = $conn->insert_id;
         // FIXED: Your actual table uses agent_id (with underscore)
         $update_farmer = "UPDATE farmers SET agent_id = ? WHERE id = ?";
         $update_stmt = $conn->prepare($update_farmer);
         $update_stmt->bind_param("ii", $agent_id, $farmer_id);
         $update_stmt->execute();
+
+        // --- NOTIFICATION ---
+        include_once __DIR__ . '/../include/notification_helpers.php';
+        $admin_ids = get_user_ids_by_role($conn, 'Admin');
+        if (!empty($admin_ids)) {
+            $notification_message = "New agreement (Ref: " . htmlspecialchars($agreement_reference) . ") created by agent " . htmlspecialchars($agent['full_name']) . " needs review.";
+            $notification_link = "/agent-app/admin_view_agreement.php?agreement_id=" . $agreement_id;
+            create_notification($conn, $admin_ids, 'agreement_status_update', $notification_message, $notification_link);
+        }
+        // --- END NOTIFICATION ---
 
         // Clear output buffer before redirect
         ob_end_clean();

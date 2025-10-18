@@ -1,11 +1,14 @@
+<?php
+ob_start(); // Start output buffering to handle session_start() in sidebar
+?>
 <link rel="stylesheet" href="../../Include/sidebar.css">
 <?php include '../../Include/SidebarWarehouse.php'; ?>
 
 <?php
 include '../../include/connect-db.php'; // Database connection
 
-// include '../../include/navbar.php';
 $admin_id = isset($user_id) ? $user_id : 65;
+
 // Define the uploads directory path
 $uploadDir = __DIR__ . '/uploads/';
 
@@ -199,7 +202,7 @@ if ($result) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product List</title>
-    <link rel="stylesheet" href="../warehouse information/product-list.css">
+    <link rel="stylesheet" href="product-list.css">
 </head>
 
 <body>
@@ -265,7 +268,7 @@ if ($result) {
                             <td><?php echo htmlspecialchars($product['unit']); ?></td>
                             <td>
                                 <?php if ($product['img_url']): ?>
-                                    <img src="<?php echo htmlspecialchars($product['img_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" style="width: 50px; height: auto;">
+                                    <img src="<?php echo htmlspecialchars("../../" . $product['img_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>" style="width: 50px; height: auto;">
                                 <?php else: ?>
                                     —
                                 <?php endif; ?>
@@ -385,7 +388,10 @@ if ($result) {
         </div>
     </div>
 
-    <script src="../warehouse information/product-list.js"></script>
+    <script src="product-list.js?v=<?php echo time(); ?>"></script>
 </body>
 
 </html>
+<?php
+ob_end_flush(); // End output buffering
+?>

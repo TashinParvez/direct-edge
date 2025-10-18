@@ -8,9 +8,6 @@ ob_start();
 <?php
 include '../include/connect-db.php'; // database connection
 
-// include_once __DIR__ . '/../include/navbar.php';
-
-// include '../include/navbar.php';
 $admin_id = isset($user_id) ? $user_id : 65;
 
 // Handle form submission
