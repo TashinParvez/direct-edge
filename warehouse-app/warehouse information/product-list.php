@@ -86,6 +86,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['addProduct'])) {
         $query = "INSERT INTO products (name, category, price, unit, img_url, special_instructions, created_at, updated_at)
                   VALUES ('$productName', '$category', $price, '$unit', " . ($imagePath ? "'$imagePath'" : 'NULL') . ", " . ($specialInstructions ? "'$specialInstructions'" : 'NULL') . ", NOW(), NOW())";
         if ($conn->query($query)) {
+            // --- NOTIFICATION ---
+            include_once __DIR__ . '/../../include/notification_helpers.php';
+            $agent_ids = get_user_ids_by_role($conn, 'Agent');
+            if (!empty($agent_ids)) {
+                $notification_message = "A new product has been added: " . htmlspecialchars($productName) . ".";
+                $notification_link = "/shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php"; // Link to a page where they can see it
+                create_notification($conn, $agent_ids, 'new_product', $notification_message, $notification_link);
+            }
+            // --- END NOTIFICATION ---
+
             echo "<script>alert('Product added successfully!'); window.location.href='product-list.php';</script>";
         } else {
             $error = 'Database error: ' . $conn->error;

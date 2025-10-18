@@ -18,7 +18,7 @@ function get_json()
 
 function status_to_flag($statusText)
 {
-    return (strtolower(trim($statusText)) === 'in progress') ? 1 : 0;
+    return (strtolower(trim($statusText)) === 'completed') ? 1 : 0;
 }
 
 // Helper: fetch warehouse capacities (optionally locking the row)
@@ -66,7 +66,7 @@ function load_row(mysqli $conn, $id)
                 p.unit AS product_unit,
                 wp.quantity,
                 wp.unit_volume,
-                CASE WHEN wp.request_status = 1 THEN 'In progress' ELSE 'Completed' END AS status,
+                CASE WHEN wp.request_status = 1 THEN 'Completed' ELSE 'Pending' END AS status,
                 w.warehouse_id,
                 w.name AS warehouse_name,
                 wp.agent_id,
@@ -146,7 +146,7 @@ try {
         $warehouseId = (int)($data['warehouseId'] ?? 0);
         $agentId = isset($data['agentId']) && $data['agentId'] !== '' ? (int)$data['agentId'] : null;
         $expiryDate = $data['expiryDate'] ?? null;
-        $statusText = $data['status'] ?? 'In progress';
+        $statusText = $data['status'] ?? 'Pending';
         $statusFlag = status_to_flag($statusText);
         $special = isset($data['specialInstructions']) ? trim($data['specialInstructions']) : '';
 
@@ -167,8 +167,8 @@ try {
         $dateAddedEsc = mysqli_real_escape_string($conn, $dateAdded);
         $expiryEsc = $expiryDate ? "'" . mysqli_real_escape_string($conn, $expiryDate) . "'" : 'NULL';
         $agentEsc = $agentId !== null ? (int)$agentId : 'NULL';
-        // Volume applies only when Completed (request_status = 0)
-        $newVol = ($statusFlag === 0) ? ((float)$quantity * (float)$unitVolume) : 0.0;
+        // Volume applies only when Completed (request_status = 1)
+        $newVol = ($statusFlag === 1) ? ((float)$quantity * (float)$unitVolume) : 0.0;
 
         // Use a transaction to ensure capacity and row are consistent
         mysqli_begin_transaction($conn);
@@ -214,7 +214,7 @@ try {
         $warehouseId = (int)($data['warehouseId'] ?? 0);
         $agentId = isset($data['agentId']) && $data['agentId'] !== '' ? (int)$data['agentId'] : null;
         $expiryDate = $data['expiryDate'] ?? null;
-        $statusText = $data['status'] ?? 'In progress';
+        $statusText = $data['status'] ?? 'Pending';
         $statusFlag = status_to_flag($statusText);
         $special = isset($data['specialInstructions']) ? trim($data['specialInstructions']) : '';
 
@@ -240,8 +240,8 @@ try {
         $finalWarehouseId = $warehouseId ?: (int)$cr['warehouse_id'];
         $finalQuantity = $quantity ?: (int)$cr['quantity'];
         $finalUnitVolume = ($unitVolume !== null) ? $unitVolume : (float)$cr['unit_volume'];
-        $oldCompletedVol = ((int)$cr['request_status'] === 0) ? ((float)$cr['quantity'] * (float)$cr['unit_volume']) : 0.0;
-        $newCompletedVol = ($statusFlag === 0) ? ((float)$finalQuantity * (float)$finalUnitVolume) : 0.0;
+        $oldCompletedVol = ((int)$cr['request_status'] === 1) ? ((float)$cr['quantity'] * (float)$cr['unit_volume']) : 0.0;
+        $newCompletedVol = ($statusFlag === 1) ? ((float)$finalQuantity * (float)$finalUnitVolume) : 0.0;
 
         // Transaction for capacity checks and updates
         mysqli_begin_transaction($conn);
@@ -306,6 +306,20 @@ try {
 
             mysqli_commit($conn);
             $row = load_row($conn, $id);
+
+            // --- NOTIFICATION FOR STATUS CHANGE ---
+            if ($row && $statusFlag != (int)$cr['request_status']) {
+                $newStatusText = ($statusFlag == 0) ? 'Completed' : 'In progress';
+                if ($row['agent_id']) {
+                    include_once __DIR__ . '/../../include/notification_helpers.php';
+                    $total_volume = $row['quantity'] * $row['unit_volume'];
+                    $notification_message = "Status for your product " . htmlspecialchars($row['product_name']) . " (Qty: " . $row['quantity'] . ", Vol: " . $total_volume . ") is now " . $newStatusText . ".";
+                    $notification_link = "/agent-app/my-inventory-requests.php";
+                    create_notification($conn, $row['agent_id'], 'request_status_update', $notification_message, $notification_link);
+                }
+            }
+            // --- END NOTIFICATION ---
+
             respond(true, ['row' => $row, 'metrics' => metrics($conn)]);
         } catch (Throwable $ex) {
             mysqli_rollback($conn);
@@ -317,11 +331,13 @@ try {
         $data = get_json();
         $id = (int)($data['id'] ?? 0);
         if (!$id) respond(false, ['error' => 'Missing id'], 400);
-        // Load row to compute capacity rollback if it was Completed
-        $cur = mysqli_query($conn, "SELECT warehouse_id, quantity, unit_volume, request_status FROM warehouse_products WHERE id = $id");
-        if (!$cur || !($cr = mysqli_fetch_assoc($cur))) respond(false, ['error' => 'Not found'], 404);
-        $oldCompletedVol = ((int)$cr['request_status'] === 0) ? ((float)$cr['quantity'] * (float)$cr['unit_volume']) : 0.0;
-        $warehouseId = (int)$cr['warehouse_id'];
+
+        // Load full row data for notification and capacity calculation
+        $product_to_delete = load_row($conn, $id);
+        if (!$product_to_delete) respond(false, ['error' => 'Not found'], 404);
+
+        $oldCompletedVol = (strtolower($product_to_delete['status']) === 'completed') ? ((float)$product_to_delete['quantity'] * (float)$product_to_delete['unit_volume']) : 0.0;
+        $warehouseId = (int)$product_to_delete['warehouse_id'];
 
         mysqli_begin_transaction($conn);
         try {
@@ -336,6 +352,18 @@ try {
                 throw new Exception('Failed to adjust capacity');
             }
             mysqli_commit($conn);
+
+            // --- NOTIFICATION FOR DELETION ---
+            include_once __DIR__ . '/../../include/notification_helpers.php';
+            $admin_ids = get_user_ids_by_role($conn, 'Admin');
+            $notification_message = "Product '" . htmlspecialchars($product_to_delete['product_name']) . "' (ID: " . $id . ") has been deleted from warehouse '" . htmlspecialchars($product_to_delete['warehouse_name']) . "'.";
+            $notification_link = "/warehouse-app/warehouse%20information/warehouse-info.php";
+
+            foreach ($admin_ids as $recipient_id) {
+                create_notification($conn, $recipient_id, 'product_deleted', $notification_message, $notification_link);
+            }
+            // --- END NOTIFICATION ---
+
             respond(true, ['metrics' => metrics($conn)]);
         } catch (Throwable $ex) {
             mysqli_rollback($conn);
@@ -357,7 +385,22 @@ try {
         $endEsc = mysqli_real_escape_string($conn, $endDate);
         $sql = "UPDATE warehouse_products SET offer_percentage=$disc, offer_start='$startEsc', offer_end='$endEsc' WHERE id=$id";
         if (!mysqli_query($conn, $sql)) respond(false, ['error' => 'Failed to save offer'], 500);
+
         $row = load_row($conn, $id);
+
+        // --- NOTIFICATION FOR NEW OFFER ---
+        if ($row) {
+            include_once __DIR__ . '/../../include/notification_helpers.php';
+            $shop_owner_ids = get_user_ids_by_role($conn, 'Shop-Owner');
+            $notification_message = "New offer! " . htmlspecialchars($row['product_name']) . " is now available with a " . htmlspecialchars($disc) . "% discount until " . htmlspecialchars($endDate) . ".";
+            $notification_link = "/shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php"; // Link to products page
+
+            foreach ($shop_owner_ids as $recipient_id) {
+                create_notification($conn, $recipient_id, 'new_offer', $notification_message, $notification_link);
+            }
+        }
+        // --- END NOTIFICATION ---
+
         respond(true, ['row' => $row]);
     }
 
@@ -457,9 +500,10 @@ try {
                         p.unit AS product_unit,
                         wp.quantity,
                         wp.unit_volume,
-                        CASE WHEN wp.request_status = 1 THEN 'In progress' ELSE 'Completed' END AS status,
+                        CASE WHEN wp.request_status = 1 THEN 'Completed' ELSE 'Pending' END AS status,
                         w.warehouse_id,
                         w.name AS warehouse_name,
+                        (w.capacity_total - w.capacity_used) AS warehouse_free_space,
                         wp.agent_id,
                         wp.offer_percentage,
                         wp.offer_start,

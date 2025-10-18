@@ -1,9 +1,7 @@
 <?php
 ob_start(); // Start output buffering to handle session_start() in sidebar
 ?>
-<link rel="stylesheet" href="../../Include/sidebar.css">
-<?php include '../../Include/SidebarWarehouse.php'; ?>
-
+\
 <?php
 // DB: connect and fetch metrics + inventory rows
 require_once __DIR__ . '/../../include/connect-db.php';
@@ -43,7 +41,7 @@ $sql = "SELECT
             p.unit AS product_unit,
             wp.quantity,
             wp.unit_volume,
-            CASE WHEN wp.request_status = 1 THEN 'In progress' ELSE 'Completed' END AS status,
+            CASE WHEN wp.request_status = 1 THEN 'Completed' ELSE 'Pending' END AS status,
             w.warehouse_id,
             w.name AS warehouse_name,
             (w.capacity_total - w.capacity_used) AS warehouse_free_space,
@@ -52,6 +50,7 @@ $sql = "SELECT
             wp.offer_start,
             wp.offer_end,
             wp.inbound_stock_date,
+            wp.expiry_date,
             wp.expiry_date,
             wp.last_updated
         FROM warehouse_products wp
@@ -151,7 +150,7 @@ if ($resAg) {
                     p.unit AS product_unit,
                     wp.quantity,
                     wp.unit_volume,
-                    CASE WHEN wp.request_status = 1 THEN 'In progress' ELSE 'Completed' END AS status,
+                    CASE WHEN wp.request_status = 1 THEN 'Completed' ELSE 'Pending' END AS status,
                     w.warehouse_id,
                     w.name AS warehouse_name,
                     (w.capacity_total - w.capacity_used) AS warehouse_free_space,
@@ -425,8 +424,8 @@ if ($resAg) {
 
                     <label for="status">Status:</label>
                     <select id="status" name="status" required>
-                        <option value="In progress">In progress</option>
-                        <option value="Completed">Completed</option>
+                        <option>Pending</option>
+                        <option>Completed</option>
                     </select>
 
                     <label for="warehouse">Warehouse:</label>
@@ -482,8 +481,8 @@ if ($resAg) {
 
                     <label for="editStatus">Status:</label>
                     <select id="editStatus" name="editStatus" required>
-                        <option value="In progress">In progress</option>
-                        <option value="Completed">Completed</option>
+                        <option>Pending</option>
+                        <option>Completed</option>
                     </select>
 
                     <label for="editWarehouse">Warehouse:</label>
