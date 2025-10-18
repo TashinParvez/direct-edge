@@ -35,14 +35,17 @@
                     Powered by AI and computer vision for smarter inventory management,
                     demand forecasting, and transparent pricing.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+
+
+                <!-- <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                     <button class="bg-green-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-green-700 transition-colors shadow-lg">
                         Start Free Trial
                     </button>
                     <button class="text-green-600 border-2 border-green-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-green-50 transition-colors">
                         Watch Demo
                     </button>
-                </div>
+                </div> -->
+
                 <!-- Trust Badges -->
                 <div class="flex flex-wrap justify-center items-center gap-8 text-sm text-gray-500">
                     <div class="flex items-center gap-2">
@@ -110,9 +113,9 @@
                             Direct market access
                         </li>
                     </ul>
-                    <button class="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                    <!-- <button class="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
                         Learn More
-                    </button>
+                    </button> -->
                 </div>
 
                 <!-- Distributor Solution -->
@@ -144,9 +147,9 @@
                             Predictive demand forecasting
                         </li>
                     </ul>
-                    <button class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                    <!-- <button class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
                         Learn More
-                    </button>
+                    </button> -->
                 </div>
 
                 <!-- Shop Owner Solution -->
@@ -178,9 +181,9 @@
                             Sales analytics & forecasting
                         </li>
                     </ul>
-                    <button class="w-full bg-purple-600 text-white py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors">
+                    <!-- <button class="w-full bg-purple-600 text-white py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors">
                         Get Free Access
-                    </button>
+                    </button> -->
                 </div>
             </div>
         </div>
@@ -331,14 +334,16 @@
             <p class="text-xl text-green-100 mb-8">
                 Join thousands of farmers, distributors, and shop owners already using DirectEdge
             </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            
+            <!-- <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <button class="bg-white text-green-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-50 transition-colors">
                     Start Free Trial
                 </button>
                 <button class="border-2 border-white text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white hover:text-green-600 transition-colors">
                     Schedule Demo
                 </button>
-            </div>
+            </div> -->
+
         </div>
     </section>
 

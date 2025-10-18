@@ -345,17 +345,17 @@ $activity_logs = [
             </div>
             <div class="flex items-center gap-3">
 
-                <button class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
+                <button class="bg-[#16a34a] border px-3 py-2 rounded shadow-sm hover:bg-green-700 text-white"
                     onclick="window.location.href='../add-warehouse.php'">
                     Add Warehouse
                 </button>
 
-                <button class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
+                <button class="bg-[#16a34a] border px-3 py-2 rounded shadow-sm hover:bg-gray-100 text-white"
                     onclick="window.location.href='../Manage-Warehouse/warehouse-status.php'">
                     Warehouse Status
                 </button>
 
-                <button class="bg-white border px-3 py-2 rounded shadow-sm hover:bg-gray-100"
+                <button class="bg-[#16a34a] border px-3 py-2 rounded shadow-sm hover:bg-gray-100 text-white"
                     onclick="window.location.href='admin-agent-management.php'">
                     Agent Management
                 </button>
@@ -643,7 +643,7 @@ $activity_logs = [
             <div class="bg-white p-4 rounded shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                     <div class="text-sm text-gray-500">Activity Logs</div>
-                    <a href="#" class="text-sm text-blue-600">View full log</a>
+                    <!-- <a href="#" class="text-sm text-blue-600">View full log</a> -->
                 </div>
 
                 <ul class="space-y-2 text-sm">

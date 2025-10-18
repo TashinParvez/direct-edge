@@ -108,6 +108,10 @@ if ($resAg) {
 <body>
     <div class="container">
         <h1>Warehouse Products</h1>
+        <p style="margin-bottom: 32px; font-size: 1.2rem; color: #555; font-weight: 400;">
+            Products Available in the Warehouse
+        </p>
+
 
         <!-- Metrics Section -->
         <?php
@@ -237,9 +241,9 @@ if ($resAg) {
                             <span class="group-title">Warehouse</span>
                             <label><input type="checkbox" class="filter-option" value="all" checked> all</label>
                             <?php foreach ($warehouses as $w) { ?>
-                            <label><input type="checkbox" class="filter-option"
-                                    value="<?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?>">
-                                <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></label>
+                                <label><input type="checkbox" class="filter-option"
+                                        value="<?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></label>
                             <?php } ?>
                         </div>
                         <div class="group">
@@ -253,9 +257,9 @@ if ($resAg) {
                             }
                             sort($units);
                             foreach ($units as $u) { ?>
-                            <label><input type="checkbox" class="filter-option"
-                                    value="<?php echo htmlspecialchars($u, ENT_QUOTES, 'UTF-8'); ?>">
-                                <?php echo htmlspecialchars($u, ENT_QUOTES, 'UTF-8'); ?></label>
+                                <label><input type="checkbox" class="filter-option"
+                                        value="<?php echo htmlspecialchars($u, ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php echo htmlspecialchars($u, ENT_QUOTES, 'UTF-8'); ?></label>
                             <?php } ?>
                         </div>
                         <div class="dropdown-footer">
@@ -389,10 +393,10 @@ if ($resAg) {
                         <option value="">Select code</option>
                         <?php foreach ($products as $p) {
                             $code = 'PRD-' . str_pad((string)$p['product_id'], 3, '0', STR_PAD_LEFT); ?>
-                        <option value="<?php echo (int)$p['product_id']; ?>"
-                            data-instructions="<?php echo htmlspecialchars($p['special_instructions'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                            data-unit="<?php echo htmlspecialchars($p['unit'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                            <?php echo $code; ?></option>
+                            <option value="<?php echo (int)$p['product_id']; ?>"
+                                data-instructions="<?php echo htmlspecialchars($p['special_instructions'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                data-unit="<?php echo htmlspecialchars($p['unit'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php echo $code; ?></option>
                         <?php } ?>
                     </select>
 
@@ -400,10 +404,10 @@ if ($resAg) {
                     <select id="productNameSelect" name="productNameSelect" required>
                         <option value="">Select product</option>
                         <?php foreach ($products as $p) { ?>
-                        <option value="<?php echo (int)$p['product_id']; ?>"
-                            data-instructions="<?php echo htmlspecialchars($p['special_instructions'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                            data-unit="<?php echo htmlspecialchars($p['unit'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
-                            <?php echo htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo (int)$p['product_id']; ?>"
+                                data-instructions="<?php echo htmlspecialchars($p['special_instructions'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                data-unit="<?php echo htmlspecialchars($p['unit'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                                <?php echo htmlspecialchars($p['name'], ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
 
@@ -428,8 +432,8 @@ if ($resAg) {
                     <label for="warehouse">Warehouse:</label>
                     <select id="warehouse" name="warehouse" required>
                         <?php foreach ($warehouses as $w) { ?>
-                        <option value="<?php echo (int)$w['warehouse_id']; ?>">
-                            <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo (int)$w['warehouse_id']; ?>">
+                                <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
 
@@ -437,9 +441,9 @@ if ($resAg) {
                     <select id="agentId" name="agentId">
                         <option value="">Select agent</option>
                         <?php foreach ($agents as $a) { ?>
-                        <option value="<?php echo (int)$a['user_id']; ?>">
-                            <?php echo (int)$a['user_id'] . ' - ' . htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
+                            <option value="<?php echo (int)$a['user_id']; ?>">
+                                <?php echo (int)$a['user_id'] . ' - ' . htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
                         <?php } ?>
                     </select>
 
@@ -485,8 +489,8 @@ if ($resAg) {
                     <label for="editWarehouse">Warehouse:</label>
                     <select id="editWarehouse" name="editWarehouse" required>
                         <?php foreach ($warehouses as $w) { ?>
-                        <option value="<?php echo (int)$w['warehouse_id']; ?>">
-                            <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <option value="<?php echo (int)$w['warehouse_id']; ?>">
+                                <?php echo htmlspecialchars($w['name'], ENT_QUOTES, 'UTF-8'); ?></option>
                         <?php } ?>
                     </select>
 
@@ -494,9 +498,9 @@ if ($resAg) {
                     <select id="editAgentId" name="editAgentId">
                         <option value="">Select agent</option>
                         <?php foreach ($agents as $a) { ?>
-                        <option value="<?php echo (int)$a['user_id']; ?>">
-                            <?php echo (int)$a['user_id'] . ' - ' . htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
+                            <option value="<?php echo (int)$a['user_id']; ?>">
+                                <?php echo (int)$a['user_id'] . ' - ' . htmlspecialchars($a['full_name'], ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
                         <?php } ?>
                     </select>
 
