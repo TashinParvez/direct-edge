@@ -1,5 +1,5 @@
-<link rel="stylesheet" href="../../Include/sidebar.css">
-<?php include '../../Include/SidebarAgent.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
+<?php include '../Include/SidebarAgent.php'; ?>
 <?php
 // Ensure session is started and output buffering is enabled before including any files
 // that may emit HTML (like the navbar). This lets POST handlers clean the buffer
@@ -7,7 +7,7 @@
 // if (session_status() === PHP_SESSION_NONE) session_start();
 
 ob_start(); // Start output buffering so we can clear HTML when returning JSON
-include '../include/navbar.php';
+// include '../include/navbar.php';
 include '../include/connect-db.php'; // Database connection
 
 $user_id = $_SESSION['user_id'] ?? 2;
