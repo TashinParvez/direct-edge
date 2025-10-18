@@ -2,11 +2,11 @@
 // Start output buffering to prevent header issues
 ob_start();
 ?>
-<link rel="stylesheet" href="../../Include/sidebar.css">
-<?php include '../Include/SidebarWarehouse.php'; ?>
+<link rel="stylesheet" href="../Include/sidebar.css">
+<?php include __DIR__ . '/../include/SidebarWarehouse.php'; ?>
 
 <?php
-include '../include/connect-db.php'; // database connection
+include __DIR__ . '/../include/connect-db.php'; // database connection
 
 $admin_id = isset($user_id) ? $user_id : 65;
 
@@ -29,6 +29,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Execute
     if ($stmt->execute()) {
         $success = "Warehouse added successfully!";
+        // --- NOTIFICATION ---
+        include_once __DIR__ . '/../include/notification_helpers.php';
+
+        // Get all agent and shop owner IDs
+        $agent_ids = get_user_ids_by_role($conn, 'Agent');
+        $shop_owner_ids = get_user_ids_by_role($conn, 'Shop-Owner');
+        $recipient_ids = array_unique(array_merge($agent_ids, $shop_owner_ids));
+
+        $notification_message = "A new warehouse '" . htmlspecialchars($name) . "' has been added in " . htmlspecialchars($location) . ".";
+        $notification_link = "/warehouse-app/Manage-Warehouse/manage_warehouse.php"; // A relevant page
+
+        foreach ($recipient_ids as $recipient_id) {
+            create_notification($conn, $recipient_id, 'new_warehouse', $notification_message, $notification_link);
+        }
+        // --- END NOTIFICATION ---
     } else {
         $error = "Error: " . $stmt->error;
     }

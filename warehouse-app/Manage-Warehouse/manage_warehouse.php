@@ -1,6 +1,9 @@
 <?php
 // Start output buffering to prevent header issues
 ob_start();
+
+// Include the notification helper
+require_once __DIR__ . '/../../include/notification_helpers.php';
 ?>
 <link rel="stylesheet" href="../../Include/sidebar.css">
 <?php include '../../Include/SidebarWarehouse.php'; ?>
@@ -13,7 +16,7 @@ include '../../include/connect-db.php'; // database connection
 $admin_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 65;
 
 // Get warehouse id from URL
-$warehouseId = $_GET['id'] ?? 15;
+$warehouseId = $_GET['id'] ?? null;
 
 if (!$warehouseId) {
     die("Warehouse ID not provided.");
@@ -27,30 +30,70 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateProduct'])) {
     $quantity = $_POST['quantity'] ?? null;
     $unitVolume = $_POST['unit_volume'] ?? null;
     $expiryDate = $_POST['expiry_date'] ?? null;
-    $requestStatus = $_POST['request_status'] ?? 0;
+    $newStatusFlag = isset($_POST['request_status']) ? (int)$_POST['request_status'] : 0;
 
-    if ($wpId && $productId) {
-        // Update products table (name)
-        $productUpdateStmt = $conn->prepare("UPDATE products SET name = ? WHERE product_id = ?");
-        $productUpdateStmt->bind_param("si", $productName, $productId);
-        $productUpdateStmt->execute();
+    if ($wpId && $productId && $quantity !== null && $unitVolume !== null) {
+        $conn->begin_transaction();
+        try {
+            // 1. Get current product state before update
+            $currentProductStmt = $conn->prepare("SELECT quantity, unit_volume, request_status, agent_id FROM warehouse_products WHERE id = ? FOR UPDATE");
+            $currentProductStmt->bind_param("i", $wpId);
+            $currentProductStmt->execute();
+            $currentProduct = $currentProductStmt->get_result()->fetch_assoc();
+            $currentProductStmt->close();
 
-        // Update warehouse_products table
-        $wpUpdateStmt = $conn->prepare("UPDATE warehouse_products SET quantity = ?, unit_volume = ?, expiry_date = ?, request_status = ? WHERE id = ?");
-        $wpUpdateStmt->bind_param("idsii", $quantity, $unitVolume, $expiryDate, $requestStatus, $wpId);
+            if (!$currentProduct) {
+                throw new Exception("Product not found.");
+            }
 
-        if ($wpUpdateStmt->execute()) {
+            $oldStatusFlag = (int)$currentProduct['request_status'];
+            // Volume is only counted if status is 1 (Approved)
+            $oldVolume = ($oldStatusFlag === 1) ? (float)$currentProduct['quantity'] * (float)$currentProduct['unit_volume'] : 0;
+            $newVolume = ($newStatusFlag === 1) ? (float)$quantity * (float)$unitVolume : 0;
+            $volumeDelta = $newVolume - $oldVolume;
+
+            // 2. Update products table (name)
+            $productUpdateStmt = $conn->prepare("UPDATE products SET name = ? WHERE product_id = ?");
+            $productUpdateStmt->bind_param("si", $productName, $productId);
+            $productUpdateStmt->execute();
+            $productUpdateStmt->close();
+
+            // 3. Update warehouse_products table
+            $wpUpdateStmt = $conn->prepare("UPDATE warehouse_products SET quantity = ?, unit_volume = ?, expiry_date = ?, request_status = ? WHERE id = ?");
+            $wpUpdateStmt->bind_param("idssi", $quantity, $unitVolume, $expiryDate, $newStatusFlag, $wpId);
+            $wpUpdateStmt->execute();
+            $wpUpdateStmt->close();
+
+            // 4. Adjust warehouse capacity if volume changed
+            if ($volumeDelta != 0) {
+                $capacityUpdateStmt = $conn->prepare("UPDATE warehouses SET capacity_used = capacity_used + ? WHERE warehouse_id = ?");
+                $capacityUpdateStmt->bind_param("di", $volumeDelta, $warehouseId);
+                $capacityUpdateStmt->execute();
+                $capacityUpdateStmt->close();
+            }
+
+            // 5. Commit the transaction
+            $conn->commit();
             $success = "Product updated successfully!";
-        } else {
-            $error = "Error updating product.";
+
+            // 6. Send notification if status changed
+            if ($newStatusFlag !== $oldStatusFlag && !empty($currentProduct['agent_id'])) {
+                $statusText = ($newStatusFlag === 1) ? 'Approved' : 'In Processing';
+                $message = "The status of your product request for '{$productName}' has been updated to: {$statusText}.";
+                $link = "/direct-edge/warehouse-app/warehouse%20information/warehouse-info.php?highlight_id={$wpId}";
+                create_notification($conn, $currentProduct['agent_id'], 'request_approved', $message, $link);
+            }
+        } catch (Exception $e) {
+            $conn->rollback();
+            $error = "Error updating product: " . $e->getMessage();
         }
     } else {
-        $error = "Invalid product data.";
+        $error = "Invalid product data provided.";
     }
 
     // Redirect to refresh the page after update
     ob_end_clean(); // Clear buffered output before redirect
-    header("Location: manage_warehouse.php?id=" . $warehouseId);
+    header("Location: manage_warehouse.php?id=" . $warehouseId . "&product_updated=1");
     exit;
 }
 
@@ -67,12 +110,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateWarehouse'])) {
     $type = $_POST['type'] ?? $warehouse['type'];
     $status = $_POST['status'] ?? $warehouse['status'];
     $capacity_total = $_POST['capacity_total'] ?? $warehouse['capacity_total'];
-    $capacity_used = $_POST['capacity_used'] ?? $warehouse['capacity_used'];
+
+    // IMPORTANT: capacity_used should not be directly editable. It should be calculated.
+    // We will fetch it again to ensure it's current.
+    $current_capacity_res = $conn->query("SELECT capacity_used FROM warehouses WHERE warehouse_id = $warehouseId");
+    $current_capacity_used = $current_capacity_res->fetch_assoc()['capacity_used'] ?? 0;
+
     $location_full = $_POST['location_full'] ?? $warehouse['location'];
 
     // Assuming 'location' in DB is the full address, update with location_full
-    $updateStmt = $conn->prepare("UPDATE warehouses SET name=?, location=?, type=?, status=?, capacity_total=?, capacity_used=? WHERE warehouse_id=?");
-    $updateStmt->bind_param("ssssiii", $name, $location_full, $type, $status, $capacity_total, $capacity_used, $warehouseId);
+    $updateStmt = $conn->prepare("UPDATE warehouses SET name=?, location=?, type=?, status=?, capacity_total=? WHERE warehouse_id=?");
+    $updateStmt->bind_param("ssssii", $name, $location_full, $type, $status, $capacity_total, $warehouseId);
 
     if ($updateStmt->execute()) {
         // Redirect to refresh the page and show success message
@@ -336,8 +384,9 @@ ob_end_flush();
                             </label>
                             <input type="number" name="capacity_used"
                                 value="<?= htmlspecialchars($warehouse['capacity_used']) ?>"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-200"
                                 readonly>
+                            <small class="text-gray-500">This field is calculated automatically.</small>
                         </div>
 
                         <div>
