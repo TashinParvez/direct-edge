@@ -1,4 +1,8 @@
-<?php include '../Include/SidebarAgent.php'; ?>
+<?php
+// include '../Include/SidebarAgent.php'; 
+include '../include/navbar.php';
+
+?>
 <link rel="stylesheet" href="../Include/sidebar.css">
 
 <?php

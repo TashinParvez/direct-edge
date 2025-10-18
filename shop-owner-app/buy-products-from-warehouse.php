@@ -376,9 +376,9 @@ mysqli_free_result($result);
 </head>
 
 <body class="bg-gray-50 min-h-screen">
-    <!-- Sidebar -->
-    <?php // include '../include/Sidebar.php'; 
-    ?>
+    <!-- Sidebar --> 
+    <?php include '../Include/SidebarShop.php'; ?>
+
 
     <!-- Main Content -->
     <div class="flex-1 p-4 sm:p-6 lg:p-8">

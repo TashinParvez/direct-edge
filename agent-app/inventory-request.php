@@ -276,7 +276,7 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
                     <!-- Expiry Date -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            <i class='bx bx-calendar mr-1'></i>Expiry Date
+                            <i class='bx bx-calendar mr-1'></i>Expiry Date (Last valid date of this item)
                         </label>
                         <input type="date" name="expiry"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
@@ -284,7 +284,7 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
                     <!-- Inbound Date -->
                     <div>
-                        <label class="block mb-1 font-medium">Inbound Date</label>
+                        <label class="block mb-1 font-medium">Inbound Date (When goods will arrive at warehouse)</label>
                         <input type="date" name="inbound" class="w-full p-2 border border-gray-300 rounded">
                     </div>
 
@@ -295,20 +295,23 @@ $all_free_warehouse = mysqli_fetch_all($result, MYSQLI_ASSOC);
                     </div> -->
 
                     <!-- Product Image Upload -->
-                    <div>
+                    <!-- <div>
                         <label class="block mb-1 font-medium">Upload Product Image</label>
                         <input type="file" name="productFile" id="productFile" accept="image/*"
                             class="w-full p-2 border border-gray-300 rounded">
                         <img id="productPreview" src="" class="mt-2 h-32 w-32 object-cover rounded hidden">
-                    </div>
+                    </div> -->
 
                     <!-- Required Space Display -->
-                    <div class="space-display p-4 rounded-md text-center">
-                        <p class="font-semibold flex items-center justify-center">
-                            <i class='bx bx-box mr-2'></i>
-                            Required Storage Space: <span id="requiredSpace" class="ml-2 text-xl">0.00</span> m³
+                    <!-- Required Space Display -->
+                    <div class="space-display p-4 rounded-md text-center text-white bg-gray-800">
+                        <p class="font-semibold flex items-center justify-center text-white">
+                            <i class='bx bx-box mr-2 text-white'></i>
+                            Required Storage Space:
+                            <span id="requiredSpace" class="ml-2 text-xl text-white">0.00</span> m³
                         </p>
                     </div>
+
 
                     <!-- Warehouse Selection -->
                     <div>
