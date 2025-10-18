@@ -1,3 +1,6 @@
+<?php
+ob_start(); // Start output buffering to handle session_start() in sidebar
+?>
 <link rel="stylesheet" href="../../Include/sidebar.css">
 <?php include '../../Include/SidebarWarehouse.php'; ?>
 
@@ -6,7 +9,6 @@
 require_once __DIR__ . '/../../include/connect-db.php';
 
 
-// include '../../include/navbar.php';
 $admin_id = isset($user_id) ? $user_id : 65;
 
 // Metrics
@@ -105,9 +107,11 @@ if ($resAg) {
 
 <body>
     <div class="container">
-        <img src="warehouse-products-icon.png" alt="Warehouse Products Icon"
-            style="width:90px;height:90px;display:block;margin:0 auto 16px auto;">
         <h1>Warehouse Products</h1>
+        <p style="margin-bottom: 32px; font-size: 1.2rem; color: #555; font-weight: 400;">
+            Products Available in the Warehouse
+        </p>
+
 
         <!-- Metrics Section -->
         <?php
@@ -335,7 +339,7 @@ if ($resAg) {
                             <td title='" . $warehouseFreeSpace . "'>" . $warehouseFreeSpace . "</td>
                             <td title='" . $agentId . "'>" . $agentId . "</td>
                             <td>
-                                <button class='offer-suggestion-link' title='View offer suggestion'>" . htmlspecialchars($offerSuggestion, ENT_QUOTES, 'UTF-8') . "</button>
+                                <button class='btn offer-suggestion-link btn-primary' title='View offer suggestion'>" . htmlspecialchars($offerSuggestion, ENT_QUOTES, 'UTF-8') . "</button>
                             </td>
                             <td title='" . ($inboundDate ?: '—') . "'>" . ($inboundDate ?: '—') . "</td>
                             <td title='" . ($expiryDate ?: '—') . "'>" . ($expiryDate ?: '—') . "</td>
@@ -545,7 +549,10 @@ if ($resAg) {
         </div>
     </div>
 
-    <script src="../warehouse information/warehouse-info.js"></script>
+    <script src="warehouse-info.js?v=<?php echo time(); ?>"></script>
 </body>
 
 </html>
+<?php
+ob_end_flush(); // End output buffering
+?>

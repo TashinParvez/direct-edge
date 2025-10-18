@@ -98,6 +98,22 @@ if (isset($user_id)) {
                 <span class="tooltip">Add Farmer</span>
             </li>
             <li>
+                <a href="../agent-app/Agreement.php"
+                    class="<?php echo ($current_page == 'add-farmers-info.php') ? 'text-white bg-white' : $linkClass; ?>">
+                    <i class='bx bx-edit-alt'></i>
+                    <span class="links_name">Add Agreement</span>
+                </a>
+                <span class="tooltip">Add Farmer</span>
+            </li>
+            <li>
+                <a href="../agent-app/my_agreements.php"
+                    class="<?php echo ($current_page == 'add-farmers-info.php') ? 'text-white bg-white' : $linkClass; ?>">
+                    <i class='bx bx-edit'></i> <!-- Classic pen icon -->
+                    <span class="links_name">My Agreements</span>
+                </a>
+                <span class="tooltip">Add Farmer</span>
+            </li>
+            <li>
                 <a href="../agent-app/payment-details.php"
                     class="<?php echo ($current_page == 'payment-details.php') ? 'text-white bg-white' : $linkClass; ?>">
                     <i class='bx bx-credit-card'></i>
@@ -113,6 +129,16 @@ if (isset($user_id)) {
                 </a>
                 <span class="tooltip">Inventory Request</span>
             </li>
+
+            <li>
+                <a href="../agent-app/my-inventory-requests.php"
+                    class="<?php echo ($current_page == 'inventory-request.php') ? 'text-white bg-white' : $linkClass; ?>">
+                    <i class='bx bx-package'></i>
+                    <span class="links_name">My Inventory Requests</span>
+                </a>
+                <span class="tooltip">Inventory Request</span>
+            </li>
+
             <li>
                 <a href="../notification/notification.php"
                     class="notification-link <?php echo ($current_page == 'notification.php') ? 'text-white bg-white' : $linkClass; ?>">

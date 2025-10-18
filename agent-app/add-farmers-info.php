@@ -87,10 +87,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 
         if ($stmt->execute()) {
-            // $farmer_id = $conn->insert_id();
+            $farmer_id = $conn->insert_id;
             $message = "Farmer information saved successfully!";
             $message_type = "success";
             $show_actions = true;
+
+            // --- NOTIFICATION ---
+            include_once __DIR__ . '/../include/notification_helpers.php';
+            $notification_message = "You have successfully added a new farmer: " . htmlspecialchars($full_name) . ".";
+            $notification_link = "/agent-app/farmer-profile.php?id=" . $farmer_id;
+            create_notification($conn, $agent_id, 'new_farmer_added', $notification_message, $notification_link);
+            // --- END NOTIFICATION ---
+
         } else {
             $message = "Error: " . $stmt->error;
             $message_type = "error";
@@ -260,7 +268,7 @@ $conn->close();
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Farming Land Size</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Farming Land Size(acres)</label>
                         <input type="number" name="land_size" placeholder="Land size in acres/bigha" step="0.01"
                             value="<?php echo isset($_POST['land_size']) ? $_POST['land_size'] : ''; ?>"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 form-field">
@@ -330,7 +338,9 @@ $conn->close();
     </div>
     </section>
 
-    <?php include '../include/footer.php'; ?>
+    <?php 
+    // include '../include/footer.php'; 
+    ?>
 </body>
 
 </html>

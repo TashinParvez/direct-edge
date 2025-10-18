@@ -1,117 +1,19 @@
 <?php
+ob_start(); // Start output buffering to handle session_start() in sidebar
+?>
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarShop.php'; ?>
+
+<?php
 
 include '../../include/connect-db.php';
-include '../../include/navbar.php';
 
-$shop_id = 6;
+$shop_id = isset($user_id) ? $user_id : 6;
 
-
-
-// ====================
-// ====================
-
-$sql = "SELECT 
-            o.order_id,
-            o.user_name,
-            o.total_amount,
-            o.status,
-            i.product_id,
-            i.quantity,
-            i.price AS unit_price,
-            p.name AS product_name,
-            shop_id
-        FROM self_service_orders o
-        JOIN self_service_order_items i ON o.order_id = i.order_id
-        JOIN products p ON i.product_id = p.`product_id`
-        WHERE `shop_id` = 6
-        ORDER BY o.order_id;";
-
+// Query to extract products from JSON and join with products table
 $sql = "SELECT 
             combined.order_id,
-            combined.user_name,
-            combined.total_amount,
-            combined.status,
-            combined.product_id,
-            p.name AS product_name,        -- optional
-            p.img_url,                     -- image from products table
-            combined.quantity as quantity,
-            combined.price as unit_price,
-            combined.shop_id
-            FROM (
-                SELECT
-                o.order_id,
-                o.user_name,
-                o.total_amount,
-                o.status,
-                JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[0].product_id'))) AS product_id,
-                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[0].quantity'))) AS UNSIGNED) AS quantity,
-                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[0].price'))) AS DECIMAL(10,2)) AS price,
-                o.shop_id
-                FROM self_service_orders o
-                WHERE o.shop_id = 6
-
-                UNION ALL
-
-                SELECT
-                o.order_id,
-                o.user_name,
-                o.total_amount,
-                o.status,
-                JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[1].product_id'))) AS product_id,
-                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[1].quantity'))) AS UNSIGNED) AS quantity,
-                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[1].price'))) AS DECIMAL(10,2)) AS price,
-                o.shop_id
-                FROM self_service_orders o
-                WHERE o.shop_id = 6
-
-                UNION ALL
-
-                SELECT
-                o.order_id,
-                o.user_name,
-                o.total_amount,
-                o.status,
-                JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[2].product_id'))) AS product_id,
-                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[2].quantity'))) AS UNSIGNED) AS quantity,
-                CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[2].price'))) AS DECIMAL(10,2)) AS price,
-                o.shop_id
-                FROM self_service_orders o
-                WHERE o.shop_id = 6
-            ) AS combined
-            LEFT JOIN products p 
-            ON p.product_id = combined.product_id       
-            WHERE combined.product_id IS NOT NULL
-            ORDER BY combined.order_id, combined.product_id;";
-
-$result = $conn->query($sql);
-
-$orders = [];
-
-// while ($row = $result->fetch_assoc()) {
-//     $id = $row['order_id'];
-
-//     if (!isset($orders[$id])) {
-//         $orders[$id] = [
-//             'id' => $id,
-//             'buyer' => $row['user_name'],
-//             'amount' => (float)$row['total_amount'],
-//             'status' => $row['status'],
-//             'products' => []
-//         ];
-//     }
-
-//     $orders[$id]['products'][] = [
-//         'name' => $row['product_name'],
-//         'qty' => (int)$row['quantity'],
-//         'unit_price' => (float)$row['unit_price']
-//     ];
-// }
-
-
-// new// new
-
-$sql = "SELECT 
-            combined.order_id,
+            combined.order_code,
             combined.user_name,
             combined.total_amount,
             combined.status,
@@ -124,6 +26,7 @@ $sql = "SELECT
         FROM (
             SELECT
                 o.order_id,
+                o.order_code,
                 o.user_name,
                 o.total_amount,
                 o.status,
@@ -132,12 +35,13 @@ $sql = "SELECT
                 CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[0].price'))) AS DECIMAL(10,2)) AS price,
                 o.shop_id
             FROM self_service_orders o
-            WHERE o.shop_id = 6
+            WHERE o.shop_id = ?
 
             UNION ALL
 
             SELECT
                 o.order_id,
+                o.order_code,
                 o.user_name,
                 o.total_amount,
                 o.status,
@@ -146,12 +50,13 @@ $sql = "SELECT
                 CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[1].price'))) AS DECIMAL(10,2)) AS price,
                 o.shop_id
             FROM self_service_orders o
-            WHERE o.shop_id = 6
+            WHERE o.shop_id = ?
 
             UNION ALL
 
             SELECT
                 o.order_id,
+                o.order_code,
                 o.user_name,
                 o.total_amount,
                 o.status,
@@ -160,61 +65,61 @@ $sql = "SELECT
                 CAST(JSON_UNQUOTE(JSON_EXTRACT(o.products, CONCAT('$[2].price'))) AS DECIMAL(10,2)) AS price,
                 o.shop_id
             FROM self_service_orders o
-            WHERE o.shop_id = 6
+            WHERE o.shop_id = ?
         ) AS combined
-        LEFT JOIN products p 
-            ON p.product_id = combined.product_id       
+        LEFT JOIN products p ON p.product_id = combined.product_id       
         WHERE combined.product_id IS NOT NULL
-        ORDER BY combined.order_id, combined.product_id;";
+        ORDER BY combined.order_id, combined.product_id";
 
-$result = $conn->query($sql);
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("iii", $shop_id, $shop_id, $shop_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if (!$result) {
+    die("Query failed: " . $conn->error);
+}
 
 $orders = [];
 
 while ($row = $result->fetch_assoc()) {
     $orderId = $row['order_id'];
 
-    // Create the order array if not yet initialized
     if (!isset($orders[$orderId])) {
+        // Normalize empty status to 'In queue'
+        $status = (!empty($row['status']) && $row['status'] != '') ? $row['status'] : 'In queue';
+
         $orders[$orderId] = [
-            'order_id'   => (int)$orderId,
+            'id'         => (int)$orderId,
+            'order_code' => $row['order_code'],
             'buyer'      => $row['user_name'],
-            'total_amount' => (float)$row['total_amount'],
-            'status'     => $row['status'],
+            'amount'     => 0.0, // Will calculate from products
+            'status'     => $status,
             'shop_id'    => (int)$row['shop_id'],
             'products'   => []
         ];
     }
 
-    // Append each product under this order
+    $qty = (int)$row['quantity'];
+    $unitPrice = (float)$row['unit_price'];
+
     $orders[$orderId]['products'][] = [
         'product_id' => (int)$row['product_id'],
         'name'       => $row['product_name'],
         'img_url'    => $row['img_url'],
-        'quantity'   => (int)$row['quantity'],
-        'unit_price' => (float)$row['unit_price'],
-        'total_price' => (float)$row['quantity'] * (float)$row['unit_price']
+        'qty'        => $qty,
+        'unit_price' => $unitPrice
     ];
+
+    // Calculate correct total amount
+    $orders[$orderId]['amount'] += ($qty * $unitPrice);
 }
 
-// Reindex to numeric array (optional) 
-
-// Example: output as JSON
-// echo json_encode($orders, JSON_PRETTY_PRINT);
-
-
-// new// new
-
-// Reset keys to 0,1,2...
+// Reset array keys to 0, 1, 2...
 $orders = array_values($orders);
 
-// print_r($orders);
-
-
-
-
-
-$notHandled = array_filter($orders, fn($o) => $o['status'] == 'In queue');
+// Filter orders by status
+$notHandled = array_filter($orders, fn($o) => $o['status'] == 'In queue' || $o['status'] == '' || $o['status'] == null);
 $running = array_filter($orders, fn($o) => $o['status'] == 'Running');
 $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
 
@@ -316,17 +221,20 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
 
 
     <script>
-        const orders = <?= json_encode($orders) ?>;
+        (function() {
+            'use strict';
 
-        const modal = document.getElementById('orderModal');
-        const modalContent = document.getElementById('modalContent');
-        const closeBtn = document.getElementById('closeModalBtn');
+            const orders = <?= json_encode($orders) ?>;
 
-        function openModal(orderId) {
-            const order = orders.find(o => o.id == orderId);
-            if (!order) return;
+            const modal = document.getElementById('orderModal');
+            const modalContent = document.getElementById('modalContent');
+            const closeBtn = document.getElementById('closeModalBtn');
 
-            const productsHtml = order.products.map(p => `
+            window.openModal = function(orderId) {
+                const order = orders.find(o => o.id == orderId);
+                if (!order) return;
+
+                const productsHtml = order.products.map(p => `
         <tr class="border-b">
             <td class="p-2 text-black-custom">${p.name}</td>
             <td class="p-2 text-black-custom">${p.qty}</td>
@@ -335,7 +243,7 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
         </tr>
     `).join('');
 
-            modalContent.innerHTML = `
+                modalContent.innerHTML = `
         <h3 class="text-2xl font-bold text-black-custom mb-4">Order #${order.id}</h3>
         <p class="mb-2 text-black-custom">Buyer: ${order.buyer}</p>
         <p class="mb-4 font-semibold text-black-custom">Total: $${order.amount}</p>
@@ -360,32 +268,32 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
         </div>
     `;
 
-            // Disable buttons based on order status
-            if (order.status === 'Running') {
-                document.getElementById('btnRunning').disabled = true;
-                document.getElementById('btnDone').disabled = false;
-                document.getElementById('btnCancel').disabled = false;
-            } else if (order.status === 'Done') {
-                document.getElementById('btnRunning').disabled = true;
-                document.getElementById('btnDone').disabled = true;
-                document.getElementById('btnCancel').disabled = true;
-            } else { // In queue
-                document.getElementById('btnRunning').disabled = false;
-                document.getElementById('btnDone').disabled = false;
-                document.getElementById('btnCancel').disabled = false;
+                // Disable buttons based on order status
+                if (order.status === 'Running') {
+                    document.getElementById('btnRunning').disabled = true;
+                    document.getElementById('btnDone').disabled = false;
+                    document.getElementById('btnCancel').disabled = false;
+                } else if (order.status === 'Done') {
+                    document.getElementById('btnRunning').disabled = true;
+                    document.getElementById('btnDone').disabled = true;
+                    document.getElementById('btnCancel').disabled = true;
+                } else { // In queue
+                    document.getElementById('btnRunning').disabled = false;
+                    document.getElementById('btnDone').disabled = false;
+                    document.getElementById('btnCancel').disabled = false;
+                }
+
+                modal.classList.remove('hidden'); // remove hidden
+                modal.classList.add('flex', 'show'); // add flex + fade-in
+
             }
 
-            modal.classList.remove('hidden'); // remove hidden
-            modal.classList.add('flex', 'show'); // add flex + fade-in
 
-        }
+            window.printOrder = function(orderId) {
+                const order = orders.find(o => o.id == orderId);
+                if (!order) return;
 
-
-        function printOrder(orderId) {
-            const order = orders.find(o => o.id == orderId);
-            if (!order) return;
-
-            const productsHtml = order.products.map(p => `
+                const productsHtml = order.products.map(p => `
         <tr>
             <td>${p.name}</td>
             <td>${p.qty}</td>
@@ -394,77 +302,101 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
         </tr>
     `).join('');
 
-            const printContent = `
-        <h2>Order #${order.id}</h2>
-        <p>Buyer: ${order.buyer}</p>
-        <p>Total: $${order.amount}</p>
-        <table border="1" cellspacing="0" cellpadding="5">
-            <tr>
-                <th>Product</th>
-                <th>Qty</th>
-                <th>Unit Price</th>
-                <th>Total</th>
-            </tr>
-            ${productsHtml}
-        </table>
+                const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${order.order_code}.pdf</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                h2 { margin-bottom: 10px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+                th { background-color: #f2f2f2; }
+            </style>
+        </head>
+        <body>
+            <h2>Order #${order.id} (${order.order_code})</h2>
+            <p><strong>Buyer:</strong> ${order.buyer}</p>
+            <p><strong>Total:</strong> $${order.amount}</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${productsHtml}
+                </tbody>
+            </table>
+        </body>
+        </html>
     `;
 
-            const newWin = window.open('', '', 'width=800,height=600');
-            newWin.document.write(printContent);
-            newWin.document.close();
-            newWin.print();
-        }
+                const newWin = window.open('', '', 'width=800,height=600');
+                newWin.document.write(printContent);
+                newWin.document.close();
+                newWin.document.title = `${order.order_code}.pdf`;
+                newWin.print();
+            }
 
 
-        function closeModal() {
-            modal.classList.remove('show', 'flex');
-            modal.classList.add('hidden');
-        }
+            function closeModal() {
+                modal.classList.remove('show', 'flex');
+                modal.classList.add('hidden');
+            }
 
-        // Close modal on button click
-        closeBtn.addEventListener('click', closeModal);
+            // Close modal on button click
+            closeBtn.addEventListener('click', closeModal);
 
-        // Close modal on outside click
-        window.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
+            // Close modal on outside click
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
 
 
 
-        function updateStatus(orderId, status) {
-            fetch('update_order_status.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        orderId,
-                        status
+            window.updateStatus = function(orderId, status) {
+                fetch('update_order_status.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            orderId,
+                            status
+                        })
                     })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(`Order #${orderId} marked as ${status}`);
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`Order #${orderId} marked as ${status}`);
 
-                        // Update the order status in JS to reflect changes in modal
-                        const order = orders.find(o => o.id == orderId);
-                        if (order) order.status = status;
+                            // Update the order status in JS to reflect changes in modal
+                            const order = orders.find(o => o.id == orderId);
+                            if (order) order.status = status;
 
-                        closeModal();
+                            closeModal();
 
-                        // Optionally, refresh the page to update the columns
-                        location.reload();
-                    } else {
-                        alert('Failed to update order: ' + data.message);
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('Something went wrong');
-                });
-        }
+                            // Optionally, refresh the page to update the columns
+                            location.reload();
+                        } else {
+                            alert('Failed to update order: ' + data.message);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Something went wrong');
+                    });
+            };
+        })();
     </script>
 </body>
 
 </html>
+<?php
+ob_end_flush(); // End output buffering
+?>

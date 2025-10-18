@@ -1,7 +1,10 @@
 <!-- SidebarShop.php -->
 <?php
 include __DIR__ . '/../include/connect-db.php'; // Database connection
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 
 $name = '';
 $role = ''; // role: admin, agent, shop-owner, user
@@ -33,7 +36,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="sidebar.css">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png">
+    <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png"> 
 </head>
 
 <body class="bg-custom">
@@ -59,7 +62,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <span class="tooltip">Self-Service Orders</span>
             </li>
             <li>
-                <a href="../shop-owner-app\DemandForecast\demand_forecast_dashboard_updated.php"
+                <a href="/../shop-owner-app/demand_forecast_dashboard_updated.php/"
                     class="<?php echo ($current_page == 'dashboard.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-bar-chart'></i>
                     <span class="links_name">Dashboard</span>
@@ -67,7 +70,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="../shop-owner-app\DemandForecast\demand_forecast_dashboard_updated.php"
+                <a href="/../shop-owner-app/demand_forecast_dashboard_updated.php/"
                     class="<?php echo ($current_page == 'demand-forecasting.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-line-chart'></i>
                     <span class="links_name">Demand Forecasting</span>
@@ -106,21 +109,21 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </ul>
     </div>
     <script>
-    let sidebar = document.querySelector(".sidebar");
-    let closeBtn = document.querySelector("#btn");
+        let sidebar = document.querySelector(".sidebar");
+        let closeBtn = document.querySelector("#btn");
 
-    closeBtn.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-        menuBtnChange();
-    });
+        closeBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            menuBtnChange();
+        });
 
-    function menuBtnChange() {
-        if (sidebar.classList.contains("open")) {
-            closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
-        } else {
-            closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+        function menuBtnChange() {
+            if (sidebar.classList.contains("open")) {
+                closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
+            } else {
+                closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
+            }
         }
-    }
     </script>
 </body>
 

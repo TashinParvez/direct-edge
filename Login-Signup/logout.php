@@ -24,5 +24,4 @@ if ($role == 'Admin')
     header("Location: ../Login-Signup/login.php");
 else
     header("Location: ../Home/landing.php");
-
 exit;
