@@ -22,6 +22,60 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateOrderStatus'])) 
         $stmtUp = $conn->prepare("UPDATE orders SET status = ?, updated_at=NOW() WHERE order_id = ?");
         $stmtUp->bind_param("si", $newStatus, $orderId);
         if ($stmtUp->execute()) {
+
+            // --- UPDATE SHOP_PRODUCTS WHEN APPROVED, SHIPPED, OR DELIVERED ---
+            // if (in_array($newStatus, ['Approved', 'Shipped', 'Delivered'])) {
+            if (in_array($newStatus, ['Shipped', 'Delivered'])) {
+                // Get shop owner id from order
+                $stmtShop = $conn->prepare("SELECT shopowner_id FROM orders WHERE order_id = ?");
+                $stmtShop->bind_param("i", $orderId);
+                $stmtShop->execute();
+                $shopResult = $stmtShop->get_result();
+                if ($shopRow = $shopResult->fetch_assoc()) {
+                    $shop_id = $shopRow['shopowner_id'];
+
+                    // Get all order items for this order
+                    $stmtItems = $conn->prepare("SELECT product_id, quantity, unit_price FROM order_items WHERE order_id = ?");
+                    $stmtItems->bind_param("i", $orderId);
+                    $stmtItems->execute();
+                    $itemsResult = $stmtItems->get_result();
+
+                    while ($item = $itemsResult->fetch_assoc()) {
+                        $product_id = $item['product_id'];
+                        $quantity = $item['quantity'];
+                        $unit_price = $item['unit_price'];
+
+                        // Check if product already exists in shop_products
+                        $checkStmt = $conn->prepare("SELECT id, quantity FROM shop_products WHERE shop_id = ? AND product_id = ?");
+                        $checkStmt->bind_param("ii", $shop_id, $product_id);
+                        $checkStmt->execute();
+                        $checkResult = $checkStmt->get_result();
+
+                        if ($checkResult->num_rows > 0) {
+                            // Update existing product - add to quantity
+                            $existingRow = $checkResult->fetch_assoc();
+                            $newQuantity = $existingRow['quantity'] + $quantity;
+
+                            $updateStmt = $conn->prepare("UPDATE shop_products SET quantity = ?, updated_at = NOW() WHERE shop_id = ? AND product_id = ?");
+                            $updateStmt->bind_param("iii", $newQuantity, $shop_id, $product_id);
+                            $updateStmt->execute();
+                            $updateStmt->close();
+                        } else {
+                            // Insert new product
+                            // Use unit_price as both bought_price and selling_price (shop owner can update selling price later)
+                            $insertStmt = $conn->prepare("INSERT INTO shop_products (shop_id, product_id, quantity, selling_price, bought_price, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
+                            $insertStmt->bind_param("iiidd", $shop_id, $product_id, $quantity, $unit_price, $unit_price);
+                            $insertStmt->execute();
+                            $insertStmt->close();
+                        }
+                        $checkStmt->close();
+                    }
+                    $stmtItems->close();
+                }
+                $stmtShop->close();
+            }
+            // --- END SHOP_PRODUCTS UPDATE ---
+
             // --- NOTIFICATION ---
             include_once __DIR__ . '/../../include/notification_helpers.php';
 
