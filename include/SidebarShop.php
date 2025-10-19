@@ -146,14 +146,14 @@ if (isset($user_id)) {
                     <i class='bx bx-log-out' id="log_out"></i>
                 </a>
             </li>
-            <li>
+            <!-- <li>
                 <a href="/../shop-owner-app/cart.php"
                     class="<?php echo ($current_page == 'self-service-orders.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-store'></i>
                     <span class="links_name">Product Scan</span>
                 </a>
                 <span class="tooltip">Product Scan</span>
-            </li>
+            </li> -->
         </ul>
     </div>
     <script>
