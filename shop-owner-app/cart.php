@@ -461,8 +461,10 @@ $conn->close();
 
     <!-- Manual Product Addition Modal -->
     <div id="manual-modal"
-        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden modal">
-        <div class="bg-white p-6 rounded-lg max-w-4xl w-full mx-4 max-h-96 overflow-hidden">
+        class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden modal" aria-hidden="true">
+        <div class="bg-white p-6 rounded-lg max-w-4xl w-full mx-4 max-h-96 overflow-hidden relative" role="dialog" aria-modal="true" aria-labelledby="manual-modal-title">
+            <!-- Close button -->
+            <button id="manual-modal-close" aria-label="Close" title="Close" class="absolute top-3 right-3 text-gray-600 hover:text-gray-800 bg-transparent focus:outline-none">✕</button>
             <h3 class="text-xl font-bold mb-4">Add Product Manually</h3>
             <div class="mb-4">
                 <input type="text" id="product-search" placeholder="Search for products in shop inventory..."
@@ -535,6 +537,45 @@ $conn->close();
             document.getElementById('search-results').innerHTML = '';
             document.getElementById('product-search').value = '';
         }
+
+        // Close when clicking outside the inner modal
+        document.addEventListener('click', function(e) {
+            const manualModal = document.getElementById('manual-modal');
+            const modalContent = manualModal ? manualModal.querySelector('[role="dialog"]') : null;
+            if (!manualModal || manualModal.classList.contains('hidden')) return;
+
+            if (e.target === manualModal) {
+                closeManualModal();
+            }
+        });
+
+        // Close via close icon
+        document.addEventListener('DOMContentLoaded', function() {
+            const closeBtn = document.getElementById('manual-modal-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeManualModal);
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const manualModal = document.getElementById('manual-modal');
+                if (manualModal && !manualModal.classList.contains('hidden')) {
+                    closeManualModal();
+                }
+            }
+        });
+
+        // Close inventory modal when clicking on overlay
+        document.addEventListener('click', function(e) {
+            const inventoryModal = document.getElementById('inventory-modal');
+            if (!inventoryModal || inventoryModal.classList.contains('hidden')) return;
+
+            if (e.target === inventoryModal) {
+                closeInventoryModal();
+            }
+        });
 
         function searchProducts(query) {
             fetch('', {

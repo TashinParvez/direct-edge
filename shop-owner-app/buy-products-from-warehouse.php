@@ -198,36 +198,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
         }
 
-        // Insert stock request
-        $sql = "INSERT INTO stock_requests (requester_id, status, notes) VALUES (?, 'Pending', 'Stock request from shop owner')";
+        // Insert stock request with product_id and quantity directly
+        $sql = "INSERT INTO stock_requests (requester_id, product_id, quantity, note, status) VALUES (?, ?, ?, NULL, 'Pending')";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
             ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Stock request query preparation failed: ' . $conn->error]);
             exit;
         }
-        $stmt->bind_param("i", $user_id);
+        $stmt->bind_param("iii", $user_id, $product_id, $quantity);
         if (!$stmt->execute()) {
             ob_end_clean();
             echo json_encode(['status' => 'error', 'message' => 'Stock request insert failed: ' . $stmt->error]);
-            $stmt->close();
-            exit;
-        }
-        $request_id = $stmt->insert_id;
-        $stmt->close();
-
-        // Insert stock request item
-        $sql = "INSERT INTO stock_request_items (request_id, product_id, quantity) VALUES (?, ?, ?)";
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            ob_end_clean();
-            echo json_encode(['status' => 'error', 'message' => 'Stock request item query preparation failed: ' . $conn->error]);
-            exit;
-        }
-        $stmt->bind_param("iii", $request_id, $product_id, $quantity);
-        if (!$stmt->execute()) {
-            ob_end_clean();
-            echo json_encode(['status' => 'error', 'message' => 'Stock request item insert failed: ' . $stmt->error]);
             $stmt->close();
             exit;
         }
@@ -279,7 +261,7 @@ mysqli_free_result($result);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buy Products</title>
+    <title>Buy Products from Warehouse</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <style>
@@ -376,6 +358,60 @@ mysqli_free_result($result);
                 flex-direction: column;
             }
         }
+
+        /* Notification Toast */
+        .notification-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            min-width: 300px;
+            max-width: 400px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            animation: slideInUp 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-toast.success {
+            border-left: 4px solid #10b981;
+        }
+
+        .notification-toast.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .notification-toast.hide {
+            animation: slideOutDown 0.3s ease-out forwards;
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutDown {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
@@ -386,7 +422,7 @@ mysqli_free_result($result);
 
     <!-- Main Content -->
     <div class="flex-1 p-4 sm:p-6 lg:p-8">
-        <h2 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Buy Products For Your Shop</h2>
+        <h2 class="text-2xl font-semibold text-gray-900 mb-8 text-center">Buy Products from Warehouse</h2>
 
         <!-- Search and Filters -->
         <div class="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -489,9 +525,9 @@ mysqli_free_result($result);
                     <?php echo (int)$cart_count; ?>
                 </span>
             </button>
-            <button onclick="window.location.href='requests.php'"
+            <button onclick="window.location.href='request-view.php'"
                 class="bg-gray-600 text-white px-5 py-3 rounded-full shadow-lg btn flex items-center">
-                <i class='bx bx-package text-lg mr-2'></i>Requests
+                <i class='bx bx-list-check text-lg mr-2'></i> view Requests
             </button>
         </div>
 
@@ -551,6 +587,30 @@ mysqli_free_result($result);
         <script>
             const USER_ID = <?php echo json_encode($user_id); ?>;
             let currentProduct = null;
+
+            function showNotification(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `notification-toast ${type}`;
+
+                const icon = type === 'success' ?
+                    '<i class="bx bx-check-circle text-2xl text-green-500"></i>' :
+                    '<i class="bx bx-error-circle text-2xl text-red-500"></i>';
+
+                toast.innerHTML = `
+                    ${icon}
+                    <span class="flex-1 text-gray-800">${message}</span>
+                    <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+                        <i class="bx bx-x text-xl"></i>
+                    </button>
+                `;
+
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.add('hide');
+                    setTimeout(() => toast.remove(), 300);
+                }, 5000);
+            }
 
             function openAddCartModal(product) {
                 currentProduct = product;
@@ -680,6 +740,7 @@ mysqli_free_result($result);
 
                         if (data.status === 'success') {
                             closeModal('requestStockModal');
+                            showNotification('Request submitted successfully! You can view it in the Requests page.', 'success');
                         } else {
                             alert(data.message || 'Failed to submit stock request');
                         }

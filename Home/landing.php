@@ -28,7 +28,7 @@
             <div class="text-center" style="padding-top: 7rem;">
                 <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
                     Revolutionize Your
-                    <span class="text-green-600">Agricultural Supply Chain</span>
+                    <span class="text-green-600">Supply Chain</span>
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
                     Connect farmers, distributors, and shop owners in one unified platform.
