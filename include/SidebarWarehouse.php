@@ -32,6 +32,18 @@ function isActive($page, $current_page)
 {
     return $current_page == $page ? 'bg-white text-black' : 'text-gray-700 hover:bg-gray-100';
 }
+
+// Get unread notification count
+$unread_count = 0;
+if (isset($user_id)) {
+    $nbPath = __DIR__ . '/../notification/notification-backend.php';
+    if (file_exists($nbPath)) {
+        include_once $nbPath;
+        if (function_exists('getUnreadCount')) {
+            $unread_count = (int) getUnreadCount($conn, $user_id);
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -119,6 +131,19 @@ function isActive($page, $current_page)
                     <span class="links_name">Warehouse Products</span>
                 </a>
                 <span class="tooltip">Warehouse Products</span>
+            </li>
+
+            <li>
+                <a href="/notification/notification.php"
+                    class="notification-link <?php echo isActive('notification.php', $current_page); ?>">
+                    <i class='bx bx-bell'></i>
+                    <span class="links_name">Notifications</span>
+                    <?php if ($unread_count > 0): ?>
+                        <span class="notif-badge"><?php echo $unread_count; ?></span>
+                        <span class="blinking-dot"></span>
+                    <?php endif; ?>
+                </a>
+                <span class="tooltip">Notifications</span>
             </li>
 
             <!-- Profile Section -->

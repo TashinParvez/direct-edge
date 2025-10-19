@@ -22,6 +22,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateOrderStatus'])) 
         $stmtUp = $conn->prepare("UPDATE orders SET status = ?, updated_at=NOW() WHERE order_id = ?");
         $stmtUp->bind_param("si", $newStatus, $orderId);
         if ($stmtUp->execute()) {
+            // --- NOTIFICATION ---
+            include_once __DIR__ . '/../../include/notification_helpers.php';
+
+            // Get the shopowner_id for this order
+            $stmtShopOwner = $conn->prepare("SELECT shopowner_id FROM orders WHERE order_id = ?");
+            $stmtShopOwner->bind_param("i", $orderId);
+            $stmtShopOwner->execute();
+            $result = $stmtShopOwner->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $shop_owner_id = $row['shopowner_id'];
+                $notification_message = "Your order #" . htmlspecialchars($orderId) . " has been updated to: " . htmlspecialchars($newStatus) . ".";
+                $notification_link = "/shop-owner-app/Self-Service-Orders/Self-Service-Orders.php"; // Link to their orders page
+                create_notification($conn, $shop_owner_id, 'order_status_update', $notification_message, $notification_link);
+            }
+            // --- END NOTIFICATION ---
+
             if (isset($_POST['ajax'])) {
                 ob_end_clean();
                 echo json_encode(['success' => true, 'new_status' => $newStatus]);
@@ -270,6 +286,7 @@ ob_end_flush();
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -284,6 +301,7 @@ ob_end_flush();
             from {
                 opacity: 1;
             }
+
             to {
                 opacity: 0;
                 transform: translateY(-20px);
@@ -306,7 +324,7 @@ ob_end_flush();
         </div>
 
         <div class="container mx-auto px-4">
-            
+
             <!-- Success/Error Messages -->
             <?php if ($successMessage): ?>
                 <div id="successAlert" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center animate-slideDown">
@@ -362,7 +380,7 @@ ob_end_flush();
                         </select>
                     </div>
                 </form>
-                
+
                 <!-- Clear Filters Button -->
                 <?php if ($search || $filterStatus || $filterDate): ?>
                     <div class="mt-4 flex justify-end">
@@ -674,7 +692,7 @@ ob_end_flush();
         window.addEventListener('DOMContentLoaded', function() {
             const successAlert = document.getElementById('successAlert');
             const errorAlert = document.getElementById('errorAlert');
-            
+
             if (successAlert) {
                 setTimeout(function() {
                     successAlert.classList.add('alert-fade-out');
@@ -683,7 +701,7 @@ ob_end_flush();
                     }, 500);
                 }, 3000);
             }
-            
+
             if (errorAlert) {
                 setTimeout(function() {
                     errorAlert.classList.add('alert-fade-out');
@@ -718,7 +736,7 @@ ob_end_flush();
             const select = document.getElementById('status-select-' + orderId);
             const newStatus = select.value;
             const saveBtn = event.target;
-            
+
             // Disable button and show loading state
             saveBtn.disabled = true;
             saveBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin mr-1"></i>Saving...';
@@ -748,7 +766,7 @@ ob_end_flush();
                             'Delivered': 'bx-check-double',
                             'Cancelled': 'bx-x-circle'
                         };
-                        
+
                         // Find and update the status badge in the table
                         const rows = document.querySelectorAll('tr.order-row');
                         rows.forEach(row => {
@@ -761,26 +779,26 @@ ob_end_flush();
                                 }
                             }
                         });
-                        
+
                         // Show success notification
                         showNotification('success', `Status updated to ${data.new_status}`);
-                        
+
                         // Re-enable button with success feedback
                         saveBtn.disabled = false;
                         saveBtn.innerHTML = '<i class="bx bx-check mr-1"></i>Saved!';
                         saveBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
                         saveBtn.classList.add('bg-green-500');
-                        
+
                         // Revert button after 2 seconds
                         setTimeout(() => {
                             saveBtn.innerHTML = '<i class="bx bx-save mr-1"></i>Save';
                             saveBtn.classList.remove('bg-green-500');
                             saveBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
                         }, 2000);
-                        
+
                     } else {
                         showNotification('error', data.message || 'Failed to update status');
-                        
+
                         // Re-enable button
                         saveBtn.disabled = false;
                         saveBtn.innerHTML = '<i class="bx bx-save mr-1"></i>Save';
@@ -789,28 +807,28 @@ ob_end_flush();
                 .catch(error => {
                     console.error('Error:', error);
                     showNotification('error', 'Network error. Please try again.');
-                    
+
                     // Re-enable button
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = '<i class="bx bx-save mr-1"></i>Save';
                 });
         }
-        
+
         function showNotification(type, message) {
             const notification = document.createElement('div');
             const isSuccess = type === 'success';
-            
+
             notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center animate-slideDown ${
                 isSuccess ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'
             }`;
-            
+
             notification.innerHTML = `
                 <i class='bx ${isSuccess ? 'bx-check-circle' : 'bx-error-circle'} text-2xl mr-3'></i>
                 <span>${message}</span>
             `;
-            
+
             document.body.appendChild(notification);
-            
+
             // Auto-remove after 3 seconds
             setTimeout(() => {
                 notification.classList.add('alert-fade-out');

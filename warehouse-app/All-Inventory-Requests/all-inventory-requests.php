@@ -21,6 +21,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['req
         $stmt->bind_param('si', $newStatus, $requestId);
         $ok = $stmt->execute();
 
+        // --- NOTIFICATION ---
+        if ($ok) {
+            include_once __DIR__ . '/../../include/notification_helpers.php';
+
+            // Get the requester_id for this request
+            $stmtRequester = $conn->prepare("SELECT requester_id FROM stock_requests WHERE request_id = ?");
+            $stmtRequester->bind_param("i", $requestId);
+            $stmtRequester->execute();
+            $result = $stmtRequester->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $requester_id = $row['requester_id'];
+                $notification_message = "Your inventory request #" . htmlspecialchars($requestId) . " is now '" . htmlspecialchars($newStatus) . "'.";
+                if ($newStatus === 'Working') {
+                    $notification_message = "We are working on your inventory request #" . htmlspecialchars($requestId) . ". We will notify you about approval or rejection soon.";
+                }
+                $notification_link = "/agent-app/my-inventory-requests.php"; // Link to their requests page
+                create_notification($conn, $requester_id, 'inventory_request_update', $notification_message, $notification_link);
+            }
+        }
+        // --- END NOTIFICATION ---
+
         header('Content-Type: application/json');
         echo json_encode(['success' => $ok, 'status' => $newStatus]);
         exit;
@@ -706,11 +727,11 @@ while ($row = $result->fetch_assoc()) {
                             inProgress._bound = true;
                             inProgress.addEventListener('change', async () => {
                                 if (!selectedRequestId) return;
-                                
+
                                 const make = inProgress.checked ? 'SetWorking' : 'SetPending';
                                 const newStatusText = inProgress.checked ? 'Working' : 'Pending';
                                 const cls = inProgress.checked ? 'working' : 'pending';
-                                
+
                                 // Update badge immediately for instant feedback
                                 const statusClasses = {
                                     'pending': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
@@ -720,11 +741,11 @@ while ($row = $result->fetch_assoc()) {
                                 };
                                 badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses[cls]}`;
                                 badge.textContent = newStatusText;
-                                
+
                                 // Update local state
                                 const idx = items.findIndex(i => i.id == selectedRequestId);
                                 if (idx > -1) items[idx].status = newStatusText;
-                                
+
                                 // Send update to server (no need to wait or check response for UI update)
                                 updateRequestStatus(make, selectedRequestId, false);
                             });
@@ -743,7 +764,7 @@ while ($row = $result->fetch_assoc()) {
         // Handle accept/reject buttons (outside renderCards)
         document.querySelector('.accept').addEventListener('click', async () => {
             if (!selectedRequestId) return;
-            
+
             // Update badge immediately for visual feedback
             const badge = document.getElementById('modalStatusBadge');
             const statusClasses = {
@@ -754,13 +775,13 @@ while ($row = $result->fetch_assoc()) {
             };
             badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses['done']}`;
             badge.textContent = 'Done';
-            
+
             await updateRequestStatus('Accept', selectedRequestId, true);
         });
 
         document.querySelector('.reject').addEventListener('click', async () => {
             if (!selectedRequestId) return;
-            
+
             // Update badge immediately for visual feedback
             const badge = document.getElementById('modalStatusBadge');
             const statusClasses = {
@@ -771,7 +792,7 @@ while ($row = $result->fetch_assoc()) {
             };
             badge.className = `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses['rejected']}`;
             badge.textContent = 'Rejected';
-            
+
             await updateRequestStatus('Reject', selectedRequestId, true);
         });
 
