@@ -619,46 +619,62 @@ $activity_logs = [
         </section>
 
         <!-- ================= Segment 4: Reports ================= -->
-        <section class="mb-8">
+        <!-- <section class="mb-8">
             <h2 class="text-xl font-semibold mb-4">Reports & Analytics</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <?php foreach ($revenue_last_3_months as $idx => $m): ?>
-                    <div class="bg-white p-4 rounded shadow-sm">
-                        <div class="text-sm text-gray-500 mb-2"><?= htmlspecialchars($m['label']) ?></div>
-                        <div class="text-2xl font-bold"><?= number_format($m['amount'], 2) ?></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4"> -->
+        <?php
+        //  foreach ($revenue_last_3_months as $idx => $m): 
+        ?>
+        <!-- <div class="bg-white p-4 rounded shadow-sm">
+                        <div class="text-sm text-gray-500 mb-2"><?php
+                                                                // htmlspecialchars($m['label']) 
+                                                                ?></div>
+                        <div class="text-2xl font-bold"><?php
+                                                        // number_format($m['amount'], 2) 
+                                                        ?></div>
                         <div class="mt-2 text-sm text-gray-600">Monthly revenue</div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+                    </div> -->
+        <?php
+        //  endforeach; 
+        ?>
+        <!-- </div>
 
             <div class="mt-4 bg-white p-4 rounded shadow-sm">
                 <div class="text-sm text-gray-500 mb-2">Revenue Trend (last 3 months)</div>
                 <canvas id="revenueChart" height="120"></canvas>
             </div>
-        </section>
+        </section> -->
 
+        <!-- ================= ================= ================= -->
         <!-- ================= Segment 5: System Management ================= -->
-        <section class="mb-12">
+        <!-- ================= ================= ================= -->
+        <!-- <section class="mb-12">
             <h2 class="text-xl font-semibold mb-4">System Management</h2>
             <div class="bg-white p-4 rounded shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                     <div class="text-sm text-gray-500">Activity Logs</div>
-                    <!-- <a href="#" class="text-sm text-blue-600">View full log</a> -->
+                    <a href="#" class="text-sm text-blue-600">View full log</a>
                 </div>
 
-                <ul class="space-y-2 text-sm">
-                    <?php foreach ($activity_logs as $act): ?>
-                        <li class="flex items-start justify-between border-t pt-2">
-                            <div>
-                                <div class="font-medium"><?= htmlspecialchars($act['user']) ?></div>
-                                <div class="text-gray-600"><?= htmlspecialchars($act['action']) ?></div>
-                            </div>
-                            <div class="text-xs text-gray-400"><?= htmlspecialchars($act['time']) ?></div>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
+                <ul class="space-y-2 text-sm"> -->
+        <?php
+        //  foreach ($activity_logs as $act): 
+        // 
+        ?>
+        <!-- <li class="flex items-start justify-between border-t pt-2">
+                        <div>
+                            <div class="font-medium"><?= htmlspecialchars($act['user']) ?></div>
+                            <div class="text-gray-600"><?= htmlspecialchars($act['action']) ?></div>
+                        </div>
+                        <div class="text-xs text-gray-400"><?= htmlspecialchars($act['time']) ?></div>
+                    </li> -->
+        <?php
+        // endforeach; 
+        // 
+        ?>
+        <!-- </ul>
             </div>
-        </section>
+        </section> -->
 
     </div>
 
