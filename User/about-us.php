@@ -1,5 +1,5 @@
 <!-- aboutus.php -->
-<?php include('../include/user-navbar.php'); ?>
+<?php include('../include/navbar.php'); ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,7 +12,7 @@
 
 
 <body class="bg-gray-50 text-gray-800">
-    <div class="max-w-5xl mx-auto px-6 py-12">
+    <div class="max-w-5xl mx-auto px-6 py-12 pt-24">
         <!-- Hero -->
         <h1 class="text-4xl font-bold text-gray-900 mb-4">About DirectEdge</h1>
         <p class="text-lg text-gray-700 mb-6">

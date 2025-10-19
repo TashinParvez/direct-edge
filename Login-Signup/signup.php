@@ -167,7 +167,7 @@ $conn->close();
 
         <!-- Form Section -->
         <div class="flex-1 w-full">
-            <h2 class="text-2xl font-bold text-center mb-6">Sign Up</h2>
+            <h2 class="text-2xl font-bold text-center mb-6">Sign Up As <span style="color: rgb(22 163 74 / var(--tw-bg-opacity, 1));">Shop Owner</span></h2>
 
             <?php if ($message != "") { ?>
                 <p class="text-center mb-4 font-medium <?php echo (strpos($message, '✅') !== false) ? 'text-green-600' : 'text-red-600'; ?>">
@@ -208,15 +208,15 @@ $conn->close();
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium">User Type</label>
+                    <!-- <label class="block text-sm font-medium">User Type : Shop Owner</label> -->
                     <div class="flex flex-wrap gap-4 mt-2">
                         <!-- <label class="flex items-center gap-2">
                             <input type="radio" name="usertype" value="User" required class="text-blue-600 focus:ring-blue-500">
                             <span>User</span>
                         </label> -->
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="usertype" value="Shop-Owner" required checked class="text-blue-600 focus:ring-blue-500">
-                            <span>Shop Owner</span>
+                            <input type="radio" name="usertype" value="Shop-Owner" required hidden checked class="text-blue-600 focus:ring-blue-500">
+                            <!-- <span>Shop Owner</span> -->
                         </label>
                         <!-- <label class="flex items-center gap-2">
                             <input type="radio" name="usertype" value="Agent" required class="text-blue-600 focus:ring-blue-500">

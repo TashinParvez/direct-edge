@@ -36,7 +36,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="sidebar.css">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png"> 
+    <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png">
 </head>
 
 <body class="bg-custom">
@@ -46,7 +46,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </div> -->
         <ul class="nav-list p-0">
             <li>
-                <a href="../shop-owner-app\buy-products-from-warehouse.php"
+                <a href="/../shop-owner-app\buy-products-from-warehouse.php"
                     class="<?php echo ($current_page == 'buy-products.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-shopping-bag'></i>
                     <span class="links_name">Buy Products</span>
@@ -54,21 +54,23 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <span class="tooltip">Buy Products</span>
             </li>
             <li>
-                <a href="../shop-owner-app\Self-Service-Orders\Self-Service-Orders.php"
+                <a href="/../shop-owner-app\Self-Service-Orders\Self-Service-Orders.php"
                     class="<?php echo ($current_page == 'self-service-orders.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-store'></i>
                     <span class="links_name">Self-Service Orders</span>
                 </a>
                 <span class="tooltip">Self-Service Orders</span>
             </li>
-            <li>
+            <!-- <li>
                 <a href="/../shop-owner-app/demand_forecast_dashboard_updated.php/"
-                    class="<?php echo ($current_page == 'dashboard.php') ? 'text-white bg-white' : ''; ?>">
+                    class="<?php
+                            // echo ($current_page == 'dashboard.php') ? 'text-white bg-white' : ''; 
+                            ?>">
                     <i class='bx bx-bar-chart'></i>
                     <span class="links_name">Dashboard</span>
                 </a>
                 <span class="tooltip">Dashboard</span>
-            </li>
+            </li> -->
             <li>
                 <a href="/../shop-owner-app/demand_forecast_dashboard_updated.php/"
                     class="<?php echo ($current_page == 'demand-forecasting.php') ? 'text-white bg-white' : ''; ?>">
@@ -78,7 +80,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <span class="tooltip">Demand Forecasting</span>
             </li>
             <li>
-                <a href="../shop-owner-app\Profuct-for-buyers-from-shop\Available-Products-List.php"
+                <a href="/../shop-owner-app\Profuct-for-buyers-from-shop\Available-Products-List.php"
                     class="<?php echo ($current_page == 'home.php') ? 'text-white bg-white' : ''; ?>">
                     <i class='bx bx-list-ul'></i>
                     <span class="links_name">Available Products</span>
@@ -95,16 +97,24 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </li> -->
             <!-- Profile Info -->
             <li class="profile">
-                <a href="../Login-Signup/profile.php" class="profile-details">
+                <a href="/../Login-Signup/profile.php" class="profile-details">
                     <i class='bx bx-user-circle profile-icon' style="font-size:28px"></i>
                     <div class="name_job">
                         <div class="name"><?php echo htmlspecialchars($name); ?></div>
                         <div class="job">Shop Owner</div>
                     </div>
                 </a>
-                <a href="../Login-Signup/logout.php">
+                <a href="/../Login-Signup/logout.php">
                     <i class='bx bx-log-out' id="log_out"></i>
                 </a>
+            </li>
+            <li>
+                <a href="/../shop-owner-app/cart.php"
+                    class="<?php echo ($current_page == 'self-service-orders.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-store'></i>
+                    <span class="links_name">Product Scan</span>
+                </a>
+                <span class="tooltip">Product Scan</span>
             </li>
         </ul>
     </div>

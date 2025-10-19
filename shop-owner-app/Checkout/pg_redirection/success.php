@@ -31,7 +31,7 @@ $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
 $headers .= 'From: <mahmed221209@bscse.uiu.ac.bd>' . "\r\n";
 
 // Fixed: Typo in the variable $message and closing parenthesis
-mail($to, $subject, $message, $headers);
+// mail($to, $subject, $message, $headers);
 
 ?>
 
