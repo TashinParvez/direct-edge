@@ -26,6 +26,19 @@ if (isset($_SESSION['user_id'])) {
 
 // Get current filename
 $current_page = basename($_SERVER['PHP_SELF']);
+
+
+// Get unread notification count
+$unread_count = 0;
+if (isset($user_id)) {
+    $nbPath = __DIR__ . '/../notification/notification-backend.php';
+    if (file_exists($nbPath)) {
+        include_once $nbPath;
+        if (function_exists('getUnreadCount')) {
+            $unread_count = (int) getUnreadCount($conn, $user_id);
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -87,6 +100,31 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 </a>
                 <span class="tooltip">Available Products</span>
             </li>
+
+            <li>
+                <a href="/../shop-owner-app/cart.php"
+                    class="<?php echo ($current_page == 'cart.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-store'></i>
+                    <span class="links_name">Product Scan</span>
+                </a>
+                <span class="tooltip">Product Scan</span>
+            </li>
+
+            <li>
+                <a href="/../notification/notification.php"
+                    class="notification-link <?php echo ($current_page == 'notification.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-bell'></i>
+                    <span class="links_name">Notifications</span>
+                    <?php if ($unread_count > 0): ?>
+                        <span class="notif-badge"><?php echo $unread_count; ?></span>
+                        <span class="blinking-dot"></span>
+                    <?php endif; ?>
+                </a>
+                <span class="tooltip">Notifications</span>
+            </li>
+
+
+
             <!-- <li>
                 <a href="../Buyer/request-products.php"
                     class="<?php echo ($current_page == 'request-products.php') ? 'text-white bg-white' : ''; ?>">

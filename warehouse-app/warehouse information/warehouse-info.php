@@ -1,7 +1,9 @@
 <?php
 ob_start(); // Start output buffering to handle session_start() in sidebar
 ?>
-\
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarWarehouse.php'; ?>
+
 <?php
 // DB: connect and fetch metrics + inventory rows
 require_once __DIR__ . '/../../include/connect-db.php';
