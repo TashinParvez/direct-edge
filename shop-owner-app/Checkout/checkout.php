@@ -1,5 +1,9 @@
+
+<link rel="stylesheet" href="../../Include/sidebar.css">
+<?php include '../../Include/SidebarShop.php'; ?>
+
 <?php
-session_start();
+// session_start();
 include '../../include/connect-db.php';
 
 // Current user (defaults to 2 like other shop-owner pages)

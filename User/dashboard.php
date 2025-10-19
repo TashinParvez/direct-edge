@@ -1,6 +1,6 @@
 <?php
 include '../include/connect-db.php';
-include('../include/user-navbar.php');
+include('../include/navbar.php');
 
 
 $sql = "SELECT `user_id` as shop_id,`full_name`,`image_url`
@@ -10,7 +10,9 @@ $result = mysqli_query($conn, $sql);
 $allshops = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 
+// echo '<pre>';
 // print_r($allshops);
+// echo '</pre>';
 
 
 ?>
@@ -27,7 +29,7 @@ $allshops = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 <body class="bg-gray-50">
 
-    <div class="max-w-7xl mx-auto px-6 py-12">
+    <div class="max-w-7xl mx-auto px-6 py-12 pt-24">
 
         <!--================== Welcome Section ==================-->
         <div class="text-center mb-12">
@@ -42,17 +44,21 @@ $allshops = mysqli_fetch_all($result, MYSQLI_ASSOC);
         <div class="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-8">
 
             <?php foreach ($allshops as $shop): ?>
-                <a href="../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id=<?php echo $shop['shop_id']; ?>"
-                    class="block">
+                <!-- <a href="../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id= -->
+                <?php
+                //  echo $shop['shop_id']; 
+                ?>
+                <!-- " -->
+                    <div   class="block">
                     <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition cursor-pointer">
-                        <img src="<?php echo $shop['image_url']; ?>"
+                        <img src="../<?php echo $shop['image_url']; ?>"
                             alt="<?php echo $shop['full_name']; ?>"
                             class="w-32 h-32 object-cover rounded-lg mb-4">
                         <h3 class="text-xl font-semibold text-gray-800">
                             <?php echo $shop['full_name']; ?>
                         </h3>
                     </div>
-                </a>
+                </div>
             <?php endforeach; ?>
 
         </div>
