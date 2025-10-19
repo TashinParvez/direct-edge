@@ -22,6 +22,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Initialize image_url as null
     $image_url = null;
 
+    // Password validation
+    $uppercase = preg_match('@[A-Z]@', $password);
+    $lowercase = preg_match('@[a-z]@', $password);
+    $number    = preg_match('@[0-9]@', $password);
+    $specialChars = preg_match('@[^\w]@', $password);
+
     // Allowed ENUM values
     // $allowed_roles = ['Admin', 'Shop-Owner', 'Agent', 'User'];
     $allowed_roles = ['Admin', 'Shop-Owner', 'Agent', 'User'];
@@ -29,6 +35,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $message = "Invalid role selected!";
     } elseif ($password !== $confirm_password) {
         $message = "Passwords do not match!";
+    } elseif (strlen($password) < 8 || !$uppercase || !$lowercase || !$number || !$specialChars) {
+        $message = "Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, one digit, and one special character.";
+    } elseif (strlen($phone) < 11 || strlen($phone) > 14) {
+        $message = "Phone number must be between 11 and 14 characters.";
     } else {
         // Handle file upload if a file was selected
         if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
@@ -108,9 +118,86 @@ $conn->close();
     <title>Sign Up DirectEdge</title>
     <link rel="icon" type="image/x-icon" href="../Logo/Favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .error-popup {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fff;
+            border-left: 4px solid #f56565;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            padding: 16px 24px;
+            width: 90%;
+            max-width: 400px;
+            animation: slideDown 0.3s ease-out forwards;
+        }
+
+        /* Password Requirements Popup */
+        .password-popup {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid #3b82f6;
+            border-radius: 6px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            width: 300px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            margin-top: 5px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
 </head>
 
 <body class="bg-[#eff2f9] flex items-center justify-center min-h-screen">
+    <!-- Error Popup -->
+    <?php if ($message != "") { ?>
+        <div id="errorPopup" class="error-popup">
+            <span class="popup-close" onclick="closePopup()">&times;</span>
+            <p class="font-medium <?php echo (strpos($message, '✅') !== false) ? 'text-green-600' : 'text-red-600'; ?>">
+                <?php echo $message; ?>
+            </p>
+        </div>
+    <?php } ?>
 
     <div class="bg-white shadow rounded-lg p-6 md:p-10 flex flex-col md:flex-row items-center gap-8 w-full max-w-5xl">
 
@@ -167,38 +254,42 @@ $conn->close();
 
         <!-- Form Section -->
         <div class="flex-1 w-full">
-            <h2 class="text-2xl font-bold text-center mb-6">Sign Up</h2>
-
-            <?php if ($message != "") { ?>
-                <p class="text-center mb-4 font-medium <?php echo (strpos($message, '✅') !== false) ? 'text-green-600' : 'text-red-600'; ?>">
-                    <?php echo $message; ?>
-                </p>
-            <?php } ?>
+            <h2 class="text-2xl font-bold text-center mb-6">Sign Up As <span style="color: rgb(22 163 74 / var(--tw-bg-opacity, 1));">Shop Owner</span></h2>
 
             <form action="" method="post" enctype="multipart/form-data" class="space-y-4">
 
                 <div>
                     <label for="username" class="block text-sm font-medium">Full Name</label>
                     <input type="text" id="username" name="username" placeholder="Mahbub" required
+                        value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>"
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
                 <div>
                     <label for="mail" class="block text-sm font-medium">Email</label>
                     <input type="email" id="mail" name="mail" placeholder="example@mail.com" required
+                        value="<?php echo isset($_POST['mail']) ? htmlspecialchars($_POST['mail']) : ''; ?>"
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
 
-                <div>
+                <div style="position: relative;">
                     <label for="phonenumber" class="block text-sm font-medium">Phone Number</label>
-                    <input type="text" id="phonenumber" name="phonenumber" placeholder="+8.80174417762e+12" required
+                    <input type="text" id="phonenumber" name="phonenumber" placeholder="+880174417762" required
+                        minlength="11" maxlength="14" pattern=".{11,14}"
+                        value="<?php echo isset($_POST['phonenumber']) ? htmlspecialchars($_POST['phonenumber']) : ''; ?>"
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <div id="phonePopup" class="password-popup">
+                        <p><strong>Phone Number Requirements:</strong> Must be between 11 and 14 characters.</p>
+                    </div>
                 </div>
 
-                <div>
+                <div style="position: relative;">
                     <label for="password" class="block text-sm font-medium">Password</label>
                     <input type="password" id="password" name="password" placeholder="Password" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <div id="passwordPopup" class="password-popup">
+                        <p><strong>Password Requirements:</strong> Must be at least 8 characters and include at least one uppercase letter, one lowercase letter, one digit, and one special character.</p>
+                    </div>
                 </div>
 
                 <div>
@@ -208,15 +299,15 @@ $conn->close();
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium">User Type</label>
+                    <!-- <label class="block text-sm font-medium">User Type : Shop Owner</label> -->
                     <div class="flex flex-wrap gap-4 mt-2">
                         <!-- <label class="flex items-center gap-2">
                             <input type="radio" name="usertype" value="User" required class="text-blue-600 focus:ring-blue-500">
                             <span>User</span>
                         </label> -->
                         <label class="flex items-center gap-2">
-                            <input type="radio" name="usertype" value="Shop-Owner" required checked class="text-blue-600 focus:ring-blue-500">
-                            <span>Shop Owner</span>
+                            <input type="radio" name="usertype" value="Shop-Owner" required hidden checked class="text-blue-600 focus:ring-blue-500">
+                            <!-- <span>Shop Owner</span> -->
                         </label>
                         <!-- <label class="flex items-center gap-2">
                             <input type="radio" name="usertype" value="Agent" required class="text-blue-600 focus:ring-blue-500">
@@ -248,7 +339,7 @@ $conn->close();
 
                 <p class="text-center text-sm text-gray-600 mt-4">
                     Want to join as an agricultural agent?
-                    <a href="../agent-app/become-agent.php" class="text-green-600 hover:underline font-semibold">Become an Agent →</a>
+                    <a href="../agent-app/become-agent.php" class="text-green-600 hover:underline font-semibold">Become an Agent</a>
                 </p>
 
 
@@ -256,6 +347,67 @@ $conn->close();
         </div>
     </div>
 
+    <script>
+        // Display the popup when page loads if there's an error message
+        document.addEventListener('DOMContentLoaded', function() {
+            const errorPopup = document.getElementById('errorPopup');
+            const passwordInput = document.getElementById('password');
+            const passwordPopup = document.getElementById('passwordPopup');
+            const phoneInput = document.getElementById('phonenumber');
+            const phonePopup = document.getElementById('phonePopup');
+
+            // Error popup handling
+            if (errorPopup) {
+                errorPopup.style.display = 'block';
+
+                // Auto-hide after 5 seconds
+                setTimeout(function() {
+                    closePopup();
+                }, 5000);
+            }
+
+            // Password requirements popup handling
+            if (passwordInput && passwordPopup) {
+                // Show popup when password field is focused
+                passwordInput.addEventListener('focus', function() {
+                    passwordPopup.style.display = 'block';
+                });
+
+                // Hide popup when focus moves away from password field
+                passwordInput.addEventListener('blur', function() {
+                    setTimeout(function() {
+                        passwordPopup.style.display = 'none';
+                    }, 300);
+                });
+            }
+
+            // Phone number requirements popup handling
+            if (phoneInput && phonePopup) {
+                // Show popup when phone field is focused
+                phoneInput.addEventListener('focus', function() {
+                    phonePopup.style.display = 'block';
+                });
+
+                // Hide popup when focus moves away from phone field
+                phoneInput.addEventListener('blur', function() {
+                    setTimeout(function() {
+                        phonePopup.style.display = 'none';
+                    }, 300);
+                });
+            }
+        });
+
+        // Function to close the popup
+        function closePopup() {
+            const errorPopup = document.getElementById('errorPopup');
+            if (errorPopup) {
+                errorPopup.style.opacity = '0';
+                setTimeout(function() {
+                    errorPopup.style.display = 'none';
+                }, 300);
+            }
+        }
+    </script>
 </body>
 
 </html>

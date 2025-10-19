@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 ob_start(); // Start output buffering to handle session_start() in sidebar
 ?>
-<link rel="stylesheet" href="../Include/sidebar.css">
+<link rel="stylesheet" href="/../Include/sidebar.css">
 <?php include '../Include/SidebarShop.php'; ?>
 
 <?php
@@ -155,8 +155,7 @@ if ($stmt) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demand Forecasting Dashboard</title> 
-
+    <title>Demand Forecasting Dashboard</title>
     <style>
         * {
             margin: 0;

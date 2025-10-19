@@ -56,6 +56,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $reference_phone = trim($_POST['reference_phone']);
         $statement = trim($_POST['statement']);
 
+        // Password validation
+        $uppercase = preg_match('@[A-Z]@', $password);
+        $lowercase = preg_match('@[a-z]@', $password);
+        $number    = preg_match('@[0-9]@', $password);
+        $specialChars = preg_match('@[^\w]@', $password);
+
         // Validation
         if (empty($full_name) || empty($email) || empty($phone) || empty($password)) {
             $error = true;
@@ -63,9 +69,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } elseif ($password !== $confirm_password) {
             $error = true;
             $message = "Passwords do not match!";
-        } elseif (strlen($password) < 6) {
+        } elseif (strlen($password) < 8 || !$uppercase || !$lowercase || !$number || !$specialChars) {
             $error = true;
-            $message = "Password must be at least 6 characters!";
+            $message = "Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, one digit, and one special character.";
+        } elseif (strlen($phone) < 11 || strlen($phone) > 14) {
+            $error = true;
+            $message = "Phone number must be between 11 and 14 characters.";
         } elseif (empty($nid_number) || empty($region) || empty($crops_expertise)) {
             $error = true;
             $message = "Please complete all agent-specific fields!";
@@ -203,6 +212,38 @@ mysqli_close($conn);
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="../assets/Logo/favicon.png">
+
+    <style>
+        /* Password Requirements Popup */
+        .password-popup {
+            display: none;
+            position: absolute;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid #10b981;
+            border-radius: 6px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            width: 300px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            margin-top: 5px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 
 <body class="bg-gradient-to-br from-green-50 via-white to-emerald-50 min-h-screen pb-8">
@@ -216,7 +257,8 @@ mysqli_close($conn);
 
         <!-- Error Message -->
         <?php if ($message): ?>
-            <div class="mb-6 rounded-lg p-4 <?php echo $error ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'; ?>">
+            <div id="messagePopup" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 mb-6 rounded-lg p-4 shadow-lg <?php echo $error ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'; ?>">
+                <button onclick="this.parentElement.style.display='none'" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">&times;</button>
                 <p class="<?php echo $error ? 'text-red-800' : 'text-green-800'; ?> text-sm font-medium">
                     <?php echo htmlspecialchars($message); ?>
                 </p>
@@ -233,27 +275,36 @@ mysqli_close($conn);
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                        <input type="text" name="full_name" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="text" name="full_name" placeholder="Enter your full name" value="<?php echo isset($_POST['full_name']) ? htmlspecialchars($_POST['full_name']) : ''; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                        <input type="email" name="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="email" name="email" placeholder="Your email address" value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
-                    <div>
+                    <div style="position: relative;">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-                        <input type="text" name="phone" placeholder="+8801XXXXXXXXX" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="text" id="phonenumber" name="phone" placeholder="+8801XXXXXXXXX"
+                            value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>"
+                            required minlength="11" maxlength="14" pattern=".{11,14}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <div id="phonePopup" class="password-popup">
+                            <p><strong>Phone Number Requirements:</strong> Must be between 11 and 14 characters.</p>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">NID / National ID *</label>
-                        <input type="text" name="nid_number" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="text" name="nid_number" placeholder="Enter your National ID number" value="<?php echo isset($_POST['nid_number']) ? htmlspecialchars($_POST['nid_number']) : ''; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
-                    <div>
+                    <div style="position: relative;">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-                        <input type="password" name="password" required minlength="6" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <div id="passwordPopup" class="password-popup">
+                            <p><strong>Password Requirements:</strong> Must be at least 8 characters and include at least one uppercase letter, one lowercase letter, one digit, and one special character.</p>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
-                        <input type="password" name="confirm_password" required minlength="6" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="password" name="confirm_password" placeholder="Confirm your password" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                 </div>
             </section>
@@ -264,25 +315,25 @@ mysqli_close($conn);
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Region/Division *</label>
-                        <input type="text" name="region" placeholder="e.g., Dhaka" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="text" name="region" placeholder="e.g., Dhaka" value="<?php echo isset($_POST['region']) ? htmlspecialchars($_POST['region']) : ''; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">District</label>
-                        <input type="text" name="district" placeholder="e.g., Gazipur" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="text" name="district" placeholder="e.g., Gazipur" value="<?php echo isset($_POST['district']) ? htmlspecialchars($_POST['district']) : ''; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Upazila/Sub-district</label>
-                        <input type="text" name="upazila" placeholder="e.g., Kapasia" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="text" name="upazila" placeholder="e.g., Kapasia" value="<?php echo isset($_POST['upazila']) ? htmlspecialchars($_POST['upazila']) : ''; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Coverage Area (km)</label>
-                        <input type="number" name="coverage_area_km" min="5" max="200" value="20" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="number" name="coverage_area_km" min="5" max="200" value="<?php echo isset($_POST['coverage_area_km']) ? htmlspecialchars($_POST['coverage_area_km']) : '20'; ?>" placeholder="Area you can service in km" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Experience (years)</label>
-                        <input type="number" name="experience_years" min="0" max="50" value="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="number" name="experience_years" min="0" max="50" value="<?php echo isset($_POST['experience_years']) ? htmlspecialchars($_POST['experience_years']) : '0'; ?>" placeholder="Your years of experience" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                 </div>
             </section>
@@ -293,20 +344,20 @@ mysqli_close($conn);
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Crops Expertise *</label>
-                        <input type="text" name="crops_expertise" placeholder="e.g., Rice, Wheat, Vegetables" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="text" name="crops_expertise" placeholder="e.g., Rice, Wheat, Vegetables" value="<?php echo isset($_POST['crops_expertise']) ? htmlspecialchars($_POST['crops_expertise']) : ''; ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Vehicle Types</label>
-                        <input type="text" name="vehicle_types" placeholder="e.g., Van, Pickup, Motorcycle" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="text" name="vehicle_types" placeholder="e.g., Van, Pickup, Motorcycle" value="<?php echo isset($_POST['vehicle_types']) ? htmlspecialchars($_POST['vehicle_types']) : ''; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                 </div>
                 <div class="mt-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Warehouse/Storage Capacity</label>
-                    <input type="text" name="warehouse_capacity" placeholder="e.g., 500 sq ft, 10 tons" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                    <input type="text" name="warehouse_capacity" placeholder="e.g., 500 sq ft, 10 tons" value="<?php echo isset($_POST['warehouse_capacity']) ? htmlspecialchars($_POST['warehouse_capacity']) : ''; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                 </div>
                 <div class="mt-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Statement / Why become an agent?</label>
-                    <textarea name="statement" rows="3" placeholder="Explain your motivation and how you plan to serve farmers and shops..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"></textarea>
+                    <textarea name="statement" rows="3" placeholder="Explain your motivation and how you plan to serve farmers and shops..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"><?php echo isset($_POST['statement']) ? htmlspecialchars($_POST['statement']) : ''; ?></textarea>
                 </div>
             </section>
 
@@ -316,11 +367,11 @@ mysqli_close($conn);
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Reference Name</label>
-                        <input type="text" name="reference_name" placeholder="Name of shop owner, distributor, etc." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="text" name="reference_name" placeholder="Name of shop owner, distributor, etc." value="<?php echo isset($_POST['reference_name']) ? htmlspecialchars($_POST['reference_name']) : ''; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Reference Phone</label>
-                        <input type="text" name="reference_phone" placeholder="+8801XXXXXXXXX" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                        <input type="text" name="reference_phone" placeholder="+8801XXXXXXXXX" value="<?php echo isset($_POST['reference_phone']) ? htmlspecialchars($_POST['reference_phone']) : ''; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
                     </div>
                 </div>
             </section>
@@ -346,7 +397,7 @@ mysqli_close($conn);
 
             <!-- Submit -->
             <div class="flex items-center justify-between pt-6 border-t">
-                <a href="signup.php" class="text-sm text-gray-600 hover:text-gray-900">← Back to regular signup</a>
+                <a href="../Login-Signup/signup.php" class="text-sm text-gray-600 hover:text-gray-900">Back to regular signup</a>
                 <button type="submit" class="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold shadow-lg hover:shadow-xl transition-all">
                     Submit Agent Application
                 </button>
@@ -360,6 +411,53 @@ mysqli_close($conn);
 
     <?php include '../include/footer.php'; ?>
 
+    <script>
+        // Password popup functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('password');
+            const passwordPopup = document.getElementById('passwordPopup');
+            const phoneInput = document.getElementById('phonenumber');
+            const phonePopup = document.getElementById('phonePopup');
+            const messagePopup = document.getElementById('messagePopup');
+
+            // Show popup when password field is focused
+            passwordInput.addEventListener('focus', function() {
+                passwordPopup.style.display = 'block';
+            });
+
+            // Hide popup when focus moves away from password field
+            passwordInput.addEventListener('blur', function() {
+                setTimeout(function() {
+                    passwordPopup.style.display = 'none';
+                }, 300);
+            });
+
+            // Show popup when phone field is focused
+            if (phoneInput && phonePopup) {
+                phoneInput.addEventListener('focus', function() {
+                    phonePopup.style.display = 'block';
+                });
+
+                // Hide popup when focus moves away from phone field
+                phoneInput.addEventListener('blur', function() {
+                    setTimeout(function() {
+                        phonePopup.style.display = 'none';
+                    }, 300);
+                });
+            }
+
+            // Auto-hide message popup after 6 seconds
+            if (messagePopup) {
+                setTimeout(function() {
+                    messagePopup.style.opacity = '0';
+                    messagePopup.style.transition = 'opacity 0.5s ease';
+                    setTimeout(function() {
+                        messagePopup.style.display = 'none';
+                    }, 500);
+                }, 6000);
+            }
+        });
+    </script>
 </body>
 
 </html>
