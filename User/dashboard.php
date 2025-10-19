@@ -44,8 +44,12 @@ $allshops = mysqli_fetch_all($result, MYSQLI_ASSOC);
         <div class="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-8">
 
             <?php foreach ($allshops as $shop): ?>
-                <a href="../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id=<?php echo $shop['shop_id']; ?>"
-                    class="block">
+                <!-- <a href="../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id= -->
+                <?php
+                //  echo $shop['shop_id']; 
+                ?>
+                <!-- " -->
+                    <div   class="block">
                     <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center hover:shadow-xl transition cursor-pointer">
                         <img src="../<?php echo $shop['image_url']; ?>"
                             alt="<?php echo $shop['full_name']; ?>"
@@ -54,7 +58,7 @@ $allshops = mysqli_fetch_all($result, MYSQLI_ASSOC);
                             <?php echo $shop['full_name']; ?>
                         </h3>
                     </div>
-                </a>
+                </div>
             <?php endforeach; ?>
 
         </div>
