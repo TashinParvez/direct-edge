@@ -28,12 +28,11 @@ if (!$shop_owner) {
 
 // Fetch available products in the shop using actual shop_products table structure
 $sql = "SELECT p.product_id, p.name AS product_name, p.category, 
-        COALESCE(sp.selling_price, p.price) as price, p.unit, p.img_url, 
-        sp.quantity,
-        sp.bought_price
+        sp.selling_price, sp.bought_price, p.unit, p.img_url, 
+        sp.quantity
         FROM shop_products sp
         INNER JOIN products p ON p.product_id = sp.product_id
-        WHERE sp.shop_id = ? AND sp.quantity > 0
+        WHERE sp.shop_id = ?
         ORDER BY p.name";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $shop_id);
@@ -64,6 +63,41 @@ $stmt->close();
             width: 100%;
             height: 200px;
             object-fit: cover;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
         }
     </style>
 </head>
@@ -130,8 +164,13 @@ $stmt->close();
                                 </span>
                             </p>
                             <p class="text-gray-600">
-                                <span class="font-medium">Price:</span>
-                                <span class="text-green-600 font-bold text-lg">৳<?= number_format($product['price'], 2) ?></span>
+                                <span class="font-medium">Bought Price:</span>
+                                <span class="text-gray-700 font-semibold">৳<?= number_format($product['bought_price'], 2) ?></span>
+                                <span class="text-gray-500">/ <?= htmlspecialchars($product['unit']) ?></span>
+                            </p>
+                            <p class="text-gray-600">
+                                <span class="font-medium">Selling Price:</span>
+                                <span class="text-green-600 font-bold text-lg">৳<?= number_format($product['selling_price'], 2) ?></span>
                                 <span class="text-gray-500">/ <?= htmlspecialchars($product['unit']) ?></span>
                             </p>
                             <p class="text-gray-600">
@@ -141,9 +180,18 @@ $stmt->close();
                                 </span>
                             </p>
                         </div>
-                        <button class="mt-4 w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors font-medium">
-                            Add to Cart
-                        </button>
+                        <div class="mt-4 flex gap-2">
+                            <button onclick="openUpdateModal(<?= $product['product_id'] ?>, '<?= htmlspecialchars($product['product_name']) ?>', <?= $product['selling_price'] ?>, <?= $product['quantity'] ?>, '<?= htmlspecialchars($product['unit']) ?>')"
+                                class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                Update
+                            </button>
+                            <button onclick="deleteProduct(<?= $product['product_id'] ?>, '<?= htmlspecialchars($product['product_name']) ?>')"
+                                class="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 transition-colors" title="Delete Product">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -160,6 +208,38 @@ $stmt->close();
         <?php endif; ?>
     </div>
 
+    <!-- Update Modal -->
+    <div id="updateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeUpdateModal()">&times;</span>
+            <h2 class="text-2xl font-bold mb-4">Update Product</h2>
+            <form id="updateForm" onsubmit="updateProduct(event)">
+                <input type="hidden" id="update_product_id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">Product Name</label>
+                    <input type="text" id="update_product_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readonly>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">Selling Price (৳)</label>
+                    <input type="number" step="0.01" id="update_selling_price" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-2">Quantity</label>
+                    <input type="number" step="0.01" id="update_quantity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                    <span id="unit_display" class="text-sm text-gray-500"></span>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-medium">
+                        Save Changes
+                    </button>
+                    <button type="button" onclick="closeUpdateModal()" class="flex-1 bg-gray-400 text-white py-2 rounded-lg hover:bg-gray-500 font-medium">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Real-time search filtering
         document.getElementById('searchInput').addEventListener('input', function() {
@@ -169,6 +249,91 @@ $stmt->close();
                 item.style.display = text.includes(filter) ? '' : 'none';
             });
         });
+
+        // Open update modal
+        function openUpdateModal(productId, productName, sellingPrice, quantity, unit) {
+            document.getElementById('update_product_id').value = productId;
+            document.getElementById('update_product_name').value = productName;
+            document.getElementById('update_selling_price').value = sellingPrice;
+            document.getElementById('update_quantity').value = quantity;
+            document.getElementById('unit_display').textContent = unit;
+            document.getElementById('updateModal').style.display = 'block';
+        }
+
+        // Close update modal
+        function closeUpdateModal() {
+            document.getElementById('updateModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('updateModal');
+            if (event.target == modal) {
+                closeUpdateModal();
+            }
+        }
+
+        // Update product
+        function updateProduct(event) {
+            event.preventDefault();
+
+            const productId = document.getElementById('update_product_id').value;
+            const sellingPrice = document.getElementById('update_selling_price').value;
+            const quantity = document.getElementById('update_quantity').value;
+
+            const formData = new FormData();
+            formData.append('action', 'update');
+            formData.append('product_id', productId);
+            formData.append('selling_price', sellingPrice);
+            formData.append('quantity', quantity);
+            formData.append('shop_id', <?= $shop_id ?>);
+
+            fetch('update_product.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Product updated successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error updating product: ' + error);
+                });
+        }
+
+        // Delete product
+        function deleteProduct(productId, productName) {
+            if (!confirm(`Are you sure you want to delete "${productName}" from your shop?`)) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('product_id', productId);
+            formData.append('shop_id', <?= $shop_id ?>);
+
+            fetch('update_product.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Product deleted successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting product: ' + error);
+                });
+        }
     </script>
 </body>
 
