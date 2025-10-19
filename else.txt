@@ -1,6 +1,39 @@
+Final Users for Project Shwapno
+------------------------
+Shop Owner
+----------
+ID: 74
+Name: Shop Owner
+Email: shopowner@gmail.com
+Number: 01875246615
+Password: Ab@12345
+
+
+Admin
+----------
+ID: 76
+Name: Admin
+Email: admin@gmail.com
+Number: 01775215476
+Password: Ab@12345
+
+
+Admin
+----------
+ID: 77
+Name: Agent
+Email: agent1@gmail.com
+Number: 01975217925
+Password: Ab@12345
+___________________________________________________
+---------------------------------------------------
+
+
+
 agent id 64
-number 789
+number 01744177620
 pass 456789
+123ASADA%asda784m
 
 admin id
 number 369
