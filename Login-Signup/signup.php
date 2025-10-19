@@ -167,7 +167,7 @@ $conn->close();
 
         <!-- Form Section -->
         <div class="flex-1 w-full">
-            <h2 class="text-2xl font-bold text-center mb-6">Sign Up As Shop Owner</h2>
+            <h2 class="text-2xl font-bold text-center mb-6">Sign Up As <span style="color: rgb(22 163 74 / var(--tw-bg-opacity, 1));">Shop Owner</span></h2>
 
             <?php if ($message != "") { ?>
                 <p class="text-center mb-4 font-medium <?php echo (strpos($message, '✅') !== false) ? 'text-green-600' : 'text-red-600'; ?>">
