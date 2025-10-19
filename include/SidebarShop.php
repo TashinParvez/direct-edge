@@ -36,7 +36,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="sidebar.css">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png"> 
+    <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png">
 </head>
 
 <body class="bg-custom">
@@ -64,7 +64,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <!-- <li>
                 <a href="/../shop-owner-app/demand_forecast_dashboard_updated.php/"
                     class="<?php
-                    // echo ($current_page == 'dashboard.php') ? 'text-white bg-white' : ''; ?>">
+                            // echo ($current_page == 'dashboard.php') ? 'text-white bg-white' : ''; 
+                            ?>">
                     <i class='bx bx-bar-chart'></i>
                     <span class="links_name">Dashboard</span>
                 </a>
@@ -106,6 +107,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <a href="/../Login-Signup/logout.php">
                     <i class='bx bx-log-out' id="log_out"></i>
                 </a>
+            </li>
+            <li>
+                <a href="/../shop-owner-app/cart.php"
+                    class="<?php echo ($current_page == 'self-service-orders.php') ? 'text-white bg-white' : ''; ?>">
+                    <i class='bx bx-store'></i>
+                    <span class="links_name">Product Scan</span>
+                </a>
+                <span class="tooltip">Product Scan</span>
             </li>
         </ul>
     </div>

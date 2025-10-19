@@ -3,7 +3,7 @@ ob_start(); // Start output buffering to handle session_start() in sidebar
 ?>
 
 <link rel="stylesheet" href="../Include/sidebar.css">
-<?php include '../Include/SidebarAgent.php'; ?>
+<?php include '../Include/SidebarShop.php'; ?>
 <?php
 // Ensure session is started and output buffering is enabled before including any files
 // that may emit HTML (like the navbar). This lets POST handlers clean the buffer
