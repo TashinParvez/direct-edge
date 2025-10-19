@@ -22,7 +22,7 @@ if (empty($role) && isset($_SESSION['user_id'])) {
 if (!empty($role)) {
     if ($role === 'Agent') {
         include __DIR__ . '/SidebarAgent.php';
-    } elseif ($role === 'Shop Owner') {
+    } elseif ($role === 'Shop-Owner') {
         include __DIR__ . '/SidebarShop.php';
     } elseif ($role === 'Admin') { // Assuming 'Admin' for warehouse manager
         include __DIR__ . '/SidebarWarehouse.php';
