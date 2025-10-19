@@ -155,7 +155,8 @@ if ($stmt) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demand Forecasting Dashboard</title>
+    <title>Demand Forecasting Dashboard</title> 
+
     <style>
         * {
             margin: 0;

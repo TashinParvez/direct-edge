@@ -47,6 +47,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
             $stmt->bind_param("si", $new_status, $agent_info_id);
 
             if ($stmt->execute()) {
+                // --- NOTIFICATION ---
+                include_once __DIR__ . '/../../include/notification_helpers.php';
+
+                // Get the agent's user_id from agent_info_id
+                $stmt_agent = $conn->prepare("SELECT agent_id FROM agent_info WHERE agent_info_id = ?");
+                $stmt_agent->bind_param("i", $agent_info_id);
+                $stmt_agent->execute();
+                $result = $stmt_agent->get_result();
+                if ($row = $result->fetch_assoc()) {
+                    $agent_user_id = $row['agent_id'];
+                    $notification_message = "Your application status has been updated to: " . htmlspecialchars($new_status) . ".";
+                    $notification_link = "/agent-app/agent-profile.php"; // Link to their profile
+                    create_notification($conn, $agent_user_id, 'agent_status_update', $notification_message, $notification_link);
+                }
+                // --- END NOTIFICATION ---
+
                 $success = true;
                 $message = "Agent status updated to: $new_status";
             } else {

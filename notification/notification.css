@@ -149,6 +149,9 @@ body {
   border: 1px solid var(--border);
   background: var(--card);
   transition: transform .18s ease, box-shadow .18s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .notification-card:hover {
@@ -169,7 +172,7 @@ body {
 .notification-content {
   display: flex;
   flex-direction: column;
-  /* flex: 1; */
+  flex: 1;
 }
 
 .notification-title {
@@ -236,14 +239,19 @@ body {
   border-radius: 6px;
   color: var(--destructive);
   transition: opacity 0.3s;
-  position: absolute;
-  top: 8px;
-  right: 24px;
+  position: relative;
+  /* Changed from absolute */
+  top: auto;
+  /* Reset position */
+  right: auto;
+  /* Reset position */
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  /* Prevent button from shrinking */
 }
 
 .notification-card:hover .delete-btn {

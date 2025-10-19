@@ -229,7 +229,7 @@
   function buildRowHtml(row) {
     const lowCls = row.quantity < 10 ? "low-stock" : "";
     const statusCls =
-      row.status.toLowerCase() === "completed" ? "completed" : "in-progress";
+      row.status.toLowerCase() === "completed" ? "completed" : "pending";
     return `
         <tr data-id="${row.id}" data-warehouse-id="${
       row.warehouse_id
@@ -403,6 +403,7 @@
     const dateAdded = document.getElementById("dateAdded")?.value; // inbound stock date
     const quantity = parseInt(document.getElementById("quantity")?.value);
     const unitVolume = parseFloat(document.getElementById("unitVolume")?.value);
+    const status = document.getElementById("status")?.value || "Pending";
     const warehouse = document.getElementById("warehouse")?.value;
     const agentId = document.getElementById("agentId")?.value || null;
     const expiryDate = document.getElementById("expiryDate")?.value || null;
@@ -535,6 +536,7 @@
     const unitVolume = parseFloat(
       document.getElementById("editUnitVolume")?.value
     );
+    const status = document.getElementById("editStatus")?.value || "Pending";
     const warehouse = document.getElementById("editWarehouse")?.value;
     const agentId = document.getElementById("editAgentId")?.value || null;
     const expiryDate = document.getElementById("editExpiryDate")?.value || null;
@@ -614,7 +616,7 @@
         trEl.cells[5].className =
           row.status.toLowerCase() === "completed"
             ? "completed"
-            : "in-progress";
+            : "pending";
         trEl.cells[6].textContent = row.warehouse_name;
         trEl.cells[7].textContent = row.free_space;
         trEl.cells[8].textContent = row.agent_id || "—";
@@ -1004,7 +1006,12 @@
             `#productTableBody tr[data-id="${id}"]`
           );
           if (tr) {
-            tr.cells[8].textContent = row.offer_text || "No Offer";
+            const offerBtn = tr.cells[9]?.querySelector('button.offer-suggestion-link');
+            if (offerBtn) {
+                offerBtn.textContent = row.offer_text || "No Offer";
+            } else if (tr.cells[9]) {
+                tr.cells[9].innerHTML = `<button class="offer-suggestion-link" title="View offer suggestion">${row.offer_text || 'No Offer'}</button>`;
+            }
             tr.setAttribute("data-offer", row.offer_text || "No Offer");
           }
           showSuccessMessage("Offer suggestion applied!");

@@ -26,6 +26,24 @@ if (isset($_SESSION['user_id'])) {
 
 // Get current filename
 $current_page = basename($_SERVER['PHP_SELF']);
+
+// Helper function to add classes
+function isActive($page, $current_page)
+{
+    return $current_page == $page ? 'bg-white text-black' : 'text-gray-700 hover:bg-gray-100';
+}
+
+// Get unread notification count
+$unread_count = 0;
+if (isset($user_id)) {
+    $nbPath = __DIR__ . '/../notification/notification-backend.php';
+    if (file_exists($nbPath)) {
+        include_once $nbPath;
+        if (function_exists('getUnreadCount')) {
+            $unread_count = (int) getUnreadCount($conn, $user_id);
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -36,8 +54,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <link rel="stylesheet" href="sidebar.css">
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="../assets/Logo/LogoBG.png">
     <link rel="icon" type="image/png" href="..\assets\Logo\LogoBG.png">
-    <!-- Alpine.js for dropdowns -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
@@ -45,85 +63,90 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <div class="sidebar open m-0">
         <ul class="nav-list p-0">
             <li>
-                <a href="/../warehouse-app/admin-dashboard/admin-dashboard.php"
-                    class="<?php echo ($current_page == 'admin-dashboard.php') ? 'text-white bg-white' : ''; ?>">
+                <a href="/../warehouse-app/admin-dashboard/admin-dashboard.php" class="<?php echo isActive('admin-dashboard.php', $current_page); ?>">
                     <i class='bx bx-grid-alt'></i>
                     <span class="links_name">Dashboard</span>
                 </a>
                 <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="/../warehouse-app/warehouse information/product-list.php"
-                    class="<?php echo ($current_page == 'products.php') ? 'text-white bg-white' : ''; ?>">
+                <a href="/../warehouse-app/warehouse information/product-list.php" class="<?php echo isActive('product-list.php', $current_page); ?>">
                     <i class='bx bx-box'></i>
                     <span class="links_name">Products</span>
                 </a>
                 <span class="tooltip">Products</span>
             </li>
             <li>
-                <a href="/../warehouse-app/Orders/orders.php"
-                    class="<?php echo ($current_page == 'orders.php') ? 'text-white bg-white' : ''; ?>">
+                <a href="/../warehouse-app/Orders/orders.php" class="<?php echo isActive('orders.php', $current_page); ?>">
                     <i class='bx bx-cart'></i>
                     <span class="links_name">Orders</span>
                 </a>
                 <span class="tooltip">Orders</span>
             </li>
             <li>
-                <a href="/../warehouse-app/agent/all-agents.php"
-                    class="<?php echo ($current_page == 'agents.php') ? 'text-white bg-white' : ''; ?>">
+                <a href="/../warehouse-app/agent/all-agents.php" class="<?php echo isActive('all-agents.php', $current_page); ?>">
                     <i class='bx bx-user'></i>
                     <span class="links_name">Agents</span>
                 </a>
                 <span class="tooltip">Agents</span>
             </li>
             <li>
-                <a href="/../warehouse-app/admin-dashboard/admin-agent-management.php"
-                    class="<?php echo ($current_page == 'agents-requests.php') ? 'text-white bg-white' : ''; ?>">
+                <a href="/../warehouse-app/admin-dashboard/admin-agent-management.php" class="<?php echo isActive('admin-agent-management.php', $current_page); ?>">
                     <i class='bx bx-user-check'></i>
-                    <span class="links_name">Agents Requests</span>
+                    <span class="links_name">Agent Management</span>
                 </a>
-                <span class="tooltip">Agents Requests</span>
+                <span class="tooltip">Agent Management </span>
             </li>
             <li>
-                <a href="/../warehouse-app/All-Inventory-Requests/all-inventory-requests.php"
-                    class="<?php echo ($current_page == 'inventory-request.php') ? 'text-white bg-white' : ''; ?>">
+                <a href="/../warehouse-app/All-Inventory-Requests/all-inventory-requests.php" class="<?php echo isActive('all-inventory-requests.php', $current_page); ?>">
                     <i class='bx bx-package'></i>
                     <span class="links_name">Inventory Request</span>
                 </a>
                 <span class="tooltip">Inventory Request</span>
             </li>
             <li>
-                <a href="/../warehouse-app/stock-request/stock-request.php"
-                    class="<?php echo ($current_page == 'stock-request.php') ? 'text-white bg-white' : ''; ?>">
+                <a href="/../warehouse-app/stock-request/stock-request.php" class="<?php echo isActive('stock-request.php', $current_page); ?>">
                     <i class='bx bx-cube'></i>
                     <span class="links_name">Stock Request</span>
                 </a>
                 <span class="tooltip">Stock Request</span>
             </li>
             <li>
-                <a href="/../warehouse-app/Manage-Warehouse/manage_warehouse.php"
-                    class="<?php echo ($current_page == 'manage-warehouse.php') ? 'text-white bg-white' : ''; ?>">
+                <a href="/../warehouse-app/Manage-Warehouse/warehouse-status.php" class="<?php echo isActive('manage_warehouse.php', $current_page); ?>">
                     <i class='bx bx-buildings'></i>
                     <span class="links_name">Manage Warehouse</span>
                 </a>
                 <span class="tooltip">Manage Warehouse</span>
             </li>
             <li>
-                <a href="/../warehouse-app/add-warehouse.php"
-                    class="<?php echo ($current_page == 'add-warehouse.php') ? 'text-white bg-white' : ''; ?>">
+                <a href="/../warehouse-app/add-warehouse.php" class="<?php echo isActive('add-warehouse.php', $current_page); ?>">
                     <i class='bx bx-building-house'></i>
                     <span class="links_name">Add New Warehouse</span>
                 </a>
                 <span class="tooltip">Add New Warehouse</span>
             </li>
             <li>
-                <a href="/../warehouse-app/warehouse information/warehouse-info.php"
-                    class="<?php echo ($current_page == 'warehouse-info.php') ? 'text-white bg-white' : ''; ?>">
+                <a href="/../warehouse-app/warehouse information/warehouse-info.php" class="<?php echo isActive('warehouse-info.php', $current_page); ?>">
                     <i class='bx bxs-box'></i>
                     <span class="links_name">Warehouse Products</span>
                 </a>
                 <span class="tooltip">Warehouse Products</span>
             </li>
+
+            <li>
+                <a href="/notification/notification.php"
+                    class="notification-link <?php echo isActive('notification.php', $current_page); ?>">
+                    <i class='bx bx-bell'></i>
+                    <span class="links_name">Notifications</span>
+                    <?php if ($unread_count > 0): ?>
+                        <span class="notif-badge"><?php echo $unread_count; ?></span>
+                        <span class="blinking-dot"></span>
+                    <?php endif; ?>
+                </a>
+                <span class="tooltip">Notifications</span>
+            </li>
+
+            <!-- Profile Section -->
             <li class="profile">
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <a href="/../warehouse-app/admin-profile.php">
@@ -145,22 +168,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </li>
         </ul>
     </div>
+
     <script>
         let sidebar = document.querySelector(".sidebar");
         let closeBtn = document.querySelector("#btn");
 
-        closeBtn.addEventListener("click", () => {
+        closeBtn?.addEventListener("click", () => {
             sidebar.classList.toggle("open");
-            menuBtnChange();
         });
-
-        function menuBtnChange() {
-            if (sidebar.classList.contains("open")) {
-                closeBtn.classList.replace("bx-menu", "bx-menu-alt-right");
-            } else {
-                closeBtn.classList.replace("bx-menu-alt-right", "bx-menu");
-            }
-        }
     </script>
 </body>
 
