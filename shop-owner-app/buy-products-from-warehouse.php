@@ -489,7 +489,7 @@ mysqli_free_result($result);
                             <?php echo htmlspecialchars($product['total_quantity']); ?>
                             <?php echo htmlspecialchars($product['unit']); ?></p>
                         <?php if ($product['total_quantity'] > 0): ?>
-                            <button class="mt-auto bg-blue-600 text-white px-4 py-2 rounded-lg btn" onclick='openAddCartModal(<?php echo json_encode([
+                            <button class="mt-auto bg-green-600 text-white px-4 py-2 rounded-lg btn" onclick='openAddCartModal(<?php echo json_encode([
                                                                                                                                     'product_id' => $product['product_id'],
                                                                                                                                     'name' => $product['product_name'],
                                                                                                                                     'category' => $product['category'],
