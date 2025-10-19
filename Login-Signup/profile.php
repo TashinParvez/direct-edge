@@ -1,6 +1,9 @@
+<?php include '../Include/SidebarShop.php'; 
+?>
+<link rel="stylesheet" href="../Include/sidebar.css">
+
 <?php
 include __DIR__ . '/../include/connect-db.php'; // Database connection
-include '../include/navbar.php';
 
 $message = "";
 $messageType = "";
@@ -264,7 +267,7 @@ $conn->close();
                 </div>
 
                 <!-- Account Settings -->
-                <div class="bg-white overflow-hidden shadow rounded-lg mt-6">
+                <!-- <div class="bg-white overflow-hidden shadow rounded-lg mt-6">
                     <div class="px-4 py-5 sm:p-6">
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Account Settings</h3>
 
@@ -300,10 +303,10 @@ $conn->close();
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Danger Zone -->
-                <div class="bg-white overflow-hidden shadow rounded-lg mt-6">
+                <!-- <div class="bg-white overflow-hidden shadow rounded-lg mt-6">
                     <div class="px-4 py-5 sm:p-6">
                         <h3 class="text-lg font-medium text-red-600 mb-4">⚠️ Danger Zone</h3>
 
@@ -317,7 +320,7 @@ $conn->close();
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
     </div>
