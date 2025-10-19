@@ -18,7 +18,7 @@ Number: 01775215476
 Password: Ab@12345
 
 
-Admin
+Agent
 ----------
 ID: 77
 Name: Agent
