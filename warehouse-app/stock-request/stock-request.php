@@ -36,6 +36,22 @@ if (isset($_GET['action'], $_GET['id'])) {
         $stmt->bind_param("si", $statusVal, $requestId);
 
         if ($stmt->execute()) {
+            // --- NOTIFICATION ---
+            include_once __DIR__ . '/../../include/notification_helpers.php';
+
+            // Get the requester_id (who is a ShopOwner) for this request
+            $stmtRequester = $conn->prepare("SELECT requester_id FROM stock_requests WHERE request_id = ?");
+            $stmtRequester->bind_param("i", $requestId);
+            $stmtRequester->execute();
+            $result = $stmtRequester->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $shop_owner_id = $row['requester_id'];
+                $notification_message = "Your stock request #" . htmlspecialchars($requestId) . " has been " . htmlspecialchars($message) . ".";
+                $notification_link = "/shop-owner-app/Self-Service-Orders/Self-Service-Orders.php"; // A relevant page for shop owners
+                create_notification($conn, $shop_owner_id, 'stock_request_update', $notification_message, $notification_link);
+            }
+            // --- END NOTIFICATION ---
+
             $successMessage = "Request has been " . $message . " successfully!";
         } else {
             $errorMessage = "Failed to update request status.";

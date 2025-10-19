@@ -23,12 +23,12 @@
     <?php include '../include/navbar.php'; ?>
 
     <!-- Hero Section -->
-    <section class="pt-20 pb-16 bg-gradient-to-br from-green-50 via-white to-emerald-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
+    <section class="pt-20 pb-16 bg-gradient-to-br from-green-50 via-white to-emerald-50 header-class">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+            <div class="text-center" style="padding-top: 7rem;">
                 <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
                     Revolutionize Your
-                    <span class="text-green-600">Agricultural Supply Chain</span>
+                    <span class="text-green-600">Supply Chain</span>
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
                     Connect farmers, distributors, and shop owners in one unified platform.
@@ -334,7 +334,7 @@
             <p class="text-xl text-green-100 mb-8">
                 Join thousands of farmers, distributors, and shop owners already using DirectEdge
             </p>
-            
+
             <!-- <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <button class="bg-white text-green-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-50 transition-colors">
                     Start Free Trial
@@ -347,8 +347,26 @@
         </div>
     </section>
 
+    <footer class="bg-gray-900 text-white">
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="border-t border-gray-800   pt-8 flex flex-col md:flex-row justify-between items-center">
+                <div>
+                    <h3 class="text-2xl font-bold text-green-400 mb-4">DirectEdge</h3>
+                    <p class="text-gray-300 mb-4">Revolutionizing agricultural supply chains through innovative technology and direct connections.</p>
+                </div>
+
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <p class="text-gray-400 text-sm">© 2025 DirectEdge. All rights reserved.</p>
+                </div>
+
+            </div>
+        </div>
+
+    </footer>
+
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
+    <!-- <footer class="bg-gray-900 text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
@@ -396,7 +414,7 @@
                 </div>
             </div>
         </div>
-    </footer>
+    </footer> -->
 
     <!-- JavaScript for smooth scrolling -->
     <script>
@@ -416,7 +434,18 @@
 
         // Add some interactive functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // Add hover effects or other interactive elements here
+            // Handle hash navigation on page load (for external links like navbar)
+            if (window.location.hash) {
+                setTimeout(() => {
+                    const target = document.querySelector(window.location.hash);
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                }, 100);
+            }
             console.log('DirectEdge Agricultural Platform Homepage Loaded');
         });
     </script>

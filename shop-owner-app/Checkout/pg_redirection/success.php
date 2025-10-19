@@ -31,7 +31,7 @@ $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
 $headers .= 'From: <mahmed221209@bscse.uiu.ac.bd>' . "\r\n";
 
 // Fixed: Typo in the variable $message and closing parenthesis
-mail($to, $subject, $message, $headers);
+// mail($to, $subject, $message, $headers);
 
 ?>
 
@@ -180,7 +180,46 @@ ini_set('display_errors', 1);
                         if ($validated) {
                             $sql = $ot->updateTransactionQuery($tran_id, 'Paid');
 
-                            if ($conn->query($sql) === TRUE) { ?>
+                            if ($conn->query($sql) === TRUE) {
+                                // Send notification to all admins about the successful payment
+                                include_once(__DIR__ . "/../../../include/notification_helpers.php");
+
+                                // Get all admin user IDs
+                                $admin_ids = get_user_ids_by_role($conn, 'Admin');
+
+                                // Get shop owner name
+                                $shop_owner_id = $row['shopowner_id'];
+                                $shop_owner_name = 'Shop Owner';
+                                $shop_stmt = $conn->prepare('SELECT full_name FROM users WHERE user_id = ?');
+                                if ($shop_stmt) {
+                                    $shop_stmt->bind_param('i', $shop_owner_id);
+                                    $shop_stmt->execute();
+                                    $shop_stmt->bind_result($shop_owner_name);
+                                    $shop_stmt->fetch();
+                                    $shop_stmt->close();
+                                }
+
+                                // Create notification message
+                                $notification_message = "New order payment received! Order #" . $row['order_id'] .
+                                    " from " . htmlspecialchars($shop_owner_name) .
+                                    " - Amount: ৳" . number_format($amount, 2) .
+                                    " (Transaction ID: " . htmlspecialchars($tran_id) . ")";
+
+                                $notification_link = "/warehouse-app/Orders/orders.php?order_id=" . $row['order_id'];
+
+                                // Send notification to all admins
+                                if (!empty($admin_ids)) {
+                                    create_notification($conn, $admin_ids, 'new_order', $notification_message, $notification_link);
+                                }
+
+                                // Send confirmation notification to shop owner
+                                $shop_owner_message = "Payment successful! Your order #" . $row['order_id'] .
+                                    " payment of ৳" . number_format($amount, 2) .
+                                    " has been confirmed. Transaction ID: " . htmlspecialchars($tran_id);
+                                $shop_owner_link = "/shop-owner-app/Self-Service-Orders/Self-Service-Orders.php";
+
+                                create_notification($conn, $shop_owner_id, 'system', $shop_owner_message, $shop_owner_link);
+                    ?>
                                 <h2 class="text-center text-success">Congratulations! Your Transaction is Successful.</h2>
                                 <br>
                                 <table border="1" class="table table-striped">

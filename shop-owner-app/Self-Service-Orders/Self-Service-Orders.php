@@ -8,7 +8,9 @@ ob_start(); // Start output buffering to handle session_start() in sidebar
 
 include '../../include/connect-db.php';
 
-$shop_id = isset($user_id) ? $user_id : 6;
+// $shop_id = isset($user_id) ? $user_id : 6;
+
+$shop_id =   6;
 
 // Query to extract products from JSON and join with products table
 $sql = "SELECT 
@@ -159,21 +161,28 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
             opacity: 0.6;
             cursor: not-allowed;
         }
+
+        /* Make columns equal height */
+        .grid {
+            align-items: start;
+        }
     </style>
 </head>
 
 <body class="bg-theme p-6">
 
-    <h1 class="text-3xl font-bold text-black-custom mb-8 text-center">Self Service Orders</h1>
+    <div class="bg-white rounded-lg shadow p-4 mb-8 mx-4 mt-4">
+        <h1 class="text-3xl font-bold text-black-custom text-center">Self Service Orders</h1>
+    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
         <!-- In queue -->
         <div class="bg-white rounded-lg shadow p-4">
             <h2 class="text-xl font-semibold mb-4 text-black-custom border-b pb-2">In queue</h2>
             <div class="space-y-4">
                 <?php foreach ($notHandled as $order): ?>
                     <div class="bg-gray-50 shadow rounded-lg p-4 cursor-pointer hover:ring hover:ring-green-300 transition" onclick="openModal(<?= $order['id'] ?>)">
-                        <p class="font-bold text-black-custom">Order #<?= $order['id'] ?></p>
+                        <p class="font-bold text-black-custom">Order Code #<?= $order['order_code'] ?></p>
                         <p class="text-gray-700">Buyer: <?= $order['buyer'] ?></p>
                         <p class="font-semibold text-black-custom">Total: $<?= $order['amount'] ?></p>
                     </div>
@@ -187,7 +196,7 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
             <div class="space-y-4">
                 <?php foreach ($running as $order): ?>
                     <div class="bg-gray-50 shadow rounded-lg p-4 cursor-pointer hover:ring hover:ring-green-300 transition" onclick="openModal(<?= $order['id'] ?>)">
-                        <p class="font-bold text-black-custom">Order #<?= $order['id'] ?></p>
+                        <p class="font-bold text-black-custom">Order Code #<?= $order['order_code'] ?></p>
                         <p class="text-gray-700">Buyer: <?= $order['buyer'] ?></p>
                         <p class="font-semibold text-black-custom">Total: $<?= $order['amount'] ?></p>
                     </div>
@@ -201,7 +210,7 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
             <div class="space-y-4">
                 <?php foreach ($done as $order): ?>
                     <div class="bg-gray-50 shadow rounded-lg p-4 cursor-pointer hover:ring hover:ring-green-300 transition" onclick="openModal(<?= $order['id'] ?>)">
-                        <p class="font-bold text-black-custom">Order #<?= $order['id'] ?> <span class="tick-mark">✔</span></p>
+                        <p class="font-bold text-black-custom">Order Code #<?= $order['order_code'] ?> <span class="tick-mark">✔</span></p>
                         <p class="text-gray-700">Buyer: <?= $order['buyer'] ?></p>
                         <p class="font-semibold text-black-custom">Total: $<?= $order['amount'] ?></p>
                     </div>
@@ -244,7 +253,7 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
     `).join('');
 
                 modalContent.innerHTML = `
-        <h3 class="text-2xl font-bold text-black-custom mb-4">Order #${order.id}</h3>
+        <h3 class="text-2xl font-bold text-black-custom mb-4">Order Code #${order.order_code}</h3>
         <p class="mb-2 text-black-custom">Buyer: ${order.buyer}</p>
         <p class="mb-4 font-semibold text-black-custom">Total: $${order.amount}</p>
 
@@ -316,7 +325,7 @@ $done = array_filter($orders, fn($o) => $o['status'] == 'Done');
             </style>
         </head>
         <body>
-            <h2>Order #${order.id} (${order.order_code})</h2>
+            <h2>Order Code #${order.order_code}</h2>
             <p><strong>Buyer:</strong> ${order.buyer}</p>
             <p><strong>Total:</strong> $${order.amount}</p>
             <table>

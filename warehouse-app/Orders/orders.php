@@ -22,6 +22,76 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['updateOrderStatus'])) 
         $stmtUp = $conn->prepare("UPDATE orders SET status = ?, updated_at=NOW() WHERE order_id = ?");
         $stmtUp->bind_param("si", $newStatus, $orderId);
         if ($stmtUp->execute()) {
+
+            // --- UPDATE SHOP_PRODUCTS WHEN APPROVED, SHIPPED, OR DELIVERED ---
+            // if (in_array($newStatus, ['Approved', 'Shipped', 'Delivered'])) {
+            if (in_array($newStatus, ['Shipped', 'Delivered'])) {
+                // Get shop owner id from order
+                $stmtShop = $conn->prepare("SELECT shopowner_id FROM orders WHERE order_id = ?");
+                $stmtShop->bind_param("i", $orderId);
+                $stmtShop->execute();
+                $shopResult = $stmtShop->get_result();
+                if ($shopRow = $shopResult->fetch_assoc()) {
+                    $shop_id = $shopRow['shopowner_id'];
+
+                    // Get all order items for this order
+                    $stmtItems = $conn->prepare("SELECT product_id, quantity, unit_price FROM order_items WHERE order_id = ?");
+                    $stmtItems->bind_param("i", $orderId);
+                    $stmtItems->execute();
+                    $itemsResult = $stmtItems->get_result();
+
+                    while ($item = $itemsResult->fetch_assoc()) {
+                        $product_id = $item['product_id'];
+                        $quantity = $item['quantity'];
+                        $unit_price = $item['unit_price'];
+
+                        // Check if product already exists in shop_products
+                        $checkStmt = $conn->prepare("SELECT id, quantity FROM shop_products WHERE shop_id = ? AND product_id = ?");
+                        $checkStmt->bind_param("ii", $shop_id, $product_id);
+                        $checkStmt->execute();
+                        $checkResult = $checkStmt->get_result();
+
+                        if ($checkResult->num_rows > 0) {
+                            // Update existing product - add to quantity
+                            $existingRow = $checkResult->fetch_assoc();
+                            $newQuantity = $existingRow['quantity'] + $quantity;
+
+                            $updateStmt = $conn->prepare("UPDATE shop_products SET quantity = ?, updated_at = NOW() WHERE shop_id = ? AND product_id = ?");
+                            $updateStmt->bind_param("iii", $newQuantity, $shop_id, $product_id);
+                            $updateStmt->execute();
+                            $updateStmt->close();
+                        } else {
+                            // Insert new product
+                            // Use unit_price as both bought_price and selling_price (shop owner can update selling price later)
+                            $insertStmt = $conn->prepare("INSERT INTO shop_products (shop_id, product_id, quantity, selling_price, bought_price, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
+                            $insertStmt->bind_param("iiidd", $shop_id, $product_id, $quantity, $unit_price, $unit_price);
+                            $insertStmt->execute();
+                            $insertStmt->close();
+                        }
+                        $checkStmt->close();
+                    }
+                    $stmtItems->close();
+                }
+                $stmtShop->close();
+            }
+            // --- END SHOP_PRODUCTS UPDATE ---
+
+            // --- NOTIFICATION ---
+            include_once __DIR__ . '/../../include/notification_helpers.php';
+
+            // Get the shopowner_id for this order
+            $stmtShopOwner = $conn->prepare("SELECT shopowner_id FROM orders WHERE order_id = ?");
+            $stmtShopOwner->bind_param("i", $orderId);
+            $stmtShopOwner->execute();
+            $result = $stmtShopOwner->get_result();
+            if ($row = $result->fetch_assoc()) {
+                $shop_owner_id = $row['shopowner_id'];
+                $notification_message = "Your order #" . htmlspecialchars($orderId) . " has been updated to: " . htmlspecialchars($newStatus) . ".";
+                $notification_link = "/shop-owner-app/Self-Service-Orders/Self-Service-Orders.php"; // Link to their orders page
+                create_notification($conn, $shop_owner_id, 'order_status_update', $notification_message, $notification_link);
+            }
+            // --- END NOTIFICATION ---
+
             if (isset($_POST['ajax'])) {
                 ob_end_clean();
                 echo json_encode(['success' => true, 'new_status' => $newStatus]);
@@ -270,6 +340,7 @@ ob_end_flush();
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -284,6 +355,7 @@ ob_end_flush();
             from {
                 opacity: 1;
             }
+
             to {
                 opacity: 0;
                 transform: translateY(-20px);
@@ -306,7 +378,7 @@ ob_end_flush();
         </div>
 
         <div class="container mx-auto px-4">
-            
+
             <!-- Success/Error Messages -->
             <?php if ($successMessage): ?>
                 <div id="successAlert" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center animate-slideDown">
@@ -362,7 +434,7 @@ ob_end_flush();
                         </select>
                     </div>
                 </form>
-                
+
                 <!-- Clear Filters Button -->
                 <?php if ($search || $filterStatus || $filterDate): ?>
                     <div class="mt-4 flex justify-end">
@@ -674,7 +746,7 @@ ob_end_flush();
         window.addEventListener('DOMContentLoaded', function() {
             const successAlert = document.getElementById('successAlert');
             const errorAlert = document.getElementById('errorAlert');
-            
+
             if (successAlert) {
                 setTimeout(function() {
                     successAlert.classList.add('alert-fade-out');
@@ -683,7 +755,7 @@ ob_end_flush();
                     }, 500);
                 }, 3000);
             }
-            
+
             if (errorAlert) {
                 setTimeout(function() {
                     errorAlert.classList.add('alert-fade-out');
@@ -718,7 +790,7 @@ ob_end_flush();
             const select = document.getElementById('status-select-' + orderId);
             const newStatus = select.value;
             const saveBtn = event.target;
-            
+
             // Disable button and show loading state
             saveBtn.disabled = true;
             saveBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin mr-1"></i>Saving...';
@@ -748,7 +820,7 @@ ob_end_flush();
                             'Delivered': 'bx-check-double',
                             'Cancelled': 'bx-x-circle'
                         };
-                        
+
                         // Find and update the status badge in the table
                         const rows = document.querySelectorAll('tr.order-row');
                         rows.forEach(row => {
@@ -761,26 +833,26 @@ ob_end_flush();
                                 }
                             }
                         });
-                        
+
                         // Show success notification
                         showNotification('success', `Status updated to ${data.new_status}`);
-                        
+
                         // Re-enable button with success feedback
                         saveBtn.disabled = false;
                         saveBtn.innerHTML = '<i class="bx bx-check mr-1"></i>Saved!';
                         saveBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
                         saveBtn.classList.add('bg-green-500');
-                        
+
                         // Revert button after 2 seconds
                         setTimeout(() => {
                             saveBtn.innerHTML = '<i class="bx bx-save mr-1"></i>Save';
                             saveBtn.classList.remove('bg-green-500');
                             saveBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
                         }, 2000);
-                        
+
                     } else {
                         showNotification('error', data.message || 'Failed to update status');
-                        
+
                         // Re-enable button
                         saveBtn.disabled = false;
                         saveBtn.innerHTML = '<i class="bx bx-save mr-1"></i>Save';
@@ -789,28 +861,28 @@ ob_end_flush();
                 .catch(error => {
                     console.error('Error:', error);
                     showNotification('error', 'Network error. Please try again.');
-                    
+
                     // Re-enable button
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = '<i class="bx bx-save mr-1"></i>Save';
                 });
         }
-        
+
         function showNotification(type, message) {
             const notification = document.createElement('div');
             const isSuccess = type === 'success';
-            
+
             notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center animate-slideDown ${
                 isSuccess ? 'bg-green-100 border border-green-400 text-green-700' : 'bg-red-100 border border-red-400 text-red-700'
             }`;
-            
+
             notification.innerHTML = `
                 <i class='bx ${isSuccess ? 'bx-check-circle' : 'bx-error-circle'} text-2xl mr-3'></i>
                 <span>${message}</span>
             `;
-            
+
             document.body.appendChild(notification);
-            
+
             // Auto-remove after 3 seconds
             setTimeout(() => {
                 notification.classList.add('alert-fade-out');

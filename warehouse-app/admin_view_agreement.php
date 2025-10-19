@@ -1,4 +1,4 @@
-<?php include '../Include/SidebarAgent.php'; ?>
+<?php include '../Include/SidebarWarehouse.php'; ?>
 <link rel="stylesheet" href="../Include/sidebar.css">
 <?php
 ob_start();
