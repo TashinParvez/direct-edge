@@ -345,21 +345,21 @@ $activity_logs = [
             </div>
             <div class="flex items-center gap-3">
 
-                <button class="bg-[#16a34a] border px-3 py-2 rounded shadow-sm hover:bg-green-700 text-white"
-                    onclick="window.location.href='../add-warehouse.php'">
-                    Add Warehouse
-                </button>
 
-                <button class="bg-[#16a34a] border px-3 py-2 rounded shadow-sm hover:bg-gray-100 text-white"
+                <button class="bg-[#16a34a] border px-3 py-2 rounded shadow-sm hover:bg-green-700 text-white"
                     onclick="window.location.href='../Manage-Warehouse/warehouse-status.php'">
                     Warehouse Status
                 </button>
 
-                <button class="bg-[#16a34a] border px-3 py-2 rounded shadow-sm hover:bg-gray-100 text-white"
+                <button class="bg-[#16a34a] border px-3 py-2 rounded shadow-sm hover:bg-green-700 text-white"
                     onclick="window.location.href='admin-agent-management.php'">
                     Agent Management
                 </button>
 
+                <button class="bg-[#16a34a] border px-3 py-2 rounded shadow-sm hover:bg-green-700 text-white"
+                    onclick="window.location.href='../admin_agreements_review.php'">
+                    Review Agreements
+                </button>
 
             </div>
         </header>
