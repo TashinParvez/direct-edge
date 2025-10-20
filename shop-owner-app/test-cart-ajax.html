@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Cart AJAX Test</title>
+  </head>
+  <body>
+    <h1>Cart AJAX Debugging</h1>
+
+    <button onclick="testGenerateReceipt()">Test Generate Receipt</button>
+    <button onclick="testSearchProducts()">Test Search Products</button>
+    <button onclick="testInventoryStatus()">Test Inventory Status</button>
+
+    <div
+      id="results"
+      style="
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        min-height: 200px;
+      "
+    >
+      <h3>Results will appear here:</h3>
+    </div>
+
+    <script>
+      const cartUrl = "cart.php";
+      const resultsDiv = document.getElementById("results");
+
+      function testGenerateReceipt() {
+        resultsDiv.innerHTML = "<p>Testing generate receipt...</p>";
+
+        fetch(cartUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: "action=generate_receipt",
+        })
+          .then((response) => {
+            console.log("Status:", response.status);
+            console.log("Headers:", response.headers.get("content-type"));
+            return response.text();
+          })
+          .then((text) => {
+            console.log("Raw response:", text);
+            resultsDiv.innerHTML =
+              "<h3>Raw Response:</h3><pre>" +
+              text.substring(0, 1000) +
+              "</pre>";
+
+            try {
+              const json = JSON.parse(text);
+              resultsDiv.innerHTML +=
+                "<h3>Parsed JSON:</h3><pre>" +
+                JSON.stringify(json, null, 2) +
+                "</pre>";
+            } catch (e) {
+              resultsDiv.innerHTML +=
+                '<h3 style="color: red;">ERROR: Response is not valid JSON!</h3>';
+              resultsDiv.innerHTML += "<p>Error: " + e.message + "</p>";
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            resultsDiv.innerHTML =
+              '<h3 style="color: red;">Fetch Error:</h3><p>' +
+              error.message +
+              "</p>";
+          });
+      }
+
+      function testSearchProducts() {
+        resultsDiv.innerHTML = "<p>Testing search products...</p>";
+
+        fetch(cartUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: "action=search_products&search=apple",
+        })
+          .then((response) => {
+            console.log("Status:", response.status);
+            return response.text();
+          })
+          .then((text) => {
+            console.log("Raw response:", text);
+            resultsDiv.innerHTML =
+              "<h3>Raw Response:</h3><pre>" +
+              text.substring(0, 1000) +
+              "</pre>";
+
+            try {
+              const json = JSON.parse(text);
+              resultsDiv.innerHTML +=
+                "<h3>Parsed JSON:</h3><pre>" +
+                JSON.stringify(json, null, 2) +
+                "</pre>";
+            } catch (e) {
+              resultsDiv.innerHTML +=
+                '<h3 style="color: red;">ERROR: Response is not valid JSON!</h3>';
+            }
+          })
+          .catch((error) => {
+            resultsDiv.innerHTML =
+              '<h3 style="color: red;">Error:</h3><p>' + error.message + "</p>";
+          });
+      }
+
+      function testInventoryStatus() {
+        resultsDiv.innerHTML = "<p>Testing inventory status...</p>";
+
+        fetch(cartUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: "action=get_inventory_status",
+        })
+          .then((response) => {
+            console.log("Status:", response.status);
+            return response.text();
+          })
+          .then((text) => {
+            console.log("Raw response:", text);
+            resultsDiv.innerHTML =
+              "<h3>Raw Response:</h3><pre>" + text + "</pre>";
+
+            try {
+              const json = JSON.parse(text);
+              resultsDiv.innerHTML +=
+                "<h3>Parsed JSON:</h3><pre>" +
+                JSON.stringify(json, null, 2) +
+                "</pre>";
+            } catch (e) {
+              resultsDiv.innerHTML +=
+                '<h3 style="color: red;">ERROR: Response is not valid JSON!</h3>';
+            }
+          })
+          .catch((error) => {
+            resultsDiv.innerHTML =
+              '<h3 style="color: red;">Error:</h3><p>' + error.message + "</p>";
+          });
+      }
+    </script>
+  </body>
+</html>

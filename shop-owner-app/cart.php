@@ -1,24 +1,33 @@
 <?php
-// Database connection
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "direct-edge";
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Don't display errors (they break JSON)
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/cart_errors.log');
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Initialize session
+// Initialize session first
 session_start();
+
+// Database connection
+require_once('../include/connect-db.php');
+
+// Get shop_id from session (default to 2 for testing)
+$shop_id = $_SESSION['user_id'] ?? 2;
+
+// Initialize cart in session
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
+}
+
+// Initialize messages
+if (!isset($_SESSION['cart_message'])) {
+    $_SESSION['cart_message'] = '';
 }
 
 // Handle receipt generation and stock deduction
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'generate_receipt') {
     header('Content-Type: application/json');
+    ob_clean(); // Clear any output buffer
 
     try {
         if (empty($_SESSION['cart'])) {
@@ -38,16 +47,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $total_amount = $subtotal + $tax_amount - $discount_amount;
 
         // Generate simple transaction number
-        $transaction_number = 'TXN-' . date('YmdHis') . '-' . rand(100, 999);
+        $transaction_number = 'TXN-' . date('YmdHis') . '-' . rand(1000, 9999);
 
         // Process each cart item and deduct from shop_products
         $stock_issues = [];
         $processed_items = [];
 
         foreach ($_SESSION['cart'] as $product_id => $item) {
-            // Check current stock in shop_products (assuming shop_id = 6 for this example)
-            $shop_id = 6; // You can make this dynamic based on your requirements
-
+            // Check current stock in shop_products
             $stock_check = $conn->prepare("
                 SELECT sp.quantity as current_quantity, p.name, sp.selling_price
                 FROM shop_products sp
@@ -63,13 +70,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                 if ($available_stock < $item['quantity']) {
                     $stock_issues[] = "Insufficient stock for {$item['name']}. Available: {$available_stock}, Required: {$item['quantity']}";
-                    continue;
+                    $conn->rollback();
+                    echo json_encode(['success' => false, 'message' => implode("; ", $stock_issues)]);
+                    exit;
                 } elseif ($available_stock - $item['quantity'] <= 10) {
                     $stock_issues[] = "Warning: {$item['name']} will be low in stock after this sale";
                 }
             } else {
-                $stock_issues[] = "Product {$item['name']} not found in shop inventory";
-                continue;
+                $conn->rollback();
+                echo json_encode(['success' => false, 'message' => "Product {$item['name']} not found in shop inventory"]);
+                exit;
             }
             $stock_check->close();
 
@@ -82,16 +92,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $update_stock->bind_param("iiii", $item['quantity'], $product_id, $shop_id, $item['quantity']);
 
             if (!$update_stock->execute() || $conn->affected_rows == 0) {
-                throw new Exception("Failed to deduct stock for {$item['name']}");
+                $conn->rollback();
+                echo json_encode(['success' => false, 'message' => "Failed to deduct stock for {$item['name']}"]);
+                exit;
             }
             $update_stock->close();
 
             $processed_items[] = $item;
         }
 
-        // If there were any stock issues but we still processed some items, include warnings
-        if (!empty($stock_issues) && empty($processed_items)) {
-            throw new Exception("Cannot complete transaction: " . implode("; ", $stock_issues));
+        // Insert sale record into daily_sales_history
+        $sale_date = date('Y-m-d');
+        foreach ($processed_items as $item) {
+            $insert_sale = $conn->prepare("
+                INSERT INTO daily_sales_history 
+                (date, shop_id, product_id, quantity_sold, total_revenue, avg_selling_price)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                quantity_sold = quantity_sold + VALUES(quantity_sold),
+                total_revenue = total_revenue + VALUES(total_revenue)
+            ");
+
+            $total_revenue = $item['price'] * $item['quantity'];
+            // date(s), shop_id(i), product_id(i), quantity(i), total_revenue(d), price(d)
+            $insert_sale->bind_param(
+                "siiidd",
+                $sale_date,
+                $shop_id,
+                $item['product_id'],
+                $item['quantity'],
+                $total_revenue,
+                $item['price']
+            );
+
+            if (!$insert_sale->execute()) {
+                error_log("Failed to insert sale history: " . $insert_sale->error);
+            }
+            $insert_sale->close();
         }
 
         $conn->commit(); // Commit the transaction
@@ -125,10 +162,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($_POST['action'] === 'search_products') {
         $search = $_POST['search'] ?? '';
-        $shop_id = 6; // You can make this dynamic
 
         // Search products that are available in shop_products
-        $sql = "SELECT p.product_id, p.name, p.category, sp.selling_price as price, p.unit, p.img_url as image_url, sp.quantity as current_quantity
+        $sql = "SELECT p.product_id, p.name, p.category, sp.selling_price as price, p.unit, 
+                       p.img_url as image_url, sp.quantity as current_quantity
                 FROM products p
                 JOIN shop_products sp ON p.product_id = sp.product_id
                 WHERE (p.name LIKE ? OR p.category LIKE ?) 
@@ -152,8 +189,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     if ($_POST['action'] === 'get_inventory_status') {
-        $shop_id = 6; // You can make this dynamic
-
         $sql = "SELECT 
                     COUNT(*) as total_products,
                     COUNT(CASE WHEN sp.quantity <= 10 THEN 1 END) as low_stock_count,
@@ -179,10 +214,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
     $action = $_POST['cart_action'];
 
     if ($action === 'add' && $product_id > 0) {
-        $shop_id = 6; // You can make this dynamic
-
         // Check stock availability before adding to cart
-        $stock_sql = "SELECT sp.quantity as current_quantity, p.product_id, p.name, sp.selling_price as price, p.unit, p.img_url as image_url
+        $stock_sql = "SELECT sp.quantity as current_quantity, p.product_id, p.name, sp.selling_price as price, 
+                             p.unit, p.img_url as image_url
                       FROM shop_products sp
                       JOIN products p ON sp.product_id = p.product_id  
                       WHERE sp.product_id = ? AND sp.shop_id = ?";
@@ -209,6 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
                         'available_stock' => $available_stock
                     ];
                 }
+                $_SESSION['cart_message'] = "Product added to cart successfully!";
             } else {
                 $_SESSION['cart_message'] = "Cannot add more. Only {$available_stock} items available in stock.";
             }
@@ -220,12 +255,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cart_action'])) {
         if (isset($_SESSION['cart'][$product_id])) {
             if ($_SESSION['cart'][$product_id]['quantity'] > 1) {
                 $_SESSION['cart'][$product_id]['quantity']--;
+                $_SESSION['cart_message'] = "Product quantity decreased.";
             } else {
                 unset($_SESSION['cart'][$product_id]);
+                $_SESSION['cart_message'] = "Product removed from cart.";
             }
         }
     } elseif ($action === 'clear') {
         $_SESSION['cart'] = [];
+        $_SESSION['cart_message'] = "Cart cleared successfully.";
     }
 
     // Redirect to prevent form resubmission
@@ -289,7 +327,14 @@ function generateReceiptHTML($transaction_number, $items, $subtotal, $tax_amount
     return $receipt_html;
 }
 
-$conn->close();
+// Check if this is an AJAX request - if so, we've already handled it above and exited
+// This flag prevents the HTML from rendering for AJAX requests
+$is_ajax_request = ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']));
+
+// Only close connection and render HTML if NOT an AJAX request
+if (!$is_ajax_request) {
+    $conn->close();
+}
 ?>
 
 <!DOCTYPE html>
@@ -578,14 +623,19 @@ $conn->close();
         });
 
         function searchProducts(query) {
-            fetch('', {
+            fetch(window.location.href, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: 'action=search_products&search=' + encodeURIComponent(query)
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(products => {
                     const resultsDiv = document.getElementById('search-results');
                     resultsDiv.innerHTML = '';
@@ -643,15 +693,37 @@ $conn->close();
                 return;
             }
 
-            fetch('', {
+            console.log('Starting receipt generation...');
+
+            fetch(window.location.href, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: 'action=generate_receipt'
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers.get('content-type'));
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+
+                    // Check if response is JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        return response.text().then(text => {
+                            console.error('Non-JSON response:', text);
+                            throw new Error('Server returned non-JSON response: ' + text.substring(0, 200));
+                        });
+                    }
+
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Receipt data:', data);
+
                     if (data.success) {
                         document.getElementById('receipt-content').innerHTML = data.receipt_html;
                         document.getElementById('receipt-modal').classList.remove('hidden');
@@ -661,22 +733,22 @@ $conn->close();
                             alert('Transaction completed with warnings:\n' + data.warnings.join('\n'));
                         }
 
-                        // Reload page to update cart and stock display
-                        setTimeout(() => {
-                            location.reload();
-                        }, 3000);
+                        // Don't auto-reload - let user close receipt manually
+                        // Page will reload when they close the modal
                     } else {
                         alert('Error generating receipt: ' + data.message);
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error generating receipt. Please check the console.');
+                    console.error('Error details:', error);
+                    alert('Error generating receipt: ' + error.message + '\nPlease check the browser console (F12) for details.');
                 });
         }
 
         function closeReceiptModal() {
             document.getElementById('receipt-modal').classList.add('hidden');
+            // Reload page to show updated cart and stock
+            location.reload();
         }
 
         function printReceipt() {
@@ -722,14 +794,19 @@ $conn->close();
 
         // Inventory Status
         function showInventoryStatus() {
-            fetch('', {
+            fetch(window.location.href, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: 'action=get_inventory_status'
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     document.getElementById('inventory-content').innerHTML = `
                 <div class="space-y-3">

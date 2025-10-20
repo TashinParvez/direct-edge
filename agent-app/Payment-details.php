@@ -413,7 +413,7 @@ $conn->close();
                                         <i class='bx bx-check-circle mr-1'></i>Status
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        <i class='bx bx-note mr-1'></i>Notes
+                                        <i class='bx bx-note mr-1'></i>Types of Crops
                                     </th>
                                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider no-print">
                                         Action
@@ -547,7 +547,7 @@ $conn->close();
 
 
                             <div class="mb-4 md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Types of Crops</label>
                                 <textarea name="notes" id="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
                             </div>
                         </div>
@@ -697,7 +697,7 @@ $conn->close();
                                 <p><strong>Due Amount:</strong> <span class="${dueAmt > 0 ? 'text-red-600 font-semibold' : 'text-green-600'}">৳ ${dueAmt}</span></p>
                                 <p><strong>Due Date:</strong> ${payment.due_date || 'N/A'}</p>
                                 <p class="col-span-2"><strong>Status:</strong> <span class="px-2 py-1 bg-${payment.status === 'Paid' ? 'green' : payment.status === 'Partial' ? 'yellow' : 'red'}-100 text-${payment.status === 'Paid' ? 'green' : payment.status === 'Partial' ? 'yellow' : 'red'}-800 text-xs rounded-full">${payment.status}</span></p>
-                                ${payment.notes ? `<p class="col-span-2"><strong>Notes:</strong> ${payment.notes}</p>` : ''}
+                                ${payment.notes ? `<p class="col-span-2"><strong>Types of Crops:</strong> ${payment.notes}</p>` : ''}
                             </div>
                         </div>
                     `;
