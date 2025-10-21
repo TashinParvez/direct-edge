@@ -117,7 +117,8 @@ shopno-self-service-pickup-system/
    - On the **server computer**, open a browser and visit:
 
      - [http://localhost:8000](http://localhost:8000)
-     - or [http://your-local-ip:8000](http://192.168.1.100:8000)
+     - or [http://your-local-ip:8000](http://10.10.201.19:8000)
+     <!-- - or [http://your-local-ip:8000](http://192.168.1.100:8000) -->
 
 You should see the **“Welcome to Shopno”** page with a name input form.
 
