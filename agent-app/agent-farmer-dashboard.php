@@ -176,9 +176,18 @@ function sanitize($v)
                     <h2 class="text-3xl font-bold text-gray-900">My Farmers</h2>
                     <p class="text-gray-600 mt-1">Farmers with active partnership agreements</p>
                 </div>
-                <a href="Agreement.php" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all">
-                    <i class="fas fa-plus mr-2"></i>Create Agreement
-                </a>
+
+                <!-- Buttons grouped side-by-side -->
+                <div class="flex items-center gap-3">
+                    <a href="Agreement.php" class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 font-medium shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-plus mr-2"></i>Create Agreement
+                    </a>
+
+                    <a href="add-farmers-info.php" title="Add Farmer"
+                        class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 font-medium shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-user-plus mr-2"></i>Add Farmer
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -501,7 +510,7 @@ function sanitize($v)
     </script>
 
 
-    <?php 
+    <?php
     // include '../include/footer.php'; 
     ?>
 
