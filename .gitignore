@@ -21,3 +21,5 @@ rad.json
 #Test results file
 TestResults.xml
 open_in_vscode.bat
+### For Implementing Security ###
+Non-Shareable-Information.txt

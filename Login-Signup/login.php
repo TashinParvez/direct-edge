@@ -12,36 +12,42 @@ if (!$conn) {
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
+    $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = $_POST['password'];
 
-    $sql = "SELECT user_id, full_name, email, phone, password, role, created_at 
-            FROM users WHERE phone = '$phone' LIMIT 1";
-    $result = mysqli_query($conn, $sql);
+    // Use prepared statement for security
+    $stmt = $conn->prepare("SELECT user_id, full_name, email, phone, password, role, is_valid_email, created_at FROM users WHERE email = ? LIMIT 1");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if ($result && mysqli_num_rows($result) > 0) {
         $user = mysqli_fetch_assoc($result);
 
         if (password_verify($password, $user['password'])) {
 
-            session_start();
-            $_SESSION['user_id'] = $user['user_id'];
-
-            $redirect_page = '';
-            if ($user['role'] == 'Agent') {
-                $redirect_page = "agent-app/agent-farmer-dashboard.php";
-            } elseif ($user['role'] == 'Admin') {
-                $redirect_page = "warehouse-app/admin-dashboard/admin-dashboard.php";
-            } elseif ($user['role'] == 'Shop-Owner') {
-                header("Location: ../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id=" . $user['user_id']);
-                exit();
+            // Check if email is verified
+            if (!$user['is_valid_email']) {
+                $error = "Please verify your email before logging in. Check your inbox for the verification code.";
             } else {
-                $redirect_page = "Home/landing.php";
+                session_start();
+                $_SESSION['user_id'] = $user['user_id'];
+
+                $redirect_page = '';
+                if ($user['role'] == 'Agent') {
+                    $redirect_page = "agent-app/agent-farmer-dashboard.php";
+                } elseif ($user['role'] == 'Admin') {
+                    $redirect_page = "warehouse-app/admin-dashboard/admin-dashboard.php";
+                } elseif ($user['role'] == 'Shop-Owner') {
+                    header("Location: ../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id=" . $user['user_id']);
+                    exit();
+                } else {
+                    $redirect_page = "Home/landing.php";
+                }
+
+                header("Location: ../" . $redirect_page);
+                exit();
             }
-
-
-            header("Location: ../" . $redirect_page);
-            exit();
 
             // Store all user info in session
             // $_SESSION['full_name'] = $user['full_name'];
@@ -63,8 +69,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $error = "Invalid password!";
         }
     } else {
-        $error = "No account found with this phone number.";
+        $error = "No account found with this email address.";
     }
+
+    $stmt->close();
 }
 
 mysqli_close($conn);
@@ -78,7 +86,7 @@ mysqli_close($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log In DirectEdge</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/Favicon.png">
+    <link rel="icon" type="image/x-icon" href="../assets/Logo/Favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -169,7 +177,7 @@ mysqli_close($conn);
 
         <!-- LOGIN FORM -->
         <div class="flex flex-col justify-center p-6">
-            <h2 class="text-2xl font-semibold text-center mb-6">Log In</h2>
+            <h2 class="text-2xl font-bold text-center mb-6">Log In</h2>
 
             <!-- Display error message if exists -->
             <?php if (!empty($error)): ?>
@@ -181,25 +189,31 @@ mysqli_close($conn);
 
             <form action="login.php" method="POST" class="space-y-4">
                 <div>
-                    <label for="phone" class="block mb-1 text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="text" id="phone" name="phone" placeholder="+8801744177620" required
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                    <label for="email" class="block text-sm font-medium">Email</label>
+                    <input type="email" id="email" name="email" placeholder="example@mail.com" required
+                        value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
                 </div>
 
                 <div>
-                    <label for="password" class="block mb-1 text-sm font-medium text-gray-700">Password</label>
+                    <label for="password" class="block text-sm font-medium">Password</label>
                     <input type="password" id="password" name="password" placeholder="Password" required
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
                 </div>
 
                 <button type="submit"
-                    class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
-                    Login
+                    class="w-full bg-green-600 text-white font-medium py-2 rounded-md hover:bg-green-700 transition">
+                    Log In
                 </button>
 
                 <p class="text-center text-sm text-gray-600 mt-4">
                     Don't have an account?
-                    <a href="signup.php" class="text-green-600 hover:underline">Create</a>
+                    <a href="signup.php" class="text-green-600 hover:underline">Sign Up</a>
+                </p>
+
+                <p class="text-center text-sm text-gray-600 mt-4">
+                    Want to join as an agricultural agent?
+                    <a href="../agent-app/become-agent.php" class="text-green-600 hover:underline font-semibold">Become an Agent</a>
                 </p>
             </form>
         </div>
