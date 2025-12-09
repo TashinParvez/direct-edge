@@ -1,4 +1,13 @@
 <?php
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require 'PHPMailer/src/Exception.php';
+require 'PHPMailer/src/PHPMailer.php';
+require 'PHPMailer/src/SMTP.php';
+
+
 // Database connection
 $servername = "localhost";
 $username = "root";
@@ -90,7 +99,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($stmt->execute()) {
                 // $message = "Sign up successful!";
-                header("Location: login.php");
+
+                // Get the newly created user_id
+                $user_id = $conn->insert_id;
+
+                sendVerificationCodeForEmail($email, $phone, $conn);
+
+                header("Location: verify.php?user_id=" . urlencode($user_id). "&verify=email");
                 exit();
             } else {
                 $message = "❌ Error: " . $stmt->error;
@@ -104,6 +119,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->close();
         }
     }
+}
+
+function sendVerificationCodeForEmail($email, $phone, $conn)
+{
+    $verification_code = rand(100000, 999999);
+
+    $stmt = $conn->prepare("INSERT INTO email_phone_verification(email, email_verification_code, phone) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $email, $verification_code, $phone);
+    $stmt->execute();
+
+    $stmt->close();
+
+
+    // Send verification email
+
+    $mail = new PHPMailer(true);
+
+    $mail->isSMTP();
+    $mail->Host = 'smtp.gmail.com';
+    $mail->SMTPAuth = true;
+
+    $mail->Username = 'mnoman221338@bscse.uiu.ac.bd';            // your Gmail
+    $mail->Password = 'rzjj ljkz lqwf qhzb';               // Gmail App Password
+
+    $mail->SMTPSecure = 'tls';
+    $mail->Port = 587;
+
+    $mail->setFrom('mnoman221338@bscse.uiu.ac.bd', 'Direct-Edge');
+    $mail->addAddress($email);
+
+    $mail->Subject = "Your Verification Code";
+    $mail->Body = "Your verification code is: $verification_code";
+
+    $mail->send();
 }
 
 $conn->close();
