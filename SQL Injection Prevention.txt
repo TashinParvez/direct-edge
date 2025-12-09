@@ -1,0 +1,4 @@
+
+
+$agent_id = isset($user_id) ? intval($user_id) : 45;
+

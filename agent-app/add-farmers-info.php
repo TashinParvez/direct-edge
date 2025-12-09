@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="../Include/sidebar.css">
 
 <?php
-$agent_id = isset($user_id) ? $user_id : 45;
+$agent_id = isset($user_id) ? intval($user_id) : 45;
 
 // connect database
 include '../include/connect-db.php'; // Database connection
