@@ -1,10 +1,64 @@
-<?php include '../Include/SidebarShop.php'; 
+<?php
+// Start session and handle redirects BEFORE any output
+session_start();
+include __DIR__ . '/../include/connect-db.php'; // Database connection
+
+// Get user_id from session
+$user_id = $_SESSION['user_id'] ?? 0;
+
+// Handle phone verification BEFORE any output
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_phone'])) {
+    // Fetch user phone
+    $stmt = $conn->prepare("SELECT phone FROM users WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user_data = $result->fetch_assoc();
+    $stmt->close();
+
+    $phone = $user_data['phone'];
+    $verification_code = rand(100000, 999999);
+
+    $stmt = $conn->prepare("UPDATE email_phone_verification SET phone_verification_code = ?, phone_is_verified = 0 WHERE phone = ?");
+    $stmt->bind_param("ss", $verification_code, $phone);
+    $stmt->execute();
+    $stmt->close();
+
+    // Send WhatsApp OTP
+    $idInstance = "7105402430";
+    $apiTokenInstance = "2d8e63493c2b41b990db9e521c5f62fdb2f20c7be5e14cbd8d";
+    $url = "https://api.greenapi.com/waInstance{$idInstance}/sendMessage/{$apiTokenInstance}";
+
+    $formattedPhone = preg_replace('/^\+?88/', '', $phone);
+    $formattedPhone = '88' . $formattedPhone;
+
+    $data = [
+        "chatId" => $formattedPhone . "@c.us",
+        "message" => "Your OTP verification code is: $verification_code"
+    ];
+
+    $options = [
+        "http" => [
+            "header"  => "Content-type: application/json\r\n",
+            "method"  => "POST",
+            "content" => json_encode($data),
+            "ignore_errors" => true
+        ]
+    ];
+
+    $context = stream_context_create($options);
+    @file_get_contents($url, false, $context);
+
+    // Redirect to phone verification page
+    header("Location: verify.php?user_id=" . urlencode($user_id) . "&verify=phone");
+    exit();
+}
+
+include '../Include/SidebarShop.php';
 ?>
 <link rel="stylesheet" href="../Include/sidebar.css">
 
 <?php
-include __DIR__ . '/../include/connect-db.php'; // Database connection
-
 $message = "";
 $messageType = "";
 
@@ -46,7 +100,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
 }
 
 // Fetch current user data
-$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at, image_url FROM users WHERE user_id = ?");
+$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at, image_url, is_valid_phone FROM users WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -54,6 +108,7 @@ $user = $result->fetch_assoc();
 $stmt->close();
 
 $conn->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -122,7 +177,21 @@ $conn->close();
 
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Phone Number</dt>
-                                <dd class="mt-1 text-sm text-gray-900"><?php echo htmlspecialchars($user['phone']); ?></dd>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    <div class="flex items-center gap-2">
+                                        <span><?php echo htmlspecialchars($user['phone']); ?></span>
+                                        <?php if ($user['is_valid_phone']): ?>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                ✓ Verified
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                ⚠ Unverified
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+
+                                </dd>
                             </div>
 
                             <div>
@@ -214,8 +283,28 @@ $conn->close();
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div>
                                     <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                                    <input type="text" id="phone" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" required
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm border">
+                                    <div class="relative">
+                                        <input type="text" id="phone" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" required
+                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm border">
+                                        <?php if ($user['is_valid_phone']): ?>
+                                            <span class="absolute right-3 top-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                ✓ Verified
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="absolute right-3 top-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                ⚠ Unverified
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <?php if (!$user['is_valid_phone']): ?>
+                                        <p class="mt-1 text-xs text-red-600">Please verify your phone number to access all features.</p>
+                                        <form method="POST" action="profile.php" class="mt-2">
+                                            <button type="submit" name="verify_phone"
+                                                class="mt-2 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                Verify Now
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 </div>
 
                                 <div>
