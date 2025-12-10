@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $password = $_POST['password'];
 
         // Use prepared statement for security
-        $stmt = $conn->prepare("SELECT user_id, full_name, email, phone, password, role, is_valid_email, created_at FROM users WHERE email = ? LIMIT 1");
+        $stmt = $conn->prepare("SELECT user_id, full_name, email, phone, password, role, is_valid_email, created_at, is_two_factor_on, two_factor_type FROM users WHERE email = ? LIMIT 1");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -50,23 +50,104 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if (!$user['is_valid_email']) {
                     $error = "Please verify your email before logging in. Check your inbox for the verification code.";
                 } else {
+                    // Fetch two-factor authentication settings
+                    $stmt_2fa = $conn->prepare("SELECT is_two_factor_on, two_factor_type FROM users WHERE user_id = ?");
+                    $stmt_2fa->bind_param("i", $user['user_id']);
+                    $stmt_2fa->execute();
+                    $result_2fa = $stmt_2fa->get_result();
+                    $two_factor_data = $result_2fa->fetch_assoc();
+                    $stmt_2fa->close();
+
                     session_start();
                     $_SESSION['user_id'] = $user['user_id'];
 
-                    $redirect_page = '';
-                    if ($user['role'] == 'Agent') {
-                        $redirect_page = "agent-app/agent-farmer-dashboard.php";
-                    } elseif ($user['role'] == 'Admin') {
-                        $redirect_page = "warehouse-app/admin-dashboard/admin-dashboard.php";
-                    } elseif ($user['role'] == 'Shop-Owner') {
-                        header("Location: ../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id=" . $user['user_id']);
+                    // Check if two-factor authentication is enabled
+                    if ($two_factor_data['is_two_factor_on']) {
+                        // Generate and send verification code
+                        $verification_code = rand(100000, 999999);
+                        $_SESSION['two_factor_code'] = $verification_code;
+                        $_SESSION['two_factor_user_id'] = $user['user_id'];
+                        $_SESSION['two_factor_type'] = $two_factor_data['two_factor_type'];
+
+                        if ($two_factor_data['two_factor_type'] === 'email') {
+                            // Send email verification code
+                            require 'PHPMailer/src/PHPMailer.php';
+                            require 'PHPMailer/src/SMTP.php';
+                            require 'PHPMailer/src/Exception.php';
+
+                            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                            try {
+                                $mail->isSMTP();
+                                $mail->Host = 'smtp.gmail.com';
+                                $mail->SMTPAuth = true;
+                                $mail->Username = 'mnoman221338@bscse.uiu.ac.bd';
+                                $mail->Password = 'rzjj ljkz lqwf qhzb';
+                                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                                $mail->Port = 587;
+
+                                $mail->setFrom('mnoman221338@bscse.uiu.ac.bd', 'DirectEdge');
+                                $mail->addAddress($user['email']);
+
+                                $mail->isHTML(true);
+                                $mail->Subject = 'Two-Factor Authentication Code';
+                                $mail->Body = "
+                                    <h2>Two-Factor Authentication</h2>
+                                    <p>Your verification code is: <strong style='font-size: 24px;'>{$verification_code}</strong></p>
+                                    <p>This code will expire in 10 minutes.</p>
+                                    <p>If you didn't attempt to log in, please ignore this email.</p>
+                                ";
+
+                                $mail->send();
+                            } catch (Exception $e) {
+                                $error = "Failed to send verification code. Please try again.";
+                            }
+                        } elseif ($two_factor_data['two_factor_type'] === 'phone') {
+                            // Send WhatsApp verification code
+                            $idInstance = "7105402430";
+                            $apiTokenInstance = "2d8e63493c2b41b990db9e521c5f62fdb2f20c7be5e14cbd8d";
+                            $url = "https://api.greenapi.com/waInstance{$idInstance}/sendMessage/{$apiTokenInstance}";
+
+                            $formattedPhone = preg_replace('/^\+?88/', '', $user['phone']);
+                            $formattedPhone = '88' . $formattedPhone;
+
+                            $data = [
+                                "chatId" => $formattedPhone . "@c.us",
+                                "message" => "Your DirectEdge login verification code is: $verification_code\n\nThis code will expire in 10 minutes."
+                            ];
+
+                            $options = [
+                                "http" => [
+                                    "header"  => "Content-type: application/json\r\n",
+                                    "method"  => "POST",
+                                    "content" => json_encode($data),
+                                    "ignore_errors" => true
+                                ]
+                            ];
+
+                            $context = stream_context_create($options);
+                            @file_get_contents($url, false, $context);
+                        }
+
+                        // Redirect to two-factor verification page
+                        header("Location: two_factor_verify.php");
                         exit();
                     } else {
-                        $redirect_page = "Home/landing.php";
-                    }
+                        // No two-factor authentication, proceed with normal login
+                        $redirect_page = '';
+                        if ($user['role'] == 'Agent') {
+                            $redirect_page = "agent-app/agent-farmer-dashboard.php";
+                        } elseif ($user['role'] == 'Admin') {
+                            $redirect_page = "warehouse-app/admin-dashboard/admin-dashboard.php";
+                        } elseif ($user['role'] == 'Shop-Owner') {
+                            header("Location: ../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id=" . $user['user_id']);
+                            exit();
+                        } else {
+                            $redirect_page = "Home/landing.php";
+                        }
 
-                    header("Location: ../" . $redirect_page);
-                    exit();
+                        header("Location: ../" . $redirect_page);
+                        exit();
+                    }
                 }
             } else {
                 $error = "Invalid password!";

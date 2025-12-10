@@ -64,6 +64,57 @@ include '../Include/SidebarShop.php';
 $message = "";
 $messageType = "";
 
+// Handle two-factor authentication toggle
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['toggle_two_factor'])) {
+    $action = $_POST['two_factor_action']; // 'enable' or 'disable'
+
+    if ($action === 'enable') {
+        $two_factor_type = $_POST['two_factor_type']; // 'email' or 'phone'
+
+        // Verify that the selected method is verified
+        $stmt = $conn->prepare("SELECT is_valid_email, is_valid_phone FROM users WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $verification_status = $result->fetch_assoc();
+        $stmt->close();
+
+        $can_enable = false;
+        if ($two_factor_type === 'email' && $verification_status['is_valid_email']) {
+            $can_enable = true;
+        } elseif ($two_factor_type === 'phone' && $verification_status['is_valid_phone']) {
+            $can_enable = true;
+        }
+
+        if ($can_enable) {
+            $stmt = $conn->prepare("UPDATE users SET is_two_factor_on = 1, two_factor_type = ? WHERE user_id = ?");
+            $stmt->bind_param("si", $two_factor_type, $user_id);
+            if ($stmt->execute()) {
+                $message = "✅ Two-factor authentication enabled successfully!";
+                $messageType = "success";
+            } else {
+                $message = "❌ Error enabling two-factor authentication.";
+                $messageType = "error";
+            }
+            $stmt->close();
+        } else {
+            $message = "❌ Cannot enable two-factor authentication. Please verify your " . $two_factor_type . " first.";
+            $messageType = "error";
+        }
+    } elseif ($action === 'disable') {
+        $stmt = $conn->prepare("UPDATE users SET is_two_factor_on = 0, two_factor_type = NULL WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
+        if ($stmt->execute()) {
+            $message = "✅ Two-factor authentication disabled successfully!";
+            $messageType = "success";
+        } else {
+            $message = "❌ Error disabling two-factor authentication.";
+            $messageType = "error";
+        }
+        $stmt->close();
+    }
+}
+
 // Handle profile update
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
     $full_name = $_POST['full_name'];
@@ -102,7 +153,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
 }
 
 // Fetch current user data
-$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at, image_url, is_valid_phone, is_valid_email FROM users WHERE user_id = ?");
+$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at, image_url, is_valid_phone, is_valid_email, is_two_factor_on, two_factor_type FROM users WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -382,44 +433,128 @@ $conn->close();
                     </div>
                 </div>
 
-                <!-- Account Settings -->
-                <!-- <div class="bg-white overflow-hidden shadow rounded-lg mt-6">
+                <!-- Two-Factor Authentication Settings - Collapsible -->
+                <div class="bg-white overflow-hidden shadow rounded-lg mt-6" x-data="{ open: false }">
                     <div class="px-4 py-5 sm:p-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Account Settings</h3>
-
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between py-3 border-b border-gray-200">
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-900">Email Notifications</h4>
-                                    <p class="text-sm text-gray-500">Receive updates about your account activity</p>
-                                </div>
-                                <button class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 bg-green-600">
-                                    <span class="translate-x-5 pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
-                                </button>
+                        <!-- Header with Toggle -->
+                        <button @click="open = !open" class="w-full flex items-center justify-between text-left group">
+                            <div class="flex items-center">
+                                <h3 class="text-lg font-medium text-gray-900">🔐 Two-Factor Authentication</h3>
+                                <?php if ($user['is_two_factor_on']): ?>
+                                    <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Enabled
+                                    </span>
+                                <?php else: ?>
+                                    <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        Disabled
+                                    </span>
+                                <?php endif; ?>
                             </div>
+                            <svg class="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-transform duration-200"
+                                :class="{ 'rotate-180': open }"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
 
-                            <div class="flex items-center justify-between py-3 border-b border-gray-200">
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-900">SMS Notifications</h4>
-                                    <p class="text-sm text-gray-500">Receive important updates via SMS</p>
-                                </div>
-                                <button class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 bg-gray-200">
-                                    <span class="translate-x-0 pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
-                                </button>
-                            </div>
+                        <!-- Collapsible Content -->
+                        <div x-show="open" x-collapse class="mt-4 space-y-4">
+                            <p class="text-sm text-gray-600">Add an extra layer of security to your account by requiring a verification code during login.</p>
 
-                            <div class="flex items-center justify-between py-3">
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-900">Two-Factor Authentication</h4>
-                                    <p class="text-sm text-gray-500">Add an extra layer of security to your account</p>
+                            <?php if ($user['is_two_factor_on']): ?>
+                                <!-- Two-Factor is currently enabled -->
+                                <div class="border border-green-200 rounded-md p-4 bg-green-50">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="text-sm font-medium text-green-800 flex items-center">
+                                                <span class="mr-2">✅</span> Two-Factor Authentication Enabled
+                                            </h4>
+                                            <p class="text-sm text-green-600 mt-1">
+                                                Verification method:
+                                                <strong><?php echo ucfirst($user['two_factor_type']); ?></strong>
+                                                <?php if ($user['two_factor_type'] === 'email'): ?>
+                                                    (<?php echo htmlspecialchars($user['email']); ?>)
+                                                <?php else: ?>
+                                                    (<?php echo htmlspecialchars($user['phone']); ?>)
+                                                <?php endif; ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <form method="POST" action="profile.php" class="mt-3">
+                                        <input type="hidden" name="two_factor_action" value="disable">
+                                        <button type="submit" name="toggle_two_factor"
+                                            class="inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                            Disable Two-Factor Authentication
+                                        </button>
+                                    </form>
                                 </div>
-                                <button class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                    Setup
-                                </button>
-                            </div>
+                            <?php else: ?>
+                                <!-- Two-Factor is currently disabled -->
+                                <div class="border border-yellow-200 rounded-md p-4 bg-yellow-50">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div>
+                                            <h4 class="text-sm font-medium text-yellow-800 flex items-center">
+                                                <span class="mr-2">⚠️</span> Two-Factor Authentication Disabled
+                                            </h4>
+                                            <p class="text-sm text-yellow-600 mt-1">Your account is less secure without two-factor authentication.</p>
+                                        </div>
+                                    </div>
+
+                                    <?php if ($user['is_valid_email'] || $user['is_valid_phone']): ?>
+                                        <form method="POST" action="profile.php" class="space-y-3">
+                                            <input type="hidden" name="two_factor_action" value="enable">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Choose verification method:</label>
+                                                <div class="space-y-2">
+                                                    <?php if ($user['is_valid_email']): ?>
+                                                        <label class="flex items-center p-3 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer">
+                                                            <input type="radio" name="two_factor_type" value="email" required
+                                                                class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300">
+                                                            <div class="ml-3">
+                                                                <span class="block text-sm font-medium text-gray-900">📧 Email Verification</span>
+                                                                <span class="block text-sm text-gray-500"><?php echo htmlspecialchars($user['email']); ?></span>
+                                                            </div>
+                                                        </label>
+                                                    <?php endif; ?>
+
+                                                    <?php if ($user['is_valid_phone']): ?>
+                                                        <label class="flex items-center p-3 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer">
+                                                            <input type="radio" name="two_factor_type" value="phone" required
+                                                                class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300">
+                                                            <div class="ml-3">
+                                                                <span class="block text-sm font-medium text-gray-900">📱 Phone Verification (WhatsApp)</span>
+                                                                <span class="block text-sm text-gray-500"><?php echo htmlspecialchars($user['phone']); ?></span>
+                                                            </div>
+                                                        </label>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+
+                                            <button type="submit" name="toggle_two_factor"
+                                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-sm">
+                                                Enable Two-Factor Authentication
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <div class="border border-gray-300 rounded-md p-3 bg-gray-50">
+                                            <p class="text-sm text-gray-700">
+                                                ⚠️ You must verify at least one contact method (email or phone) before enabling two-factor authentication.
+                                            </p>
+                                            <div class="mt-2 space-x-2">
+                                                <?php if (!$user['is_valid_email']): ?>
+                                                    <span class="text-xs text-red-600">❌ Email not verified</span>
+                                                <?php endif; ?>
+                                                <?php if (!$user['is_valid_phone']): ?>
+                                                    <span class="text-xs text-red-600">❌ Phone not verified</span>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
-                </div> -->
+                </div>
 
                 <!-- Danger Zone -->
                 <!-- <div class="bg-white overflow-hidden shadow rounded-lg mt-6">
