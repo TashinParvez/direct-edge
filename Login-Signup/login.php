@@ -12,67 +12,71 @@ if (!$conn) {
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $password = $_POST['password'];
+    // Google reCAPTCHA verification
+    $secretKey = "6LdNTSEsAAAAAPNc_OatPnrX3J12qWvkthB99Uc3";
+    $captcha = $_POST["g-recaptcha-response"] ?? '';
 
-    // Use prepared statement for security
-    $stmt = $conn->prepare("SELECT user_id, full_name, email, phone, password, role, is_valid_email, created_at FROM users WHERE email = ? LIMIT 1");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result && mysqli_num_rows($result) > 0) {
-        $user = mysqli_fetch_assoc($result);
-
-        if (password_verify($password, $user['password'])) {
-
-            // Check if email is verified
-            if (!$user['is_valid_email']) {
-                $error = "Please verify your email before logging in. Check your inbox for the verification code.";
-            } else {
-                session_start();
-                $_SESSION['user_id'] = $user['user_id'];
-
-                $redirect_page = '';
-                if ($user['role'] == 'Agent') {
-                    $redirect_page = "agent-app/agent-farmer-dashboard.php";
-                } elseif ($user['role'] == 'Admin') {
-                    $redirect_page = "warehouse-app/admin-dashboard/admin-dashboard.php";
-                } elseif ($user['role'] == 'Shop-Owner') {
-                    header("Location: ../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id=" . $user['user_id']);
-                    exit();
-                } else {
-                    $redirect_page = "Home/landing.php";
-                }
-
-                header("Location: ../" . $redirect_page);
-                exit();
-            }
-
-            // Store all user info in session
-            // $_SESSION['full_name'] = $user['full_name'];
-            // $_SESSION['email'] = $user['email'];
-            // $_SESSION['phone'] = $user['phone'];
-            // $_SESSION['role'] = $user['role'];
-            // $_SESSION['created_at'] = $user['created_at'];
-            // $_SESSION['login_time'] = date('Y-m-d H:i:s');
-
-            // ✅ Redirect based on user role
-            // if ($user['role'] === 'Agent') {
-            //     header("Location: ../agent-app/agent-profile.php");
-            // } else if ($user['role'] === 'Admin') {
-            //     header("Location: ../warehouse-app/admin-dashboard/admin-agent-management.php");
-            // } else {
-            //     header("Location: profile.php");
-            // }
-        } else {
-            $error = "Invalid password!";
-        }
+    if (!$captcha) {
+        $error = "Please complete the CAPTCHA verification.";
     } else {
-        $error = "No account found with this email address.";
+        // Verify CAPTCHA with Google
+        $verifyResponse = file_get_contents(
+            "https://www.google.com/recaptcha/api/siteverify?secret=$secretKey&response=$captcha"
+        );
+        $responseData = json_decode($verifyResponse);
+
+        if (!$responseData->success) {
+            $error = "CAPTCHA verification failed. Please try again.";
+        }
     }
 
-    $stmt->close();
+    // Only proceed with login if CAPTCHA is verified
+    if (empty($error)) {
+        $email = mysqli_real_escape_string($conn, $_POST['email']);
+        $password = $_POST['password'];
+
+        // Use prepared statement for security
+        $stmt = $conn->prepare("SELECT user_id, full_name, email, phone, password, role, is_valid_email, created_at FROM users WHERE email = ? LIMIT 1");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            $user = mysqli_fetch_assoc($result);
+
+            if (password_verify($password, $user['password'])) {
+
+                // Check if email is verified
+                if (!$user['is_valid_email']) {
+                    $error = "Please verify your email before logging in. Check your inbox for the verification code.";
+                } else {
+                    session_start();
+                    $_SESSION['user_id'] = $user['user_id'];
+
+                    $redirect_page = '';
+                    if ($user['role'] == 'Agent') {
+                        $redirect_page = "agent-app/agent-farmer-dashboard.php";
+                    } elseif ($user['role'] == 'Admin') {
+                        $redirect_page = "warehouse-app/admin-dashboard/admin-dashboard.php";
+                    } elseif ($user['role'] == 'Shop-Owner') {
+                        header("Location: ../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id=" . $user['user_id']);
+                        exit();
+                    } else {
+                        $redirect_page = "Home/landing.php";
+                    }
+
+                    header("Location: ../" . $redirect_page);
+                    exit();
+                }
+            } else {
+                $error = "Invalid password!";
+            }
+        } else {
+            $error = "No account found with this email address.";
+        }
+
+        $stmt->close();
+    }
 }
 
 mysqli_close($conn);
@@ -88,6 +92,7 @@ mysqli_close($conn);
     <title>Log In DirectEdge</title>
     <link rel="icon" type="image/x-icon" href="../assets/Logo/Favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
 <body class="flex justify-center items-center min-h-screen bg-[#eff2f9]">
@@ -199,6 +204,11 @@ mysqli_close($conn);
                     <label for="password" class="block text-sm font-medium">Password</label>
                     <input type="password" id="password" name="password" placeholder="Password" required
                         class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
+                </div>
+
+                <!-- Google reCAPTCHA -->
+                <div class="w-full">
+                    <div class="g-recaptcha w-full" data-sitekey="6LdNTSEsAAAAAO7ovUcBYc5ZyWNTbyKrAMX5YtVn" style="transform:scale(1);transform-origin:0 0;"></div>
                 </div>
 
                 <button type="submit"
