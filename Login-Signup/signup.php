@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -103,9 +104,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Get the newly created user_id
                 $user_id = $conn->insert_id;
 
-                sendVerificationCodeForEmail($email, $phone, $conn);
+                // Generate and send verification code
+                $verification_code = sendVerificationCodeForEmail($email);
 
-                header("Location: verify.php?user_id=" . urlencode($user_id). "&verify=email");
+                // Store user info and verification code in session
+                $_SESSION['pending_verification_user_id'] = $user_id;
+                $_SESSION['pending_verification_email'] = $email;
+                $_SESSION['pending_verification_phone'] = $phone;
+                $_SESSION['verification_type'] = 'email';
+                $_SESSION['email_verification_code'] = $verification_code;
+
+                header("Location: verify.php");
                 exit();
             } else {
                 $message = "❌ Error: " . $stmt->error;
@@ -121,18 +130,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-function sendVerificationCodeForEmail($email, $phone, $conn)
+// Send verification email
+function sendVerificationCodeForEmail($email)
 {
     $verification_code = rand(100000, 999999);
-
-    $stmt = $conn->prepare("INSERT INTO email_phone_verification(email, email_verification_code, phone) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $email, $verification_code, $phone);
-    $stmt->execute();
-
-    $stmt->close();
-
-
-    // Send verification email
 
     $mail = new PHPMailer(true);
 
@@ -153,6 +154,9 @@ function sendVerificationCodeForEmail($email, $phone, $conn)
     $mail->Body = "Your verification code is: $verification_code";
 
     $mail->send();
+
+    // Return verification code to be stored in session
+    return $verification_code;
 }
 
 $conn->close();

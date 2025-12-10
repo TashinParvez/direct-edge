@@ -19,10 +19,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_phone'])) {
     $phone = $user_data['phone'];
     $verification_code = rand(100000, 999999);
 
-    $stmt = $conn->prepare("UPDATE email_phone_verification SET phone_verification_code = ?, phone_is_verified = 0 WHERE phone = ?");
-    $stmt->bind_param("ss", $verification_code, $phone);
-    $stmt->execute();
-    $stmt->close();
 
     // Send WhatsApp OTP
     $idInstance = "7105402430";
@@ -49,8 +45,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['verify_phone'])) {
     $context = stream_context_create($options);
     @file_get_contents($url, false, $context);
 
+    // Store verification data in session
+    $_SESSION['pending_verification_user_id'] = $user_id;
+    $_SESSION['pending_verification_phone'] = $phone;
+    $_SESSION['verification_type'] = 'phone';
+    $_SESSION['phone_verification_code'] = $verification_code;
+
     // Redirect to phone verification page
-    header("Location: verify.php?user_id=" . urlencode($user_id) . "&verify=phone");
+    header("Location: verify.php");
     exit();
 }
 
@@ -100,7 +102,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_profile'])) {
 }
 
 // Fetch current user data
-$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at, image_url, is_valid_phone FROM users WHERE user_id = ?");
+$stmt = $conn->prepare("SELECT full_name, email, phone, role, created_at, image_url, is_valid_phone, is_valid_email FROM users WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -172,7 +174,20 @@ $conn->close();
 
                             <div>
                                 <dt class="text-sm font-medium text-gray-500">Email Address</dt>
-                                <dd class="mt-1 text-sm text-gray-900"><?php echo htmlspecialchars($user['email']); ?></dd>
+                                <dd class="mt-1 text-sm text-gray-900">
+                                    <div class="flex items-center gap-2">
+                                        <span><?php echo htmlspecialchars($user['email']); ?></span>
+                                        <?php if ($user['is_valid_email']): ?>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                Verified
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                Unverified
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                </dd>
                             </div>
 
                             <div>
@@ -182,11 +197,11 @@ $conn->close();
                                         <span><?php echo htmlspecialchars($user['phone']); ?></span>
                                         <?php if ($user['is_valid_phone']): ?>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                ✓ Verified
+                                                Verified
                                             </span>
                                         <?php else: ?>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                ⚠ Unverified
+                                                Unverified
                                             </span>
                                         <?php endif; ?>
                                     </div>
@@ -275,8 +290,20 @@ $conn->close();
 
                                 <div>
                                     <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                                    <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm border">
+                                    <div class="relative">
+                                        <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required readonly
+                                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2 bg-gray-50 cursor-not-allowed sm:text-sm border">
+                                        <?php if ($user['is_valid_email']): ?>
+                                            <span class="absolute right-3 top-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                Verified
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="absolute right-3 top-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                Unverified
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Email cannot be changed after registration.</p>
                                 </div>
                             </div>
 
@@ -288,11 +315,11 @@ $conn->close();
                                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 sm:text-sm border">
                                         <?php if ($user['is_valid_phone']): ?>
                                             <span class="absolute right-3 top-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                ✓ Verified
+                                                Verified
                                             </span>
                                         <?php else: ?>
                                             <span class="absolute right-3 top-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                ⚠ Unverified
+                                                Unverified
                                             </span>
                                         <?php endif; ?>
                                     </div>
