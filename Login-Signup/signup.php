@@ -1,4 +1,14 @@
 <?php
+session_start();
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require 'PHPMailer/src/Exception.php';
+require 'PHPMailer/src/PHPMailer.php';
+require 'PHPMailer/src/SMTP.php';
+
+
 // Database connection
 $servername = "localhost";
 $username = "root";
@@ -90,7 +100,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($stmt->execute()) {
                 // $message = "Sign up successful!";
-                header("Location: login.php");
+
+                // Get the newly created user_id
+                $user_id = $conn->insert_id;
+
+                // Generate and send verification code
+                $verification_code = sendVerificationCodeForEmail($email);
+
+                // Store user info and verification code in session
+                $_SESSION['pending_verification_user_id'] = $user_id;
+                $_SESSION['pending_verification_email'] = $email;
+                $_SESSION['pending_verification_phone'] = $phone;
+                $_SESSION['verification_type'] = 'email';
+                $_SESSION['email_verification_code'] = $verification_code;
+
+                header("Location: verify.php");
                 exit();
             } else {
                 $message = "❌ Error: " . $stmt->error;
@@ -104,6 +128,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->close();
         }
     }
+}
+
+// Send verification email
+function sendVerificationCodeForEmail($email)
+{
+    $verification_code = rand(100000, 999999);
+
+    $mail = new PHPMailer(true);
+
+    $mail->isSMTP();
+    $mail->Host = 'smtp.gmail.com';
+    $mail->SMTPAuth = true;
+
+    $mail->Username = 'mnoman221338@bscse.uiu.ac.bd';            // your Gmail
+    $mail->Password = 'rzjj ljkz lqwf qhzb';               // Gmail App Password
+
+    $mail->SMTPSecure = 'tls';
+    $mail->Port = 587;
+
+    $mail->setFrom('mnoman221338@bscse.uiu.ac.bd', 'Direct-Edge');
+    $mail->addAddress($email);
+
+    $mail->Subject = "Your Verification Code";
+    $mail->Body = "Your verification code is: $verification_code";
+
+    $mail->send();
+
+    // Return verification code to be stored in session
+    return $verification_code;
 }
 
 $conn->close();

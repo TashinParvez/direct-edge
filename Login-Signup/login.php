@@ -12,58 +12,151 @@ if (!$conn) {
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $phone = mysqli_real_escape_string($conn, $_POST['phone']);
-    $password = $_POST['password'];
+    // Google reCAPTCHA verification
+    $secretKey = "6LdNTSEsAAAAAPNc_OatPnrX3J12qWvkthB99Uc3";
+    $captcha = $_POST["g-recaptcha-response"] ?? '';
 
-    $sql = "SELECT user_id, full_name, email, phone, password, role, created_at 
-            FROM users WHERE phone = '$phone' LIMIT 1";
-    $result = mysqli_query($conn, $sql);
-
-    if ($result && mysqli_num_rows($result) > 0) {
-        $user = mysqli_fetch_assoc($result);
-
-        if (password_verify($password, $user['password'])) {
-
-            session_start();
-            $_SESSION['user_id'] = $user['user_id'];
-
-            $redirect_page = '';
-            if ($user['role'] == 'Agent') {
-                $redirect_page = "agent-app/agent-farmer-dashboard.php";
-            } elseif ($user['role'] == 'Admin') {
-                $redirect_page = "warehouse-app/admin-dashboard/admin-dashboard.php";
-            } elseif ($user['role'] == 'Shop-Owner') {
-                header("Location: ../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id=" . $user['user_id']);
-                exit();
-            } else {
-                $redirect_page = "Home/landing.php";
-            }
-
-
-            header("Location: ../" . $redirect_page);
-            exit();
-
-            // Store all user info in session
-            // $_SESSION['full_name'] = $user['full_name'];
-            // $_SESSION['email'] = $user['email'];
-            // $_SESSION['phone'] = $user['phone'];
-            // $_SESSION['role'] = $user['role'];
-            // $_SESSION['created_at'] = $user['created_at'];
-            // $_SESSION['login_time'] = date('Y-m-d H:i:s');
-
-            // ✅ Redirect based on user role
-            // if ($user['role'] === 'Agent') {
-            //     header("Location: ../agent-app/agent-profile.php");
-            // } else if ($user['role'] === 'Admin') {
-            //     header("Location: ../warehouse-app/admin-dashboard/admin-agent-management.php");
-            // } else {
-            //     header("Location: profile.php");
-            // }
-        } else {
-            $error = "Invalid password!";
-        }
+    if (!$captcha) {
+        $error = "Please complete the CAPTCHA verification.";
     } else {
-        $error = "No account found with this phone number.";
+        // Verify CAPTCHA with Google
+        $verifyResponse = file_get_contents(
+            "https://www.google.com/recaptcha/api/siteverify?secret=$secretKey&response=$captcha"
+        );
+        $responseData = json_decode($verifyResponse);
+
+        if (!$responseData->success) {
+            $error = "CAPTCHA verification failed. Please try again.";
+        }
+    }
+
+    // Only proceed with login if CAPTCHA is verified
+    if (empty($error)) {
+        $email = mysqli_real_escape_string($conn, $_POST['email']);
+        $password = $_POST['password'];
+
+        // Use prepared statement for security
+        $stmt = $conn->prepare("SELECT user_id, full_name, email, phone, password, role, is_valid_email, created_at, is_two_factor_on, two_factor_type FROM users WHERE email = ? LIMIT 1");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result && mysqli_num_rows($result) > 0) {
+            $user = mysqli_fetch_assoc($result);
+
+            if (password_verify($password, $user['password'])) {
+
+                // Check if email is verified
+                if (!$user['is_valid_email']) {
+                    $error = "Please verify your email before logging in. Check your inbox for the verification code.";
+                } else {
+                    // Fetch two-factor authentication settings
+                    $stmt_2fa = $conn->prepare("SELECT is_two_factor_on, two_factor_type FROM users WHERE user_id = ?");
+                    $stmt_2fa->bind_param("i", $user['user_id']);
+                    $stmt_2fa->execute();
+                    $result_2fa = $stmt_2fa->get_result();
+                    $two_factor_data = $result_2fa->fetch_assoc();
+                    $stmt_2fa->close();
+
+                    session_start();
+                    $_SESSION['user_id'] = $user['user_id'];
+
+                    // Check if two-factor authentication is enabled
+                    if ($two_factor_data['is_two_factor_on']) {
+                        // Generate and send verification code
+                        $verification_code = rand(100000, 999999);
+                        $_SESSION['two_factor_code'] = $verification_code;
+                        $_SESSION['two_factor_user_id'] = $user['user_id'];
+                        $_SESSION['two_factor_type'] = $two_factor_data['two_factor_type'];
+
+                        if ($two_factor_data['two_factor_type'] === 'email') {
+                            // Send email verification code
+                            require 'PHPMailer/src/PHPMailer.php';
+                            require 'PHPMailer/src/SMTP.php';
+                            require 'PHPMailer/src/Exception.php';
+
+                            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+                            try {
+                                $mail->isSMTP();
+                                $mail->Host = 'smtp.gmail.com';
+                                $mail->SMTPAuth = true;
+                                $mail->Username = 'mnoman221338@bscse.uiu.ac.bd';
+                                $mail->Password = 'rzjj ljkz lqwf qhzb';
+                                $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+                                $mail->Port = 587;
+
+                                $mail->setFrom('mnoman221338@bscse.uiu.ac.bd', 'DirectEdge');
+                                $mail->addAddress($user['email']);
+
+                                $mail->isHTML(true);
+                                $mail->Subject = 'Two-Factor Authentication Code';
+                                $mail->Body = "
+                                    <h2>Two-Factor Authentication</h2>
+                                    <p>Your verification code is: <strong style='font-size: 24px;'>{$verification_code}</strong></p>
+                                    <p>This code will expire in 10 minutes.</p>
+                                    <p>If you didn't attempt to log in, please ignore this email.</p>
+                                ";
+
+                                $mail->send();
+                            } catch (Exception $e) {
+                                $error = "Failed to send verification code. Please try again.";
+                            }
+                        } elseif ($two_factor_data['two_factor_type'] === 'phone') {
+                            // Send WhatsApp verification code
+                            $idInstance = "7105402430";
+                            $apiTokenInstance = "2d8e63493c2b41b990db9e521c5f62fdb2f20c7be5e14cbd8d";
+                            $url = "https://api.greenapi.com/waInstance{$idInstance}/sendMessage/{$apiTokenInstance}";
+
+                            $formattedPhone = preg_replace('/^\+?88/', '', $user['phone']);
+                            $formattedPhone = '88' . $formattedPhone;
+
+                            $data = [
+                                "chatId" => $formattedPhone . "@c.us",
+                                "message" => "Your DirectEdge login verification code is: $verification_code\n\nThis code will expire in 10 minutes."
+                            ];
+
+                            $options = [
+                                "http" => [
+                                    "header"  => "Content-type: application/json\r\n",
+                                    "method"  => "POST",
+                                    "content" => json_encode($data),
+                                    "ignore_errors" => true
+                                ]
+                            ];
+
+                            $context = stream_context_create($options);
+                            @file_get_contents($url, false, $context);
+                        }
+
+                        // Redirect to two-factor verification page
+                        header("Location: two_factor_verify.php");
+                        exit();
+                    } else {
+                        // No two-factor authentication, proceed with normal login
+                        $redirect_page = '';
+                        if ($user['role'] == 'Agent') {
+                            $redirect_page = "agent-app/agent-farmer-dashboard.php";
+                        } elseif ($user['role'] == 'Admin') {
+                            $redirect_page = "warehouse-app/admin-dashboard/admin-dashboard.php";
+                        } elseif ($user['role'] == 'Shop-Owner') {
+                            header("Location: ../shop-owner-app/Profuct-for-buyers-from-shop/Available-Products-List.php?shop_id=" . $user['user_id']);
+                            exit();
+                        } else {
+                            $redirect_page = "Home/landing.php";
+                        }
+
+                        header("Location: ../" . $redirect_page);
+                        exit();
+                    }
+                }
+            } else {
+                $error = "Invalid password!";
+            }
+        } else {
+            $error = "No account found with this email address.";
+        }
+
+        $stmt->close();
     }
 }
 
@@ -78,8 +171,9 @@ mysqli_close($conn);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Log In DirectEdge</title>
-    <link rel="icon" type="image/x-icon" href="../Logo/Favicon.png">
+    <link rel="icon" type="image/x-icon" href="../assets/Logo/Favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
 <body class="flex justify-center items-center min-h-screen bg-[#eff2f9]">
@@ -169,7 +263,7 @@ mysqli_close($conn);
 
         <!-- LOGIN FORM -->
         <div class="flex flex-col justify-center p-6">
-            <h2 class="text-2xl font-semibold text-center mb-6">Log In</h2>
+            <h2 class="text-2xl font-bold text-center mb-6">Log In</h2>
 
             <!-- Display error message if exists -->
             <?php if (!empty($error)): ?>
@@ -181,25 +275,36 @@ mysqli_close($conn);
 
             <form action="login.php" method="POST" class="space-y-4">
                 <div>
-                    <label for="phone" class="block mb-1 text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="text" id="phone" name="phone" placeholder="+8801744177620" required
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                    <label for="email" class="block text-sm font-medium">Email</label>
+                    <input type="email" id="email" name="email" placeholder="example@mail.com" required
+                        value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
                 </div>
 
                 <div>
-                    <label for="password" class="block mb-1 text-sm font-medium text-gray-700">Password</label>
+                    <label for="password" class="block text-sm font-medium">Password</label>
                     <input type="password" id="password" name="password" placeholder="Password" required
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                        class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
+                </div>
+
+                <!-- Google reCAPTCHA -->
+                <div class="w-full">
+                    <div class="g-recaptcha w-full" data-sitekey="6LdNTSEsAAAAAO7ovUcBYc5ZyWNTbyKrAMX5YtVn" style="transform:scale(1);transform-origin:0 0;"></div>
                 </div>
 
                 <button type="submit"
-                    class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
-                    Login
+                    class="w-full bg-green-600 text-white font-medium py-2 rounded-md hover:bg-green-700 transition">
+                    Log In
                 </button>
 
                 <p class="text-center text-sm text-gray-600 mt-4">
                     Don't have an account?
-                    <a href="signup.php" class="text-green-600 hover:underline">Create</a>
+                    <a href="signup.php" class="text-green-600 hover:underline">Sign Up</a>
+                </p>
+
+                <p class="text-center text-sm text-gray-600 mt-4">
+                    Want to join as an agricultural agent?
+                    <a href="../agent-app/become-agent.php" class="text-green-600 hover:underline font-semibold">Become an Agent</a>
                 </p>
             </form>
         </div>
