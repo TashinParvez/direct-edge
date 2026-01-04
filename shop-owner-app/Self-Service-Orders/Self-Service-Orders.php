@@ -8,6 +8,8 @@ ob_start(); // Start output buffering to handle session_start() in sidebar
 
 include '../../include/connect-db.php';
 
+require 'OrderCodeDecryption.php';
+
 $shop_id = isset($user_id) ? $user_id : 74;
 
 // $shop_id =   74;
@@ -93,7 +95,7 @@ while ($row = $result->fetch_assoc()) {
 
         $orders[$orderId] = [
             'id'         => (int)$orderId,
-            'order_code' => $row['order_code'],
+            'order_code' => decryptAES($row['order_code']),
             'buyer'      => $row['user_name'],
             'amount'     => 0.0, // Will calculate from products
             'status'     => $status,

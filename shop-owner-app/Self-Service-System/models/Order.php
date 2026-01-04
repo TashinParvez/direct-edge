@@ -1,4 +1,7 @@
 <?php
+
+require 'OrderCodeEncryption.php';
+
 class Order
 {
     private $db;
@@ -27,7 +30,7 @@ class Order
 
         $products_json = json_encode($products);
         $insert = $this->db->prepare("INSERT INTO orders (user_name, products, code) VALUES (?, ?, ?)");
-        $insert->execute([$user_name, $products_json, $code]);
+        $insert->execute([$user_name, $products_json, encryptAES($code)]);
         return $code;
     }
 

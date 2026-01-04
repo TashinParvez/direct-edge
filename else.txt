@@ -33,6 +33,7 @@ Real Email and Phone Number
 
 Name: noman
 ID: 197
+Role: Shop Owner
 Email: azizulhaquenoman@gmail.com
 Number: 01851604135
 Password: Abc@1234
