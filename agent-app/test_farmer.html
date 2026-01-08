@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Farmer Side - Sign Now</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+    <style>
+        .signature-box { border: 2px dashed #16a34a; background: #fff; width: 100%; height: 160px; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-2xl w-full bg-white rounded-xl shadow-2xl overflow-hidden">
+        
+        <div class="bg-green-700 p-6 text-white text-center">
+            <h2 class="text-xl font-bold">Review & Sign Agreement</h2>
+            <p class="text-green-100 text-sm mt-1">Ref: AGR-2026-TEST-REF-123</p>
+        </div>
+
+        <div class="p-8">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 text-sm text-blue-800">
+                <p><strong>Note:</strong> Agent <b>Md Musfiqur Rahman</b> has already signed this agreement. Please review the terms and provide your signature below to activate it.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <div>
+                    <p class="text-sm font-bold text-gray-500 uppercase mb-2">Agent Signature</p>
+                    <div class="border rounded bg-gray-100 h-40 flex items-center justify-center relative">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/John_Hancock_Signature.svg/1200px-John_Hancock_Signature.svg.png" class="w-3/4 opacity-70">
+                        <span class="absolute bottom-2 right-2 text-xs text-gray-400">Signed on 04 Jan 2026</span>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-sm font-bold text-green-600 uppercase mb-2">Your Signature</p>
+                    <canvas id="signCanvas" class="signature-box cursor-crosshair"></canvas>
+                    <div class="flex justify-between mt-1">
+                        <span class="text-xs text-gray-400">Draw above</span>
+                        <button onclick="signaturePad.clear()" class="text-red-500 text-xs font-bold hover:underline">CLEAR</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <button onclick="submitSign()" class="w-full mt-8 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg transition transform hover:scale-[1.01]">
+                Confirm & Activate Agreement
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('signCanvas');
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+        }
+        resizeCanvas();
+        const signaturePad = new SignaturePad(canvas, {
+            penColor: "rgb(0, 0, 0)"
+        });
+
+        function submitSign() {
+            if(signaturePad.isEmpty()) {
+                alert("Please draw your signature first!");
+            } else {
+                alert("Signature Captured! Submitting to server...");
+                // এখানে ব্যাকএন্ডে ডাটা পাঠানোর কোড থাকবে
+            }
+        }
+    </script>
+</body>
+</html>
