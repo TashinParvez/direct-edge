@@ -1,4 +1,4 @@
-Final Users for Project Shwapno
+Final Users for Project Show
 __________
 ------------------------
 Shop Owner
@@ -28,6 +28,18 @@ Number: 01975217925
 Password: Ab@12345
 ___________________________________________________
 ---------------------------------------------------
+Real Email and Phone Number
+-----------
+
+Name: noman
+ID: 197
+Role: Shop Owner
+Email: azizulhaquenoman@gmail.com
+Number: 01851604135
+Password: Abc@1234
+___________________________________________________
+---------------------------------------------------
+
 
 
 

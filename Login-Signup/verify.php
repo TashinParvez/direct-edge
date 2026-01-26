@@ -1,4 +1,11 @@
 <?php
+session_start();
+
+// Check if user has pending verification
+if (!isset($_SESSION['pending_verification_user_id'])) {
+    header("Location: signup.php");
+    exit();
+}
 
 // Database connection
 $servername = "localhost";
@@ -11,78 +18,44 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-$email = '';
-$phone = '';
-$user_id = '';
-$verify = '';
+// Get user info from session
+$user_id = $_SESSION['pending_verification_user_id'];
+$email = isset($_SESSION['pending_verification_email']) ? $_SESSION['pending_verification_email'] : '';
+$phone = isset($_SESSION['pending_verification_phone']) ? $_SESSION['pending_verification_phone'] : '';
+$verify = isset($_SESSION['verification_type']) ? $_SESSION['verification_type'] : 'email';
+
 $verification_success = false;
 $verification_error = false;
-
-if (isset($_GET['user_id']) && isset($_GET['verify'])) {
-    $user_id = urldecode($_GET['user_id']);
-    $verify = $_GET['verify'];
-
-    if ($verify === 'email') {
-
-        // Fetch email using user_id
-        $stmt = $conn->prepare("SELECT email FROM users WHERE user_id = ?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-
-        $stmt->bind_result($email);
-        $stmt->fetch();
-
-        $stmt->close();
-    } elseif ($verify === 'phone') {
-
-        // Fetch phone using user_id
-        $stmt = $conn->prepare("SELECT phone FROM users WHERE user_id = ?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-
-        $stmt->bind_result($phone);
-        $stmt->fetch();
-
-        $stmt->close();
-    }
-}
 
 
 if (isset($_POST['verify_account'])) {
 
     $code_input = $_POST['code'];
-    $user_id = $_POST['user_id'];
-    $verify = $_POST['verify'];
+    $user_id = $_SESSION['pending_verification_user_id'];
+    $verify = $_SESSION['verification_type'];
 
     // Email verification Process..................
     if ($verify === 'email') {
 
-        // Fetch email using user_id for POST request
-        $stmt = $conn->prepare("SELECT email FROM users WHERE user_id = ?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $stmt->bind_result($email);
-        $stmt->fetch();
-        $stmt->close();
+        $email = $_SESSION['pending_verification_email'];
+        $stored_code = isset($_SESSION['email_verification_code']) ? $_SESSION['email_verification_code'] : '';
 
-        // Get verification code from DB
-        $stmt = $conn->prepare("SELECT email_verification_code FROM email_phone_verification WHERE email = ?");
-        $stmt->bind_param("s", $email);
-        $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
+        // Verify code from session
+        if ($stored_code && $stored_code == $code_input) {
 
-        if ($result && $result['email_verification_code'] == $code_input) {
-
-            $update = $conn->prepare("UPDATE email_phone_verification SET email_is_verified = 1 WHERE email = ?");
-            $update->bind_param("s", $email);
+            // Update users table to mark email as verified
+            $update = $conn->prepare("UPDATE users SET is_valid_email = 1 WHERE user_id = ?");
+            $update->bind_param("i", $user_id);
             $update->execute();
             $update->close();
 
-            $update = $conn->prepare("UPDATE users SET is_valid_email = 1 WHERE email = ?");
-            $update->bind_param("s", $email);
-            $update->execute();
-            $update->close();
+            // Clear verification session data
+            unset($_SESSION['pending_verification_user_id']);
+            unset($_SESSION['pending_verification_email']);
+            unset($_SESSION['pending_verification_phone']);
+            unset($_SESSION['verification_type']);
+            unset($_SESSION['email_verification_code']);
+            unset($_SESSION['phone_verification_code']);
 
             $verification_success = true;
         } else {
@@ -92,36 +65,28 @@ if (isset($_POST['verify_account'])) {
     // Phone verification Process..................
     elseif ($verify === 'phone') {
 
-        // Fetch phone using user_id for POST request
-        $stmt = $conn->prepare("SELECT phone FROM users WHERE user_id = ?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
-        $stmt->bind_result($phone);
-        $stmt->fetch();
-        $stmt->close();
+        $phone = $_SESSION['pending_verification_phone'];
+        $stored_code = isset($_SESSION['phone_verification_code']) ? $_SESSION['phone_verification_code'] : '';
 
-        // Get verification code from DB
-        $stmt = $conn->prepare("SELECT phone_verification_code FROM email_phone_verification WHERE phone = ?");
-        $stmt->bind_param("s", $phone);
-        $stmt->execute();
-        $result = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
+        // Verify code from session
+        if ($stored_code && $stored_code == $code_input) {
 
-        if ($result && $result['phone_verification_code'] == $code_input) {
-
-            $update = $conn->prepare("UPDATE email_phone_verification SET phone_is_verified = 1 WHERE phone = ?");
-            $update->bind_param("s", $phone);
+            // Update users table to mark phone as verified
+            $update = $conn->prepare("UPDATE users SET is_valid_phone = 1 WHERE user_id = ?");
+            $update->bind_param("i", $user_id);
             $update->execute();
             $update->close();
 
-            $update = $conn->prepare("UPDATE users SET is_valid_phone = 1 WHERE phone = ?");
-            $update->bind_param("s", $phone);
-            $update->execute();
-            $update->close();
-
-            // Start session and redirect to profile
-            session_start();
+            // Set user session for logged in user
             $_SESSION['user_id'] = $user_id;
+
+            // Clear verification session data
+            unset($_SESSION['pending_verification_user_id']);
+            unset($_SESSION['pending_verification_email']);
+            unset($_SESSION['pending_verification_phone']);
+            unset($_SESSION['verification_type']);
+            unset($_SESSION['email_verification_code']);
+            unset($_SESSION['phone_verification_code']);
 
             $verification_success = true;
         } else {
@@ -139,7 +104,7 @@ if (isset($_POST['verify_account'])) {
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Email Verification - DirectEdge</title>
+    <title><?php echo ($verify === 'phone') ? 'Phone' : 'Email'; ?> Verification - DirectEdge</title>
     <link rel="icon" type="image/x-icon" href="../assets/Logo/Favicon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -230,9 +195,6 @@ if (isset($_POST['verify_account'])) {
 
                 <form method="POST" action="verify.php" class="space-y-4">
 
-                    <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($user_id); ?>" />
-                    <input type="hidden" name="verify" value="<?php echo htmlspecialchars($verify); ?>" />
-
                     <div>
                         <label for="code" class="block text-sm font-medium mb-1">Verification Code</label>
                         <input type="text" id="code" name="code" placeholder="Enter 6-digit code" required maxlength="6"
@@ -300,9 +262,6 @@ if (isset($_POST['verify_account'])) {
                 </div>
 
                 <form method="POST" action="verify.php" class="space-y-4">
-
-                    <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($user_id); ?>" />
-                    <input type="hidden" name="verify" value="<?php echo htmlspecialchars($verify); ?>" />
 
                     <div>
                         <label for="code" class="block text-sm font-medium mb-1">Verification Code</label>
