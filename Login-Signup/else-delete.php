@@ -21,66 +21,34 @@ if (!$conn) {
 
 $message = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Sanitize and validate inputs
-    $full_name = trim(strip_tags($_POST['username']));
-    $email = trim(strtolower($_POST['mail']));
-    $phone = trim($_POST['phonenumber']);
+    $full_name = $_POST['username'];
+    $email = $_POST['mail'];
+    $phone = $_POST['phonenumber'];
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
-    $role = trim($_POST['usertype']);
+    $role = $_POST['usertype'];
 
     // Initialize image_url as null
     $image_url = null;
 
-    // Validation checks
-    // 1. Validate full name
-    if (empty($full_name) || strlen($full_name) < 2) {
-        $message = "Full name must be at least 2 characters long.";
-    } elseif (strlen($full_name) > 100) {
-        $message = "Full name is too long (max 100 characters).";
-    } elseif (!preg_match('/^[a-zA-Z\s.\'-]+$/', $full_name)) {
-        $message = "Full name can only contain letters, spaces, periods, hyphens, and apostrophes.";
-    }
-    // 2. Validate email
-    elseif (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $message = "Please enter a valid email address.";
-    } elseif (strlen($email) > 100) {
-        $message = "Email address is too long.";
-    }
-    // 3. Validate phone number
-    elseif (empty($phone) || strlen($phone) < 11 || strlen($phone) > 14) {
-        $message = "Phone number must be between 11 and 14 characters.";
-    } elseif (!preg_match('/^[+]?[0-9]{11,14}$/', $phone)) {
-        $message = "Phone number can only contain digits and an optional + at the beginning.";
-    }
-    // 4. Password validation
-    elseif (empty($password)) {
-        $message = "Password is required.";
+    // Password validation
+    $uppercase = preg_match('@[A-Z]@', $password);
+    $lowercase = preg_match('@[a-z]@', $password);
+    $number    = preg_match('@[0-9]@', $password);
+    $specialChars = preg_match('@[^\w]@', $password);
+
+    // Allowed ENUM values
+    // $allowed_roles = ['Admin', 'Shop-Owner', 'Agent', 'User'];
+    $allowed_roles = ['Admin', 'Shop-Owner', 'Agent', 'User'];
+    if (!in_array($role, $allowed_roles)) {
+        $message = "Invalid role selected!";
     } elseif ($password !== $confirm_password) {
         $message = "Passwords do not match!";
+    } elseif (strlen($password) < 8 || !$uppercase || !$lowercase || !$number || !$specialChars) {
+        $message = "Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, one digit, and one special character.";
+    } elseif (strlen($phone) < 11 || strlen($phone) > 14) {
+        $message = "Phone number must be between 11 and 14 characters.";
     } else {
-        $uppercase = preg_match('@[A-Z]@', $password);
-        $lowercase = preg_match('@[a-z]@', $password);
-        $number    = preg_match('@[0-9]@', $password);
-        $specialChars = preg_match('@[^\w]@', $password);
-        
-        if (strlen($password) < 8 || !$uppercase || !$lowercase || !$number || !$specialChars) {
-            $message = "Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, one digit, and one special character.";
-        } elseif (strlen($password) > 128) {
-            $message = "Password is too long (max 128 characters).";
-        }
-    }
-    
-    // 5. Validate role
-    if ($message === "") {
-        $allowed_roles = ['Admin', 'Shop-Owner', 'Agent', 'User'];
-        if (!in_array($role, $allowed_roles)) {
-            $message = "Invalid role selected!";
-        }
-    }
-    
-    // Proceed if no validation errors
-    if ($message === "") {
         // Handle file upload if a file was selected
         if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
             $upload_dir = 'uploads/profile_pictures/';
@@ -91,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             $file_tmp_path = $_FILES['profile_picture']['tmp_name'];
-            $file_name = basename($_FILES['profile_picture']['name']); // Sanitize filename
+            $file_name = $_FILES['profile_picture']['name'];
             $file_size = $_FILES['profile_picture']['size'];
             $file_type = $_FILES['profile_picture']['type'];
             $file_name_cmps = explode(".", $file_name);
@@ -99,29 +67,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Allowed file extensions
             $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif'];
-            // Allowed MIME types
-            $allowed_mime_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
 
-            if (in_array($file_extension, $allowed_extensions) && in_array($file_type, $allowed_mime_types)) {
-                // Verify it's actually an image using getimagesize
-                $image_info = @getimagesize($file_tmp_path);
-                if ($image_info === false) {
-                    $message = "❌ Uploaded file is not a valid image.";
-                } else {
-                    // Create unique filename
-                    $new_file_name = uniqid() . '_' . time() . '.' . $file_extension;
-                    $dest_path = $upload_dir . $new_file_name;
+            if (in_array($file_extension, $allowed_extensions)) {
+                // Create unique filename
+                $new_file_name = uniqid() . '_' . time() . '.' . $file_extension;
+                $dest_path = $upload_dir . $new_file_name;
 
-                    // Check file size (limit to 5MB)
-                    if ($file_size < 5000000) {
-                        if (move_uploaded_file($file_tmp_path, $dest_path)) {
-                            $image_url = $dest_path;
-                        } else {
-                            $message = "❌ Error uploading profile picture.";
-                        }
+                // Check file size (limit to 5MB)
+                if ($file_size < 5000000) {
+                    if (move_uploaded_file($file_tmp_path, $dest_path)) {
+                        $image_url = $dest_path;
                     } else {
-                        $message = "❌ File size too large. Maximum size is 5MB.";
+                        $message = "❌ Error uploading profile picture.";
                     }
+                } else {
+                    $message = "❌ File size too large. Maximum size is 5MB.";
                 }
             } else {
                 $message = "❌ Invalid file type. Only JPG, JPEG, PNG, and GIF files are allowed.";
@@ -130,49 +90,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // If no error with file upload, proceed with user registration
         if ($message === "") {
-            // Check for duplicate email or phone
-            $check_stmt = $conn->prepare("SELECT user_id FROM users WHERE email = ? OR phone = ?");
-            $check_stmt->bind_param("ss", $email, $phone);
-            $check_stmt->execute();
-            $check_result = $check_stmt->get_result();
-            
-            if ($check_result->num_rows > 0) {
-                $message = "❌ Email or phone number already registered. Please use different credentials.";
-                // Clean up uploaded file if exists
+            // Hash password
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+            // Insert query with image_url
+            $stmt = $conn->prepare("INSERT INTO users (full_name, email, phone, password, role, image_url) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssss", $full_name, $email, $phone, $hashed_password, $role, $image_url);
+
+            if ($stmt->execute()) {
+                // $message = "Sign up successful!";
+
+                // Get the newly created user_id
+                $user_id = $conn->insert_id;
+
+                sendVerificationCodeForEmail($email, $phone, $conn);
+
+                header("Location: verify.php?user_id=" . urlencode($user_id). "&verify=email");
+                exit();
+            } else {
+                $message = "❌ Error: " . $stmt->error;
+
+                // If there was an error and we uploaded a file, delete it
                 if ($image_url && file_exists($image_url)) {
                     unlink($image_url);
-                    $image_url = null;
                 }
-            } else {
-                // Hash password
-                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-                // Insert query with image_url
-                $stmt = $conn->prepare("INSERT INTO users (full_name, email, phone, password, role, image_url) VALUES (?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssss", $full_name, $email, $phone, $hashed_password, $role, $image_url);
-
-                if ($stmt->execute()) {
-                    // $message = "Sign up successful!";
-
-                    // Get the newly created user_id
-                    $user_id = $conn->insert_id;
-
-                    sendVerificationCodeForEmail($email, $phone, $conn);
-
-                    header("Location: verify.php?user_id=" . urlencode($user_id). "&verify=email");
-                    exit();
-                } else {
-                    $message = "❌ Error: " . $stmt->error;
-
-                    // If there was an error and we uploaded a file, delete it
-                    if ($image_url && file_exists($image_url)) {
-                        unlink($image_url);
-                    }
-                }
-
-                $stmt->close();
             }
-            $check_stmt->close();
+
+            $stmt->close();
         }
     }
 }
