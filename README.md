@@ -9,11 +9,9 @@ DirectEdge is a smart 3-sided digital platform designed to simplify agricultural
 - [Background](#background)
 - [Features](#features)
 - [Technology Stack](#technology-stack)
-- [Installation](#installation)
 - [Usage](#usage)
 - [Work Distribution](#work-distribution)
 - [Methodology](#methodology)
-- [Contributing](#contributing)
 - [Contact](#contact)
 - [References](#references)
 
