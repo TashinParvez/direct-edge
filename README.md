@@ -69,46 +69,6 @@ DirectEdge addresses these issues by providing a platform that:
 - **Machine Learning**: scikit-learn, Prophet, or XGBoost for demand forecasting.
 - **Cloud & Deployment**: AWS/GCP for scalable infrastructure.
 
-## Installation
-
-1. **Clone the Repository**:
-
-   ```bash
-   git clone https://github.com/DirectEdge/DirectEdge.git
-   cd DirectEdge
-   ```
-
-2. **Frontend Setup**:
-
-   ```bash
-   cd frontend
-   npm install
-   npm start
-   ```
-
-3. **Backend Setup**:
-
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   uvicorn main:app --reload
-   ```
-
-4. **Database Setup**:
-
-   - Install PostgreSQL and configure the database.
-   - Update the database connection settings in the backend configuration file.
-
-5. **Computer Vision & Machine Learning**:
-
-   - Install Python dependencies: PyTorch, TensorFlow, scikit-learn, OpenCV.
-   - Pre-trained models for product recognition and forecasting are available in the `models/` directory.
-
-6. **Cloud Deployment**:
-   - Configure AWS/GCP credentials.
-   - Deploy using provided scripts in the `deploy/` directory.
-
----
 
 ## Self-service-pickup-system Run
 
@@ -205,11 +165,6 @@ We welcome contributions! To contribute:
 
 Please ensure your code follows the project's coding standards and includes tests.
 
-## Contributors ✨
-
-A big thanks to all the people who contribute to this project!
-
-[![Contributors](https://contrib.rocks/image?repo=TashinParvez/direct-edge)](https://github.com/TashinParvez/direct-edge/graphs/contributors)
 
 
 ## Contact
