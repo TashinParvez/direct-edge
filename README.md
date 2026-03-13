@@ -151,18 +151,11 @@ DirectEdge follows an **Agile (Scrum)** methodology to accommodate:
 - Parallel web and mobile development.
 - Evolving stakeholder feedback.
 
-## Contributing
+## 🌟 Contributors
 
-We welcome contributions! To contribute:
+A big thanks to all the people who contribute to this project!
 
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes and commit (`git commit -m "Add feature"`).
-4. Push to the branch (`git push origin feature-branch`).
-5. Create a pull request.
-
-Please ensure your code follows the project's coding standards and includes tests.
-
+## [![Contributors](https://contrib.rocks/image?repo=TashinParvez/direct-edge)](https://github.com/TashinParvez/direct-edge/graphs/contributors)
 
 
 ## Contact
